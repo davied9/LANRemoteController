@@ -8,7 +8,7 @@ class LRCServer ( TCPServer ):
 
     allow_reuse_address = True
 
-    def __init__(self, *argv, async=False):
+    def __init__(self, async=True):
         super(LRCServer, self).__init__(
             server_address=('localhost', 33520),
             RequestHandlerClass=LRCRequestHandlerClass
@@ -16,22 +16,29 @@ class LRCServer ( TCPServer ):
         self.round = -1
         print('start LRCServer on', self.server_address)
         if async:
-            self.serve_thread = threading.Thread(target=self.serve_forever)
-            self.serve_thread.start()
+            threading.Thread(target=self.serve_forever).start()
         else:
-            self.serve_thread = None
             self.serve_forever()
+
+
 
 
 class LRCRequestHandlerClass(StreamRequestHandler):
 
-    def __init__(self, *argv, **kwargs):
-        super(LRCRequestHandlerClass, self).__init__(*argv, **kwargs)
+    def __init__(self, request, client_address, server):
+        super(LRCRequestHandlerClass, self).__init__(request, client_address, server)
 
     def handle(self):
         self.server.round += 1
         print('round ', self.server.round, 'accepted : ', self.request, ' from ', self.client_address)
         print('from hello :', self.request.recv(1024))
+        self.request.close()
+
+
+class Waiter(object):
+
+    def __init__(self, client_address ):
+        self.client_address = client_address
 
 
 def test000():
