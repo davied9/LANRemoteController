@@ -9,7 +9,7 @@ class LRCClient(object):
         self.round = -1
     # interfaces
     def Start(self):
-        self.round = self.round + 1
+        self.round += 1
 
         s = socket(AF_INET, SOCK_STREAM)
 

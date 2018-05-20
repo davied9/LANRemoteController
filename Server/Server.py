@@ -1,51 +1,49 @@
 from socket import *
-from socketserver import TCPServer
+from socketserver import TCPServer, StreamRequestHandler
 import threading
 
-class LRCServer ( object ):
-    def __init__(self):
-        self.is_working = False
-        self.serve_addr = ('localhost', 33520)
-        self.serve_thread = None
-        self.listener = None
+
+
+class LRCServer ( TCPServer ):
+
+    allow_reuse_address = True
+
+    def __init__(self, *argv, async=False):
+        super(LRCServer, self).__init__(
+            server_address=('localhost', 33520),
+            RequestHandlerClass=LRCRequestHandlerClass
+            )
         self.round = -1
-    # interfaces
-    def Start(self):
-        self.serve_thread = threading.Thread(target=self.__respond_thread)
-        self.is_working = True
-        self.serve_thread.start()
-        print('start serving on', self.serve_addr)
-        pass
-    def Stop(self):
-        self.serve_thread._stop()
-        pass
-    # implementation
-    def __respond_thread(self):
-
-        self.listener = socket(AF_INET, SOCK_STREAM)
-        self.listener.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-        self.listener.bind(self.serve_addr)
-        self.listener.listen(10)
-
-        while True:
-            self.round = self.round + 1
-            hello_connection, client_addr = self.listener.accept()
-            print('round ', self.round, 'accepted : ', hello_connection, ' - ', client_addr)
-            print('from hello :', hello_connection.recv(1024).decode())
-            hello_connection.close()
-            
-
-    def __serve_thread(self):
+        print('start LRCServer on', self.server_address)
+        if async:
+            self.serve_thread = threading.Thread(target=self.serve_forever)
+            self.serve_thread.start()
+        else:
+            self.serve_thread = None
+            self.serve_forever()
 
 
-        pass
+class LRCRequestHandlerClass(StreamRequestHandler):
+
+    def __init__(self, *argv, **kwargs):
+        super(LRCRequestHandlerClass, self).__init__(*argv, **kwargs)
+
+    def handle(self):
+        self.server.round += 1
+        print('round ', self.server.round, 'accepted : ', self.request, ' from ', self.client_address)
+        print('from hello :', self.request.recv(1024))
+
 
 def test000():
-    server = LRCServer()
-    server.Start()
+    import time
+    server = LRCServer(async=True)
+    time.sleep(10)
+    server.shutdown()
+    print('close server from outside')
     pass
 
 
 if '__main__' == __name__:
     test000()
+
     pass
