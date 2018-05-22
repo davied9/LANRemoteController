@@ -1,10 +1,19 @@
+from __future__ import print_function
+    
 from socket import *
-from socketserver import TCPServer, StreamRequestHandler
 import threading
 
+try:
+    from SocketServer import TCPServer, StreamRequestHandler
+except ImportError:
+    from socketserver import TCPServer, StreamRequestHandler
+except:
+    print('can not import TCPServer, StreamRequestHandler.')
+finally:
+    pass
 
 
-class LRCServer ( TCPServer ):
+class LRCServer ( TCPServer, object ):
 
     allow_reuse_address = True
 
@@ -23,7 +32,7 @@ class LRCServer ( TCPServer ):
 
 
 
-class LRCRequestHandlerClass(StreamRequestHandler):
+class LRCRequestHandlerClass( StreamRequestHandler, object ):
 
     def __init__(self, request, client_address, server):
         super(LRCRequestHandlerClass, self).__init__(request, client_address, server)
