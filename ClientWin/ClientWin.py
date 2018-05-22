@@ -14,7 +14,8 @@ class LRCClient(object):
         s = socket(AF_INET, SOCK_STREAM)
 
         hello_connection = s.connect(self.serve_addr)
-        time.sleep(1)
+        # if 1 == self.round%2:
+            # time.sleep(1)
         s.send(('hello from %d' % self.round).encode('utf-8'))
         s.close()
 

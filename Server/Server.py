@@ -1,66 +1,69 @@
 from __future__ import print_function
 
+from socket import *
+import threading
+
 try: # python 2
-    from socket import *
-    import threading
-    from SocketServer import TCPServer, StreamRequestHandler
+    from SocketServer import TCPServer, BaseRequestHandler
 except ImportError:  # python 3
-    from socket import *
-    import threading
-    from socketserver import TCPServer, StreamRequestHandler
+    from socketserver import TCPServer, BaseRequestHandler
 except:
     print('can not import packages for Server.')
 finally:
     pass
 
+import sys
+sys.path.append('..')
+from Protocol.v1 import *
 
 class LRCServer ( TCPServer, object ):
 
     allow_reuse_address = True
 
-    def __init__(self, async=True):
-        super(LRCServer, self).__init__(
-            server_address=('localhost', 33520),
-            RequestHandlerClass=LRCRequestHandlerClass
-            )
+    def __init__(self):
+        TCPServer.__init__( self, ('localhost', 33520), LRCDoorGuy )
+        self.socket.setblocking(False)
+        #self.socket.settimeout(5) # timeout is for blocking socket
         self.round = -1
-        print('start LRCServer on', self.server_address)
-        if async:
-            threading.Thread(target=self.serve_forever).start()
-        else:
-            self.serve_forever()
 
-
-
-
-class LRCRequestHandlerClass( StreamRequestHandler, object ):
-
-    def __init__(self, request, client_address, server):
-        super(LRCRequestHandlerClass, self).__init__(request, client_address, server)
-
-    def handle(self):
-        self.server.round += 1
-        print('round ', self.server.round, 'accepted : ', self.request, ' from ', self.client_address)
-        print('from hello :', self.request.recv(1024))
-        self.request.close()
-
-
-class Waiter(object):
+        
+class LRCWaiter(object): # waiter serve you all the time 
 
     def __init__(self, client_address ):
         self.client_address = client_address
 
+        
+class LRCDoorGuy( BaseRequestHandler, object ): # door guy welcome you to the table
 
-def test000():
+    def __init__(self, request, client_address, server):
+        BaseRequestHandler.__init__(self, request, client_address, server)
+
+    def handle(self):
+        self.server.round += 1
+        print('round ', self.server.round, 'accepted : ', self.request, ' from ', self.client_address)
+        try:
+            print('from hello :', self.request.recv(1024))
+        except Exception as err:
+            print('network blocked, message not got')
+        finally:
+            self.server.close_request(self.request)
+        
+def test000_async_server():
     import time
-    server = LRCServer(async=True)
-    time.sleep(10)
+    
+    server = LRCServer()
+    st = threading.Thread(target=server.serve_forever)
+    print('serve thread created :', st)
+    st.start()
+    print('start server at', server.server_address)
+            
+    time.sleep(5)
     server.shutdown()
     print('close server from outside')
     pass
 
 
 if '__main__' == __name__:
-    test000()
+    test000_async_server()
 
     pass
