@@ -36,6 +36,7 @@ class LRCWaiter(object): # waiter serve you all the time
 class LRCDoorGuy( BaseRequestHandler, object ): # door guy welcome you to the table
 
     def __init__(self, request, client_address, server):
+        self.table = 0 # the table number of guest, if 0, then guest can not stay
         BaseRequestHandler.__init__(self, request, client_address, server)
 
     def handle(self):
