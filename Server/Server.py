@@ -1,14 +1,15 @@
 from __future__ import print_function
-    
-from socket import *
-import threading
 
-try:
+try: # python 2
+    from socket import *
+    import threading
     from SocketServer import TCPServer, StreamRequestHandler
-except ImportError:
+except ImportError:  # python 3
+    from socket import *
+    import threading
     from socketserver import TCPServer, StreamRequestHandler
 except:
-    print('can not import TCPServer, StreamRequestHandler.')
+    print('can not import packages for Server.')
 finally:
     pass
 
