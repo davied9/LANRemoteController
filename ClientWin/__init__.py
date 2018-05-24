@@ -1,1 +1,1 @@
-from ClientWin import LRCClient
+from LRCClient import LRCClient
