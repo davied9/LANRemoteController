@@ -1,7 +1,8 @@
-# from Protocol import BaseProtocol
+from Protocol import BaseServerProtocol
 
-# class ServerProtocol(BaseProtocol):
-class ServerProtocol( object ):
+class ServerProtocol(BaseServerProtocol):
+
     def __init__(self):
-        pass
+        BaseServerProtocol.__init__(self)
+
     pass

@@ -17,7 +17,7 @@ class LRCServer ( TCPServer, object ):
     allow_reuse_address = True
 
     def __init__(self):
-        TCPServer.__init__( self, ('localhost', 33520), LRCDoorGuy )
+        TCPServer.__init__( self, server_address=('localhost', 33520), RequestHandlerClass=LRCDoorGuy )
         self.socket.setblocking(False)
         #self.socket.settimeout(5) # timeout is for blocking socket
         self.round = -1
