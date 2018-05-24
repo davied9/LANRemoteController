@@ -12,16 +12,12 @@ except:
 finally:
     pass
 
-import sys
-sys.path.append('..')
-from Protocol.v1 import *
-
 class LRCServer ( TCPServer, object ):
 
     allow_reuse_address = True
 
     def __init__(self):
-        TCPServer.__init__( self, ('localhost', 33520), LRCDoorGuy )
+        TCPServer.__init__( self, server_address=('localhost', 33520), RequestHandlerClass=LRCDoorGuy )
         self.socket.setblocking(False)
         #self.socket.settimeout(5) # timeout is for blocking socket
         self.round = -1
@@ -57,7 +53,7 @@ def test000_async_server():
     print('serve thread created :', st)
     st.start()
     print('start server at', server.server_address)
-            
+
     time.sleep(5)
     server.shutdown()
     print('close server from outside')
