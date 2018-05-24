@@ -12,10 +12,6 @@ except:
 finally:
     pass
 
-import sys
-sys.path.append('..')
-from Protocol.v1 import *
-
 class LRCServer ( TCPServer, object ):
 
     allow_reuse_address = True
@@ -56,7 +52,7 @@ def test000_async_server():
     print('serve thread created :', st)
     st.start()
     print('start server at', server.server_address)
-            
+
     time.sleep(5)
     server.shutdown()
     print('close server from outside')
