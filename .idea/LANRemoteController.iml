@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/LANRemoteController/Protocol" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/LANRemoteController/Server" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/LANRemoteController/ClientWin" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/LANRemoteController/Protocol/v1" isTestSource="false" />
-    </content>
-    <orderEntry type="jdk" jdkName="Python 3.5.2 (F:\Develop\Python35\python35.exe)" jdkType="Python SDK" />
+    <content url="file://$MODULE_DIR$" />
+    <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="kivy" />
+    <orderEntry type="module" module-name="util_tools" />
+  </component>
+  <component name="TestRunnerService">
+    <option name="PROJECT_TEST_RUNNER" value="Unittests" />
   </component>
 </module>
