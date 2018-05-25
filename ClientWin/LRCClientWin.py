@@ -23,7 +23,7 @@ class LRCClient(object):
     def Stop(self):
         pass
 
-def test000():
+def __test000__():
     client = LRCClient()
     for round in range(10):
         client.round = round - 1
@@ -33,6 +33,6 @@ def test000():
 
 
 if '__main__' == __name__:
-    test000()
+    __test000__()
     pass
 
