@@ -1,4 +1,4 @@
-from ServerProtocol import ServerProtocol
+from ServerProtocol import ServerProtocol, WaiterProtocol, ValidateServer
 from ClientProtocol import ClientProtocol
 
-__all__ = ['ServerProtocol', 'ClientProtocol']
+__all__ = ['ServerProtocol', 'WaiterProtocol', 'ValidateServer', 'ClientProtocol']

@@ -12,6 +12,8 @@ except:
 finally:
     pass
 
+from Protocol import v1
+
 class LRCServer ( TCPServer, object ):
 
     allow_reuse_address = True
@@ -47,7 +49,10 @@ class LRCDoorGuy( BaseRequestHandler, object ): # door guy welcome you to the ta
         
 def test000_async_server():
     import time
-    
+
+    if hasattr(LRCServer, 'handle_request'):
+        print('LRCServer has operator handle_request')
+
     server = LRCServer(server_address=('localhost',33520))
     st = threading.Thread(target=server.serve_forever)
     print('serve thread created :', st)
