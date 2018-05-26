@@ -16,19 +16,19 @@ class LRCServer ( TCPServer, object ):
 
     allow_reuse_address = True
 
-    def __init__(self):
-        TCPServer.__init__( self, server_address=('localhost', 33520), RequestHandlerClass=LRCDoorGuy )
+    def __init__(self, server_address ):
+        TCPServer.__init__( self, server_address=server_address, RequestHandlerClass=LRCDoorGuy )
         self.socket.setblocking(False)
-        #self.socket.settimeout(5) # timeout is for blocking socket
         self.round = -1
 
-        
-class LRCWaiter(object): # waiter serve you all the time 
+class LRCWaiter( TCPServer, object ): # waiter serve all the time
 
-    def __init__(self, client_address ):
-        self.client_address = client_address
+    allow_reuse_address = True
 
-        
+    def __init__(self, server_address ):
+        TCPServer.__init__( self, server_address=server_address, RequestHandlerClass=LRCDoorGuy )
+
+
 class LRCDoorGuy( BaseRequestHandler, object ): # door guy welcome you to the table
 
     def __init__(self, request, client_address, server):
@@ -48,7 +48,7 @@ class LRCDoorGuy( BaseRequestHandler, object ): # door guy welcome you to the ta
 def test000_async_server():
     import time
     
-    server = LRCServer()
+    server = LRCServer(server_address=('localhost',33520))
     st = threading.Thread(target=server.serve_forever)
     print('serve thread created :', st)
     st.start()

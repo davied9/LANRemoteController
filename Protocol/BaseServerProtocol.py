@@ -4,7 +4,7 @@ try: # python 2
 except ImportError:  # python 3
     from socketserver import BaseRequestHandler
 except:
-    print('can not import packages for BaseRequestHandler.')
+    print('can not import package for BaseRequestHandler.')
 finally:
     pass
 
@@ -16,8 +16,5 @@ class BaseServerProtocol( BaseRequestHandler, BaseProtocol ):
     def __init__(self, request, client_address, server):
         BaseRequestHandler.__init__(self, request, client_address, server)
         BaseProtocol.__init__(self)
-
-    def next(self):
-        pass
 
 
