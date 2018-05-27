@@ -8,8 +8,6 @@ except:
 finally:
     pass
 
-from PyUserInput import *
-
 
 class ServerRequestHandler(BaseRequestHandler):
 
@@ -19,7 +17,7 @@ class ServerRequestHandler(BaseRequestHandler):
     def handle(self): # given clent the waiter address
         print('SeverProtocol : handling request from', self.client_address)
         print('      message :', self.request[0])
-        self.server.socket.sendto( str(self.server.waiter_address).encode('utf-8'), self.client_address )
+        self.server.sendto( str(self.server.waiter_address) , self.client_address )
 
 
 

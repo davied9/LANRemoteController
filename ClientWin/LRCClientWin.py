@@ -4,31 +4,34 @@ import re
 
 class LRCClient(object):
 
-    def __init__(self):
-        self.is_working = False
-        self.server_address = ('localhost', 33520)
-        self.round = -1
+    def __init__(self, message_encoding='utf-8'):
+        self.server_address = None
+        self.waiter_address = None
+        self.socket = socket(AF_INET, SOCK_DGRAM)
+        self.message_encoding = message_encoding
 
     # interfaces
-    def start(self):
-        self.round += 1
-        s = socket(AF_INET, SOCK_DGRAM)
+    def connect(self, server_address):
+        self.server_address = server_address
+        self.socket.sendto(self.encode_message('hello'), server_address)
+        msg, server_address = self.socket.recvfrom(1024)
+        self.waiter_address = self.parse_address_from_message(msg)
+        print('parse waiter address from :', msg, 'with waiter address :', self.waiter_address)
 
-        s.sendto(('hello from %d' % self.round).encode('utf-8'), self.server_address)
-        msg, server_address = s.recvfrom(1024)
-        print('got hello back :', msg)
-        print('       address :', server_address)
+    def send_message(self, message):
+        self.socket.sendto(self.encode_message(message), self.waiter_address)
 
-        waiter_address = self.parse_address_from_message(msg)
-        print('got waiter address :', waiter_address)
+    def send_combinations(self, *args):
+        self.send_message(self.make_message_from_key_combinations(*args))
 
-        s.sendto('a'.encode('utf-8'), waiter_address)
-        s.sendto('d'.encode('utf-8'), waiter_address)
-
-        pass
-
-    def stop(self):
-        pass
+    def make_message_from_key_combinations(self, *args):
+        msg = []
+        if len(args):
+            msg.append(args[0])
+            for key in args[1:]:
+                msg.append('+')
+                msg.append(key)
+        return ''.join(msg)
 
     def parse_address_from_message(self, message):
         """ parse_address_from_message
@@ -45,12 +48,22 @@ class LRCClient(object):
         else:
             print('parse_address_from_message : can\'t parse address from message "%s"' % contents)
 
+    def encode_message(self, message):
+        return message.encode(self.message_encoding)
 
 def __test000__():
+    import time
+
+    server_address = ('127.0.0.1',33520)
     client = LRCClient()
-    for round in range(10):
-        client.round = round - 1
-        client.start()
+    client.connect(server_address)
+
+    time.sleep(5)
+    print('start tap keys now')
+
+    client.send_combinations('a')
+    client.send_combinations('a', 'b')
+    client.send_combinations('a', 'd')
     
     pass
 
