@@ -61,10 +61,14 @@ def __test000__():
     time.sleep(5)
     print('start tap keys now')
 
-    client.send_combinations('a')
-    client.send_combinations('a', 'b')
-    client.send_combinations('a', 'd')
-    
+    client.send_combinations('j')
+    client.send_combinations(' ')
+    client.send_combinations('o', 'shift')
+    client.send_combinations(' ')
+    client.send_combinations('k', 'shift')
+    client.send_combinations(' ')
+    client.send_combinations('e', 'r')
+
     pass
 
 

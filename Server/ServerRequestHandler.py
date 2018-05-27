@@ -15,8 +15,7 @@ class ServerRequestHandler(BaseRequestHandler):
         BaseRequestHandler.__init__(self, request, client_address, server)
 
     def handle(self): # given clent the waiter address
-        print('SeverProtocol : handling request from', self.client_address)
-        print('      message :', self.request[0])
+        # print('ServerRequestHandler : handling request from', self.client_address, 'with message', self.request[0])
         self.server.sendto( str(self.server.waiter_address) , self.client_address )
 
 
@@ -27,7 +26,5 @@ class WaiterRequestHandler(BaseRequestHandler):
         BaseRequestHandler.__init__(self, request, client_address, server)
 
     def handle(self): # respond to short_cut_key
-        print('WaiterProtocol : handling request from', self.client_address)
-        print('      message :', self.request[0])
+        # print('WaiterProtocol : handling request from', self.client_address, 'with message', self.request[0])
         pass
-
