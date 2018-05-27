@@ -8,16 +8,13 @@ class ServerProtocol(BaseServerProtocol):
     def __init__(self, request, client_address, server):
         BaseServerProtocol.__init__(self, request, client_address, server)
 
-    def handle(self):
+    def handle(self): # given clent the waiter address
+        print('SeverProtocol : handling request from', self.client_address)
+        print('      message :', self.request[0])
+        self.server.socket.sendto( str(self.server.waiter_address).encode('utf-8'), self.client_address )
 
-        pass
 
-    def next(self):
-
-        pass
-
-    pass
-
+#import PyUserInput
 
 class WaiterProtocol(BaseServerProtocol):
 
@@ -26,10 +23,8 @@ class WaiterProtocol(BaseServerProtocol):
     def __init__(self, request, client_address, server):
         BaseServerProtocol.__init__(self, request, client_address, server)
 
+    def handle(self): # respond to short_cut_key
+        print('WaiterProtocol : handling request from', self.client_address)
+        print('      message :', self.request[0])
+        pass
 
-    pass
-
-
-def ValidateServer(server_class):
-    ServerProtocol.validate(server_class)
-    WaiterProtocol.validate(server_class)

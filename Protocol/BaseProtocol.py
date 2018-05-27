@@ -50,9 +50,4 @@ class BaseProtocol:
                 print(server_or_client_class.__name__, 'do not have necessary attribute', attr, 'for protocol', cls.__name__)
         return avail
 
-    def next(self):
-        """next step as expected
-        :return:
-        """
-        pass
 
