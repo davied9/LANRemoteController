@@ -40,7 +40,7 @@ class LRCClient(object):
         # match ipv4 address
         ip = re.findall(r"'[\w\.]+'", contents)
         port = re.findall(r"\d+", contents)
-        if len(ip) == 1 and ( len(port) == 1 or len(port) == 5):
+        if len(ip) == 1 and ( len(port) == 1 or len(port) == 5 ):
             return (ip[0][1:-1], int(port[-1]))
         else:
             print('parse_address_from_message : can\'t parse address from message "%s"' % contents)

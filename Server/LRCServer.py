@@ -1,26 +1,23 @@
 from __future__ import print_function
 
-from socket import *
-from multiprocessing import Process
-from threading import Thread
-
 try: # python 2
-    from SocketServer import UDPServer, BaseRequestHandler
+    from SocketServer import UDPServer
 except ImportError:  # python 3
-    from socketserver import UDPServer, BaseRequestHandler
+    from socketserver import UDPServer
 except:
-    print('can not import packages for Server.')
+    print('can not import packages for UDPServer.')
 finally:
     pass
 
-from Protocol import v1
+from ServerRequestHandler import ServerRequestHandler, WaiterRequestHandler
+
 
 class LRCServer ( UDPServer, object ):
 
     allow_reuse_address = True
 
     def __init__(self, server_address, waiter_address ):
-        UDPServer.__init__( self, server_address, v1.ServerProtocol )
+        UDPServer.__init__( self, server_address, ServerRequestHandler )
         # self.socket.setblocking(False)
         self.waiter_address = waiter_address
 
@@ -29,11 +26,13 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
     allow_reuse_address = True
 
     def __init__(self, server_address ):
-        UDPServer.__init__( self, server_address, v1.WaiterProtocol )
+        UDPServer.__init__( self, server_address, WaiterRequestHandler )
 
         
 def test000_async_server():
     import time
+    from multiprocessing import Process
+    from threading import Thread
 
     waiter_address = ('127.0.0.1',33555)
     server_address = ('127.0.0.1',33520)
@@ -55,9 +54,9 @@ def test000_async_server():
     time.sleep(15)
     server.shutdown()
     waiter.shutdown()
-    print('close server from outside', server._BaseServer__is_shut_down.is_set(), waiter._BaseServer__is_shut_down.is_set())
-    print('serve thread  :', st)
-    print('waiter thread  :', wt)
+    print('force to close server ')
+    print('serve thread  :', st, '-- closed :', server._BaseServer__is_shut_down.is_set())
+    print('waiter thread  :', wt, '-- closed :', waiter._BaseServer__is_shut_down.is_set())
     pass
 
 

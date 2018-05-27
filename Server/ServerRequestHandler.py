@@ -1,12 +1,20 @@
-from Protocol import BaseServerProtocol
+
+try: # python 2
+    from SocketServer import UDPServer, BaseRequestHandler
+except ImportError:  # python 3
+    from socketserver import UDPServer, BaseRequestHandler
+except:
+    print('can not import packages for Server.')
+finally:
+    pass
+
+from PyUserInput import *
 
 
-class ServerProtocol(BaseServerProtocol):
-
-    necessary_attributes = []
+class ServerRequestHandler(BaseRequestHandler):
 
     def __init__(self, request, client_address, server):
-        BaseServerProtocol.__init__(self, request, client_address, server)
+        BaseRequestHandler.__init__(self, request, client_address, server)
 
     def handle(self): # given clent the waiter address
         print('SeverProtocol : handling request from', self.client_address)
@@ -14,12 +22,11 @@ class ServerProtocol(BaseServerProtocol):
         self.server.socket.sendto( str(self.server.waiter_address).encode('utf-8'), self.client_address )
 
 
-class WaiterProtocol(BaseServerProtocol):
 
-    necessary_attributes = []
+class WaiterRequestHandler(BaseRequestHandler):
 
     def __init__(self, request, client_address, server):
-        BaseServerProtocol.__init__(self, request, client_address, server)
+        BaseRequestHandler.__init__(self, request, client_address, server)
 
     def handle(self): # respond to short_cut_key
         print('WaiterProtocol : handling request from', self.client_address)

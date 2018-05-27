@@ -7,6 +7,9 @@
       <sourceFolder url="file://$MODULE_DIR$/Server" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Protocol/v1" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Test" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/PyUserInput" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/PyUserInput/pykeyboard" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/PyUserInput/pymouse" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
