@@ -10,7 +10,7 @@ class LRCServerUI(App):
         # up : start/stop buttons
         up_grid = GridLayout(cols=6, padding=10, spacing=10, size_hint_max_y=100)
         self.main.add_widget(up_grid)
-        up_grid.add_widget(Button(text="Start Server", size_hint_max_x=140))
+        up_grid.add_widget(Button(text="Start Server", size_hint_max_x=140, on_press=self.response))
         up_grid.add_widget(Label(text="IP", size_hint_max_x=40))
         up_grid.add_widget(TextInput(text='text default', size_hint_max_x=140))
         up_grid.add_widget(Label(text="Port", size_hint_max_x=60))
@@ -26,9 +26,21 @@ class LRCServerUI(App):
         self.main.add_widget(Label(text='Log window', size_hint=[0.9, 0.9], pos_hint={'center_x': 0.5, 'center_y': 0.5}))
         return self.main
 
+    def on_start(self):
+        try:
+            win = self.root.get_root_window()
+            win.minimum_width, win.minimum_height = 800, 600
+        except:
+            pass
+        finally:
+            pass
+
+    def response(self, inst):
+        print('Got ', inst)
 
 def __test001_basics():
     LRCServerUI().run()
+    print('Done running')
     pass
 
 
