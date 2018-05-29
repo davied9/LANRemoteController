@@ -5,7 +5,7 @@ from multiprocessing import Process
 from threading import Thread
 from random import randint
 from time import sleep
-
+import re
 
 def start_LRCServer(server_address, waiter_address, verify_code):
     from LRCServer import LRCServer
@@ -32,11 +32,11 @@ class LRCServerUI(App):
         up_grid = GridLayout(cols=6, padding=10, spacing=10, size_hint_max_y=100)
         self.root.add_widget(up_grid)
         self.server_button      = Button(text="Start Server", size_hint_max_x=140, on_press=self.on_start_server_pressed)
-        self.server_info_label  = Label()
+        self.server_info_label  = Label(halign='left')
         self.server_ip_input    = TextInput(text=self.server_address[0], size_hint_max_x=140)
         self.server_port_input  = TextInput(text=str(self.server_address[1]), size_hint_max_x=140)
         self.waiter_button      = Button(text="Start Waiter", on_press=self.on_start_waiter_pressed)
-        self.waiter_info_label  = Label()
+        self.waiter_info_label  = Label(halign='left')
         self.waiter_ip_input    = TextInput(text=self.waiter_address[0])
         self.waiter_port_input  = TextInput(text=str(self.waiter_address[1]))
         up_grid.add_widget(self.server_button)
@@ -54,6 +54,8 @@ class LRCServerUI(App):
         #   down : log window
         self.log_window = Label(text='Log window', size_hint=[0.9, 0.9], pos_hint={'center_x': 0.5, 'center_y': 0.5})
         self.root.add_widget(self.log_window)
+        # regexp
+        self.ip_matcher = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
         return self.root
 
     def on_start(self):
@@ -61,15 +63,31 @@ class LRCServerUI(App):
         if win:
             win.minimum_width, win.minimum_height = 800, 600
 
+    def on_stop(self):
+        self.stop_waiter()
+        self.stop_server()
+
     def log(self, *args):
         print(*args)
 
-    @staticmethod
-    def parse_ip(str):
+    def parse_ip(self, str):
+        if '' == str or 'localhost' == str:
+            str = '127.0.0.1'
+        else:
+            vols, = self.ip_matcher.findall(str)
+            if len(vols) != 4:
+                raise ValueError('ip not correct, must be "xxx.xxx.xxx.xxx", "xxx" should between [0,255]')
+            ip_list = []
+            for vol in vols:
+                val = int(vol)
+                if val < 0 or val > 255:
+                    raise ValueError('ip should be between [0,255], found %d' % val)
+                ip_list.append(vol)
+                ip_list.append('.')
+            str = ''.join(ip_list[:-1])
         return str
 
-    @staticmethod
-    def parse_port(str):
+    def parse_port(self, str):
         port = int(str)
         if port > 10000 and port < 49999:
             return port
@@ -83,7 +101,7 @@ class LRCServerUI(App):
             server_address = (ip, port)
         except ValueError as err:
             server_address = None
-            self.log('start server failed :', err.args)
+            self.log('start server failed, unable to parse ip or port :', err.args)
         finally:
             pass
         if server_address:
@@ -96,7 +114,7 @@ class LRCServerUI(App):
             self.server_port_input.disabled = True
             self.server_process = Process(target=start_LRCServer, args=(self.server_address, self.waiter_address, self.server_code))
             self.server_process.start()
-            Thread(target=self.server_watcher).start()
+            Thread(target=self._server_watcher).start()
 
     def stop_server(self):
         if self.server_process:
@@ -116,7 +134,7 @@ class LRCServerUI(App):
             waiter_address = (ip, port)
         except ValueError as err:
             waiter_address = None
-            self.log('start server failed :', err.args)
+            self.log('start server failed, unable to parse ip or port :', err.args)
         finally:
             pass
         if waiter_address:
@@ -128,7 +146,7 @@ class LRCServerUI(App):
             self.waiter_port_input.disabled = True
             self.waiter_process = Process(target=start_LRCWaiter, args=(self.waiter_address, ))
             self.waiter_process.start()
-            Thread(target=self.waiter_watcher).start()
+            Thread(target=self._waiter_watcher).start()
 
     def stop_waiter(self):
         if self.waiter_process:
@@ -140,7 +158,7 @@ class LRCServerUI(App):
             self.waiter_ip_input.disabled = False
             self.waiter_port_input.disabled = False
 
-    def server_watcher(self):
+    def _server_watcher(self):
         while True:
             if not self.server_process:
                 break
@@ -149,7 +167,7 @@ class LRCServerUI(App):
                 break
             sleep(self.watch_interval)
 
-    def waiter_watcher(self):
+    def _waiter_watcher(self):
         while True:
             if not self.waiter_process:
                 break
