@@ -1,15 +1,6 @@
 # -*-coding:utf-8-*-
 from __future__ import print_function
-from multiprocessing import Process, Pool, Manager
 from Common.KivyImporter import *
-
-
-def print_hello():
-    print('hello')
-
-
-def print_hello_from(obj):
-    print('hello from', obj)
 
 
 class LRCCodeUI(App):
@@ -33,13 +24,7 @@ class LRCCodeUI(App):
             win.size = [130, 60]
 
     def close_this(self, button):
-        print(self.sync_state)
-
-        print('closing Code UI')
         self.sync_state.remove('code UI on')
-
-        print(self.sync_state)
-
         self.stop()
 
 
@@ -68,6 +53,7 @@ class LRCServerUI(App):
         # down : log window
         self.root.add_widget(Label(text='Log window', size_hint=[0.9, 0.9], pos_hint={'center_x': 0.5, 'center_y': 0.5}))
         # sync state
+        from multiprocessing import Manager
         self.sync_state = Manager().list()
         return self.root
 
@@ -77,11 +63,22 @@ class LRCServerUI(App):
             win.minimum_width, win.minimum_height = 800, 600
 
     def response(self, inst):
-        print('Got ', inst)
         from multiprocessing import Process
         self.sync_state.append('code UI on')
-        pr = Process(target = load_code_ui, args=(self.sync_state,))
-        pr.start()
+        Process(target = load_code_ui, args=(self.sync_state,)).start()
+        from threading import Thread
+        Thread(target=self.test_state).start()
+
+    def test_state(self):
+        from time import sleep
+        while True:
+            if 'code UI on' in self.sync_state:
+                print('test_state : still on.')
+                sleep(1)
+            else:
+                print('test_state : closed')
+                break
+
 
 def __test001_basics():
     LRCServerUI().run()
