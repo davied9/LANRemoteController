@@ -1,35 +1,18 @@
 # -*-coding:utf-8-*-
 from __future__ import print_function
 from Common.KivyImporter import *
+from multiprocessing import Process
+from random import randint
+
+def start_LRCServer(server_address, waiter_address):
+    from LRCServer import LRCServer
+    LRCServer(server_address, waiter_address).serve_forever()
 
 
-class LRCCodeUI(App):
+def start_LRCWaiter(server_address):
+    from LRCServer import LRCWaiter
+    LRCWaiter(server_address).serve_forever()
 
-    code_bit_size = 4
-
-    def __init__(self, sync_state):
-        App.__init__(self)
-        self.sync_state = sync_state
-        if self.sync_state is None:
-            print('sync_state needed for LRCCodeUI')
-
-    def build(self):
-        import random
-        self.code = random.randint(10**(LRCCodeUI.code_bit_size-1), 10**LRCCodeUI.code_bit_size-1)
-        return Button(text=str(self.code), on_press=self.close_this)
-
-    def on_start(self):
-        win = self.root.get_root_window()
-        if win:
-            win.size = [130, 60]
-
-    def close_this(self, button):
-        self.sync_state.remove('code UI on')
-        self.stop()
-
-
-def load_code_ui(sync_state):
-    LRCCodeUI(sync_state=sync_state).run()
 
 class LRCServerUI(App):
 
@@ -38,46 +21,75 @@ class LRCServerUI(App):
         # up : start/stop buttons
         up_grid = GridLayout(cols=6, padding=10, spacing=10, size_hint_max_y=100)
         self.root.add_widget(up_grid)
-        up_grid.add_widget(Button(text="Start Server", size_hint_max_x=140, on_press=self.response))
+        self.server_button      = Button(text="Start Server", size_hint_max_x=140, on_press=self.on_start_server_pressed)
+        self.server_info_label  = Label()
+        self.server_ip_input    = TextInput(text='text default', size_hint_max_x=140)
+        self.server_port_input  = TextInput(text='text default', size_hint_max_x=140)
+        self.waiter_button      = Button(text="Start Waiter", on_press=self.on_start_waiter_pressed)
+        self.waiter_info_label  = Label()
+        self.waiter_ip_input    = TextInput(text='text default')
+        self.waiter_port_input  = TextInput(text='text default')
+        up_grid.add_widget(self.server_button)
         up_grid.add_widget(Label(text="IP", size_hint_max_x=40))
-        up_grid.add_widget(TextInput(text='text default', size_hint_max_x=140))
+        up_grid.add_widget(self.server_ip_input)
         up_grid.add_widget(Label(text="Port", size_hint_max_x=60))
-        up_grid.add_widget(TextInput(text='text default', size_hint_max_x=140))
-        up_grid.add_widget(Label())
-        up_grid.add_widget(Button(text="Start Waiter"))
+        up_grid.add_widget(self.server_port_input)
+        up_grid.add_widget(self.server_info_label)
+        up_grid.add_widget(self.waiter_button)
         up_grid.add_widget(Label(text="IP"))
-        up_grid.add_widget(TextInput(text='text default'))
+        up_grid.add_widget(self.waiter_ip_input)
         up_grid.add_widget(Label(text="Port"))
-        up_grid.add_widget(TextInput(text='text default'))
-        up_grid.add_widget(Label())
+        up_grid.add_widget(self.waiter_port_input)
+        up_grid.add_widget(self.waiter_info_label)
         # down : log window
         self.root.add_widget(Label(text='Log window', size_hint=[0.9, 0.9], pos_hint={'center_x': 0.5, 'center_y': 0.5}))
-        # sync state
-        from multiprocessing import Manager
-        self.sync_state = Manager().list()
         return self.root
 
     def on_start(self):
         win = self.root.get_root_window()
         if win:
             win.minimum_width, win.minimum_height = 800, 600
+        # servers
+        self.server_address = ('127.0.0.1', 35530)
+        self.server_process = None
+        self.waiter_address = ('127.0.0.1', 35527)
+        self.waiter_process = None
 
-    def response(self, inst):
-        from multiprocessing import Process
-        self.sync_state.append('code UI on')
-        Process(target = load_code_ui, args=(self.sync_state,)).start()
-        from threading import Thread
-        Thread(target=self.test_state).start()
+    def on_start_server_pressed(self, inst):
+        if self.server_process: # process is running, close it
+            print('terminate server ')
+            self.server_process.terminate()
+            self.server_process = None
+            self.server_button.text = 'Start Server'
+            self.server_info_label.text = ''
+            self.server_ip_input.disabled = False
+            self.server_port_input.disabled = False
+        else: # start new server
+            self.server_process = Process(target=start_LRCServer, args=(self.server_address, self.waiter_address))
+            print('start server at :', self.server_address)
+            self.server_process.start()
+            self.server_button.text = 'Close Server'
+            self.server_info_label.text = 'code : ' + str(randint(1000, 9999)) + ', running ...'
+            self.server_ip_input.disabled = True
+            self.server_port_input.disabled = True
 
-    def test_state(self):
-        from time import sleep
-        while True:
-            if 'code UI on' in self.sync_state:
-                print('test_state : still on.')
-                sleep(1)
-            else:
-                print('test_state : closed')
-                break
+    def on_start_waiter_pressed(self, inst):
+        if self.waiter_process: # process is running, close it
+            print('terminate waiter ')
+            self.waiter_process.terminate()
+            self.waiter_process = None
+            self.waiter_button.text = 'Start Waiter'
+            self.waiter_info_label.text = ''
+            self.waiter_ip_input.disabled = False
+            self.waiter_port_input.disabled = False
+        else: # start new waiter
+            self.waiter_process = Process(target=start_LRCWaiter, args=(self.waiter_address, ))
+            print('start waiter at :', self.waiter_address)
+            self.waiter_process.start()
+            self.waiter_button.text = 'Close Waiter'
+            self.waiter_info_label.text = 'running ...'
+            self.waiter_ip_input.disabled = True
+            self.waiter_port_input.disabled = True
 
 
 def __test001_basics():
