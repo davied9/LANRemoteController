@@ -54,7 +54,7 @@ class LRCClient(object):
 def __test000__():
     import time
 
-    server_address = ('127.0.0.1',33520)
+    server_address = ('127.0.0.1',35530)
     client = LRCClient()
     client.connect(server_address)
 

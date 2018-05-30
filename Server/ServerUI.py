@@ -57,7 +57,9 @@ class LRCServerUI(App):
         up_grid.add_widget(self.waiter_port_input)
         up_grid.add_widget(self.waiter_info_label)
         #   down : log window
-        self.log_window = Label(text='Log window', size_hint=[0.9, 0.9], pos_hint={'center_x': 0.5, 'center_y': 0.5})
+        self.log_window = Label(text='', size_hint=[0.9, 0.9], pos_hint={'center_x': 0.5, 'center_y': 0.5},
+                                halign='left', valign='top')
+        self.log_window.bind(size=self._sync_size_to_text_size)
         self.root.add_widget(self.log_window)
         # regexp
         self.ip_matcher = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
