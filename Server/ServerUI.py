@@ -9,12 +9,15 @@ import re
 
 def start_LRCServer(server_address, waiter_address, verify_code):
     from LRCServer import LRCServer
-    LRCServer(server_address, waiter_address, verify_code).serve_forever()
+    LRCServer(server_address=server_address,
+              waiter_address=waiter_address,
+              verify_code=verify_code).serve_forever()
 
 
-def start_LRCWaiter(server_address):
+def start_LRCWaiter(waiter_address, server_address):
     from LRCServer import LRCWaiter
-    LRCWaiter(server_address).serve_forever()
+    LRCWaiter(waiter_address=waiter_address,
+              connect_server_address=server_address).serve_forever()
 
 
 class LRCServerUI(App):
@@ -133,9 +136,12 @@ class LRCServerUI(App):
             self.server_port_input.disabled = False
 
     def start_waiter(self):
+        if not self.server_process:
+            self.log('server should be started first')
+            return
         try:
-            ip = self.parse_ip(self.server_ip_input.text)
-            port = self.parse_port(self.server_port_input.text)
+            ip = self.parse_ip(self.waiter_ip_input.text)
+            port = self.parse_port(self.waiter_port_input.text)
             waiter_address = (ip, port)
         except ValueError as err:
             waiter_address = None
@@ -144,12 +150,12 @@ class LRCServerUI(App):
             pass
         if waiter_address:
             self.waiter_address = waiter_address
-            self.log('start waiter at :', self.waiter_address)
+            self.log('start waiter at :', self.waiter_address, ' binded to server ', self.server_address)
             self.waiter_button.text = 'Close Waiter'
             self.waiter_info_label.text = 'running ...'
             self.waiter_ip_input.disabled = True
             self.waiter_port_input.disabled = True
-            self.waiter_process = Process(target=start_LRCWaiter, args=(self.waiter_address, ))
+            self.waiter_process = Process(target=start_LRCWaiter, args=(self.waiter_address, self.server_address ))
             self.waiter_process.start()
             Thread(target=self._waiter_watcher).start()
 

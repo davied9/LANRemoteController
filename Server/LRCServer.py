@@ -16,10 +16,11 @@ class LRCServer ( UDPServer, object ):
 
     allow_reuse_address = True
 
-    def __init__(self, server_address, waiter_address, message_encoding='utf-8' ):
+    def __init__(self, server_address, waiter_address, verify_code, message_encoding='utf-8' ):
         UDPServer.__init__( self, server_address, ServerRequestHandler )
         self.waiter_address = waiter_address
         self.message_encoding = message_encoding
+        self.verify_code = verify_code
 
     def encode_message(self, message):
         return message.encode(self.message_encoding)
@@ -38,9 +39,10 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
 
     allow_reuse_address = True
 
-    def __init__(self, server_address, message_encoding='utf-8' ):
-        UDPServer.__init__( self, server_address, WaiterRequestHandler )
+    def __init__(self, waiter_address, connect_server_address, message_encoding='utf-8' ):
+        UDPServer.__init__( self, waiter_address, WaiterRequestHandler )
         self.message_encoding = message_encoding
+        self.connect_server_address = connect_server_address
         self.keyboard = PyKeyboard()
         self.key_matcher = re.compile(r'[a-zA-Z]+')
         self.__make_functional_key_dict()
@@ -94,9 +96,9 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
         key_combination = self.parse_key_combination_message(message)
         try:
             self.keyboard.press_keys(key_combination)
-            print('pressing keys :', key_combination)
+            print('pressing keys from ', client_address, ' :', key_combination)
         except Exception as err:
-            print('can\'t press key ', key_combination, ':', err.args)
+            print('can\'t press key from ', client_address, key_combination, ':', err.args)
         finally:
             pass
 
@@ -106,10 +108,10 @@ def test000_async_server():
     from multiprocessing import Process
     from threading import Thread
 
-    waiter_address = ('127.0.0.1',33555)
-    server_address = ('127.0.0.1',33520)
+    waiter_address = ('127.0.0.1',35527)
+    server_address = ('127.0.0.1',35530)
 
-    waiter = LRCWaiter(server_address=waiter_address)
+    waiter = LRCWaiter(waiter_address=waiter_address, connect_server_address=server_address)
     server = LRCServer(server_address=server_address, waiter_address=waiter_address)
 
     st = Thread(target=server.serve_forever)
