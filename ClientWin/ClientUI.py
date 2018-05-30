@@ -20,13 +20,20 @@ Builder.load_string('''
                 size_hint_max_x: 30
         Widget:
             size_hint_max_y: 10
-        BoxLayout:
-            id: controller_container
-            orientation: 'vertical'
-            padding: 20
-            spacing: 10
-            Button:
-                text: 'test'
+        ScrollView:
+            text: 'just fine'
+            do_scroll_x: False
+            size_hint: 1, 1
+            BoxLayout:
+                id: controller_container
+                orientation: 'vertical'
+                padding: 20
+                spacing: 10
+                size_hint: 1, None  # this will make this not in control of its parent
+                Button:
+                    text: 'test'
+                    size_hint_max_y: 50
+                Widget:
 <ControllerScreen>:
     Button:
         text: 'controller'
@@ -36,14 +43,21 @@ Builder.load_string('''
 ''')
 
 
+
 class ControlSetScreen(Screen): # gallery of controller sets
+
+    def test_fun(self, *args):
+        print('test ', *args)
 
     def __init__(self, **kwargs):
         Screen.__init__(self, **kwargs)
-
+        # self.controller_container.bind(minimum_height=self.controller_container.setter('height'))
 
     def _add_control_set(self):
-        self.controller_container.add_widget(Button(text='joker'))
+        place_holder = self.controller_container.children[0]
+        self.controller_container.remove_widget(place_holder)
+        self.controller_container.add_widget(Button(text='joker', size_hint_min_y=50))
+        self.controller_container.add_widget(place_holder)
 
     pass
 
