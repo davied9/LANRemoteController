@@ -32,11 +32,13 @@ class LRCServerUI(App):
         up_grid = GridLayout(cols=6, padding=10, spacing=10, size_hint_max_y=100)
         self.root.add_widget(up_grid)
         self.server_button      = Button(text="Start Server", size_hint_max_x=140, on_press=self.on_start_server_pressed)
-        self.server_info_label  = Label(halign='left')
+        self.server_info_label  = Label(halign='left', valign='center')
+        self.server_info_label.bind(size=self._sync_size_to_text_size)
         self.server_ip_input    = TextInput(text=self.server_address[0], size_hint_max_x=140)
         self.server_port_input  = TextInput(text=str(self.server_address[1]), size_hint_max_x=140)
         self.waiter_button      = Button(text="Start Waiter", on_press=self.on_start_waiter_pressed)
-        self.waiter_info_label  = Label(halign='left')
+        self.waiter_info_label  = Label(halign='left', valign='center')
+        self.waiter_info_label.bind(size=self._sync_size_to_text_size)
         self.waiter_ip_input    = TextInput(text=self.waiter_address[0])
         self.waiter_port_input  = TextInput(text=str(self.waiter_address[1]))
         up_grid.add_widget(self.server_button)
@@ -69,6 +71,9 @@ class LRCServerUI(App):
 
     def log(self, *args):
         print(*args)
+
+    def _sync_size_to_text_size(self, component, new_size):
+        component.text_size = new_size
 
     def parse_ip(self, str):
         if '' == str or 'localhost' == str:
