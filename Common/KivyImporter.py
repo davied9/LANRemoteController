@@ -9,9 +9,11 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.lang.builder import Builder
+from kivy.uix.screenmanager import Screen, ScreenManager
 
 
-__all__ = (['kivy', 'Builder', 'App', 'Widget',
-            'Label', 'Button', 'TextInput',
+__all__ = (['kivy', 'Builder', 'App',
+            'Screen', 'ScreenManager',
+            'Widget','Label', 'Button', 'TextInput',
             'GridLayout', 'BoxLayout',
             ])
