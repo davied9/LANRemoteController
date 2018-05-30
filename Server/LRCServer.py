@@ -9,15 +9,13 @@ except:
 finally:
     pass
 
-from ServerRequestHandler import ServerRequestHandler, WaiterRequestHandler
-
 
 class LRCServer ( UDPServer, object ):
 
     allow_reuse_address = True
 
     def __init__(self, server_address, waiter_address, verify_code, message_encoding='utf-8' ):
-        UDPServer.__init__( self, server_address, ServerRequestHandler )
+        UDPServer.__init__( self, server_address, None )
         self.waiter_address = waiter_address
         self.message_encoding = message_encoding
         self.verify_code = verify_code
@@ -28,6 +26,8 @@ class LRCServer ( UDPServer, object ):
     def sendto(self, message, client_address):
         self.socket.sendto(self.encode_message(message), client_address)
 
+    def finish_request(self, request, client_address):
+        self.sendto( str(self.waiter_address) , client_address )
 
 class KeyCombinationParseError(Exception):
     pass
@@ -40,7 +40,7 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
     allow_reuse_address = True
 
     def __init__(self, waiter_address, connect_server_address, message_encoding='utf-8' ):
-        UDPServer.__init__( self, waiter_address, WaiterRequestHandler )
+        UDPServer.__init__( self, waiter_address, None )
         self.message_encoding = message_encoding
         self.connect_server_address = connect_server_address
         self.keyboard = PyKeyboard()
@@ -91,7 +91,6 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
 
     def finish_request(self, request, client_address):
         """Finish one request by instantiating RequestHandlerClass."""
-        self.RequestHandlerClass(request, client_address, self)
         message = self.decode_message(request[0])
         key_combination = self.parse_key_combination_message(message)
         try:
