@@ -10,10 +10,11 @@ from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.lang.builder import Builder
 from kivy.uix.screenmanager import Screen, ScreenManager
+from kivy.uix.scrollview import ScrollView
 
 
 __all__ = (['kivy', 'Builder', 'App',
             'Screen', 'ScreenManager',
             'Widget','Label', 'Button', 'TextInput',
-            'GridLayout', 'BoxLayout',
+            'GridLayout', 'BoxLayout', 'ScrollView',
             ])
