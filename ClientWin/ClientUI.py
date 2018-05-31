@@ -1,35 +1,35 @@
 from Common.KivyImporter import *
+from kivy.uix.screenmanager import CardTransition, SwapTransition, ShaderTransition, SlideTransition
+from kivy.uix.screenmanager import WipeTransition, FadeTransition, FallOutTransition, RiseInTransition
+
 
 Builder.load_string('''
-<ControllerSetScreen>:
+<ControllerCollectionScreen>:
     controller_set_scrollview: controller_set_scrollview
     controller_set_container: controller_set_container
     size_hint_min: 400, 600
     BoxLayout:
         orientation: 'vertical'
-        Widget:
-            size_hint_max_y: 30
+        padding: 30, 30
         BoxLayout:
             orientation: 'horizontal'
             size_hint_max_y: 50
-            Widget:
+            Label:
+                id: title_label
+                text: 'Collections'
+                font_size: 43
             Button:
                 text: 'Add'
                 size_hint_max: 50, 50
-                on_release: root._goto_screen('Controller Set Builder')
-            Widget:
-                size_hint_max_x: 30
+                on_release: root.manager.current = 'Controller Collection Builder'
         Widget:
-            size_hint_max_y: 10
+            size_hint_max_y: 30
         ScrollView:
             id: controller_set_scrollview
             do_scroll_x: False
-            size: self.size
-            size_hint: 1, 1
             GridLayout:
                 id: controller_set_container
                 cols: 1
-                padding: 20
                 spacing: 10
                 size_hint: 1, None  # this will make this not in control of its parent
                 height: 180
@@ -37,18 +37,83 @@ Builder.load_string('''
                     text: 'test'
                     size_hint: 1, None
                     height: 150
-                    on_release: root._goto_screen('Controller')
+                    on_release: root.manager.current = 'Controller'
+
+
 <ControllerScreen>:
-    Button:
-        text: 'controller'
-<ControllerSetBuildScreen>:
-    Button:
-        text: 'building'
+    button_container: button_container
+    title_label: title_label
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 30, 30
+        BoxLayout:
+            size_hint_max_y: 50
+            Button:
+                text: 'Back'
+                size_hint_max_x: 50
+                on_release: root.manager.current = 'Controller Collections'
+            Label:
+                id: title_label
+                text: 'Default'
+                font_size: 43
+            Button:
+                text: 'Edit'
+                size_hint_max_x: 50
+                on_release: root.manager.current = 'Controller Collection Builder'
+        Widget:
+            size_hint_max_y: 30
+        ScrollView:
+            do_scroll_x: False
+            GridLayout:
+                id: button_container
+                cols: 1
+                size_hint: 1, None
+                height: 80
+                Button:
+                    text: 'controller'
+
+
+<ControllerCollectionBuildScreen>:
+    display_title: title_label
+    button_container: button_container
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 30, 30
+        Label:
+            id: title_label
+            text: 'Builder'
+            size_hint_max_y: 80
+            font_size: 43
+        ScrollView:
+            do_scroll_x: False
+            GridLayout:
+                id: button_container
+                cols: 1
+                size_hint: 1, None
+                height: 80
+                Button:
+                    text: 'new'
+        BoxLayout:
+            size_hint_max_y: 50
+            padding: 10, 0
+            Button:
+                text: 'Back'
+                size_hint_max_x: 50
+                on_release: root.manager.current = 'Controller Collections'
+            Widget:
+            Button:
+                text: 'Save'
+                size_hint_max_x: 50
+                on_release:
+            Widget:
+            Button:
+                text: 'Add'
+                size_hint_max_x: 50
 ''')
 
 
 
-class ControllerSetScreen(Screen): # gallery of controller sets
+class ControllerCollectionScreen(Screen): # gallery of controller sets
 
     def test_fun(self, *args):
         print('test ', *args)
@@ -70,9 +135,6 @@ class ControllerSetScreen(Screen): # gallery of controller sets
 
     def _add_controller_set_button(self):
         pass
-
-    def _goto_screen(self, screen):
-        self.manager.current = screen
 
     def _add_control_set(self):
         self.controller_set_container.add_widget(Button(text='joker {0}'.format(self.index), size_hint=(1,None), height=50))
@@ -99,32 +161,32 @@ class ControllerScreen(Screen): # controller operation room
 
     pass
 
-class ControllerSetBuildScreen(Screen):
-
+class ControllerCollectionBuildScreen(Screen):
 
     pass
 
 class ClientUI(App):
 
     def build(self):
-        self.screen_manager = ScreenManager()
+        self.screen_manager = ScreenManager(transition=RiseInTransition())
 
-        self.controller_set_screen = ControllerSetScreen(name='Controller Set')
+        self.controller_set_screen = ControllerCollectionScreen(name='Controller Collections')
         self.screen_manager.add_widget(self.controller_set_screen)
 
-        self.controller_set_builder_screen = ControllerSetBuildScreen(name='Controller Set Builder')
+        self.controller_set_builder_screen = ControllerCollectionBuildScreen(name='Controller Collection Builder')
         self.screen_manager.add_widget(self.controller_set_builder_screen)
 
         self.controller_screen = ControllerScreen(name='Controller')
         self.screen_manager.add_widget(self.controller_screen)
 
-        self.screen_manager.current = 'Controller Set'
+        self.screen_manager.current = 'Controller Collections'
         return self.screen_manager
 
     def on_start(self):
         win = self.root.get_root_window()
         if win:
             win.minimum_width, win.minimum_height = [400, 600]
+            win.size = [400, 600]
 
     def on_test(self, inst):
         pass
