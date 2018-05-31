@@ -16,7 +16,7 @@ Builder.load_string('''
             Button:
                 text: 'Add'
                 size_hint_max: 50, 50
-                on_release: root._add_control_set()
+                on_release: root._goto_screen('Controller Set Builder')
             Widget:
                 size_hint_max_x: 30
         Widget:
@@ -26,9 +26,9 @@ Builder.load_string('''
             do_scroll_x: False
             size: self.size
             size_hint: 1, 1
-            BoxLayout:
+            GridLayout:
                 id: controller_set_container
-                orientation: 'vertical'
+                cols: 1
                 padding: 20
                 spacing: 10
                 size_hint: 1, None  # this will make this not in control of its parent
@@ -37,6 +37,7 @@ Builder.load_string('''
                     text: 'test'
                     size_hint: 1, None
                     height: 150
+                    on_release: root._goto_screen('Controller')
 <ControllerScreen>:
     Button:
         text: 'controller'
@@ -57,12 +58,25 @@ class ControllerSetScreen(Screen): # gallery of controller sets
         self.index = 0
 
     def on_start(self):
-        self.controller_set_container.bind(minimum_height=self.controller_set_container.setter('height'))
         pass
+
+    def on_pre_enter(self, *args):
+        for _set in self._load_controller_set_from_local():
+            self._add_controller_set_button()
+        pass
+
+    def _load_controller_set_from_local(self):
+        return []
+
+    def _add_controller_set_button(self):
+        pass
+
+    def _goto_screen(self, screen):
+        self.manager.current = screen
 
     def _add_control_set(self):
         self.controller_set_container.add_widget(Button(text='joker {0}'.format(self.index), size_hint=(1,None), height=50))
-        self.controller_set_container.height += (50 + self.controller_set_container.spacing)
+        self.controller_set_container.height += (50 + self.controller_set_container.spacing[-1])
         self.index += 1
         print('pressed {0} times :'.format(self.index))
         self._print_scroll_view_content()
@@ -74,7 +88,7 @@ class ControllerSetScreen(Screen): # gallery of controller sets
         print('        pos {0}, size {1}'.format(self.controller_set_container.pos, self.controller_set_container.size))
         print('    children buttons :')
         for ix in range(len(self.controller_set_container.children)):
-            print('        {0} :', ix)
+            print('        {0} :'.format(ix))
             print('            pos {0}, size {1}'.format(self.controller_set_container.children[ix].pos, self.controller_set_container.children[ix].size))
 
 
@@ -86,15 +100,25 @@ class ControllerScreen(Screen): # controller operation room
     pass
 
 class ControllerSetBuildScreen(Screen):
+
+
     pass
 
 class ClientUI(App):
 
     def build(self):
         self.screen_manager = ScreenManager()
-        self.control_set_screen = ControllerSetScreen(name='Set')
-        self.screen_manager.add_widget(self.control_set_screen)
-        self.screen_manager.current = 'Set'
+
+        self.controller_set_screen = ControllerSetScreen(name='Controller Set')
+        self.screen_manager.add_widget(self.controller_set_screen)
+
+        self.controller_set_builder_screen = ControllerSetBuildScreen(name='Controller Set Builder')
+        self.screen_manager.add_widget(self.controller_set_builder_screen)
+
+        self.controller_screen = ControllerScreen(name='Controller')
+        self.screen_manager.add_widget(self.controller_screen)
+
+        self.screen_manager.current = 'Controller Set'
         return self.screen_manager
 
     def on_start(self):
