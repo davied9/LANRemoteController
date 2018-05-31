@@ -1,9 +1,57 @@
 from KivyImporter import *
 
+Builder.load_string('''
+<ScreenA>:
+    Button:
+        text: 'screen A'
+        on_press: root.to_b()
+        size_hint: 0.3, 0.3
+        pos_hint: {'x':0, 'y':0}
+
+<ScreenB>:
+    Button:
+        text: 'screen B'
+        on_press: root.to_a()
+        size_hint: 0.3, 0.3
+        pos_hint: {'x':0.7, 'y':0.7}
+''')
+
+
+class ScreenA(Screen):
+
+    def to_b(self):
+        print('to b by', self.manager)
+        self.manager.current = "B"
+
+    pass
+
+class ScreenB(Screen):
+
+    def to_a(self):
+        print('to a by', self.manager)
+        self.manager.current  = "A"
+
+    pass
+
+class BuildWithScreen(App):
+
+    def build(self):
+        manager = ScreenManager()
+
+        manager.add_widget(ScreenA(name="A"))
+
+        manager.add_widget(ScreenB(name="B"))
+
+        manager.current  = "B"
+        self.screen_manager = manager
+        return manager
 
 
 
-class Main(App):
+    pass
+
+
+class Directly(App):
 
     def build(self):
         root = BoxLayout(orientation='vertical', padding=30, spacing=10)
@@ -34,5 +82,13 @@ class Main(App):
         text = 'joker {0}'.format(self.index)
         self.scroll_layout.add_widget(Button(text=text, size_hint=(1,None), height=60))
 
+def _test000_directly_build_scroll_view_in_app():
+    Directly().run()
+
+
+def _test001_build_scroll_view_with_screens():
+    BuildWithScreen().run()
+
 if '__main__' == __name__:
-    Main().run()
+    # _test000_directly_build_scroll_view_in_app()
+    _test001_build_scroll_view_with_screens()
