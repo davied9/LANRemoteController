@@ -79,11 +79,13 @@ Builder.load_string('''
         BoxLayout:
             orientation: 'vertical'
             padding: 30, 30
-            Label:
+            Button:
                 id: title_input
                 text: 'Builder'
                 size_hint_max_y: 80
                 font_size: 43
+                background_color: [0, 0, 0, 0]
+                on_release: root._display_set_name_editor(self, self.text)
             ScrollView:
                 do_scroll_x: False
                 GridLayout:
@@ -249,16 +251,16 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
 
     def __init__(self, **kwargs):
         Screen.__init__(self, **kwargs)
-        self.display_title.bind(on_touch_up=self._display_set_name_editor)
 
     def _display_set_name_editor(self, *args):
-        # print('_display_set_name_editor', args)
-        self.display_title.unbind(on_touch_up=self._display_set_name_editor)
+        print('_display_set_name_editor', args)
         # bind size && pos, call sync once manually to sync pos && size
         self.display_title.bind(size=self._sync_display_title_size_to_set_name_editor)
         self.display_title.bind(pos=self._sync_display_title_pos_to_set_name_editor)
         self._sync_display_title_size_to_set_name_editor(self.display_title, self.display_title.size)
         self._sync_display_title_pos_to_set_name_editor(self.display_title, self.display_title.pos)
+        # disable display_title to avoid re-call of _display_set_name_editor
+        self.display_title.disabled = True
         # sync name && unbind display
         self.set_name_editor.text = self.display_title.text
         self.set_name_editor.bind(focused=self._on_focused_set_name_editor)
@@ -270,13 +272,13 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         else:
             self._hide_set_name_editor()
             self.set_name_editor.unbind(focused=self._on_focused_set_name_editor)
-            self.display_title.bind(on_touch_up=self._display_set_name_editor)
             self.display_title.text = self.set_name_editor.text
 
     def _hide_set_name_editor(self, *args):
         # print('_hide_set_name_editor', args)
         self.display_title.unbind(size=self._sync_display_title_size_to_set_name_editor)
         self.display_title.unbind(pos=self._sync_display_title_pos_to_set_name_editor)
+        self.display_title.disabled = False
         self.set_name_editor.size = (1, 1)
         self.set_name_editor.pos = (-50, -50)
 
@@ -319,6 +321,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         pass
 
     def _add_new_button(self, button): #
+        print('hello')
         pass
 
     def _go_back_last_screen(self, button):
