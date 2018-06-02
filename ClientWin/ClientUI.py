@@ -115,6 +115,7 @@ Builder.load_string('''
             size_hint: None, None
             size: 1, 1
             multiline: False
+            is_open: False
 ''')
 
 
@@ -253,7 +254,6 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
     def _display_set_name_editor(self, *args):
         # print('_display_set_name_editor', args)
         self.display_title.unbind(on_touch_up=self._display_set_name_editor)
-
         # bind size && pos, call sync once manually to sync pos && size
         self.display_title.bind(size=self._sync_display_title_size_to_set_name_editor)
         self.display_title.bind(pos=self._sync_display_title_pos_to_set_name_editor)
@@ -262,6 +262,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         # sync name && unbind display
         self.set_name_editor.text = self.display_title.text
         self.set_name_editor.bind(focused=self._on_focused_set_name_editor)
+        self.set_name_editor.is_open = True
 
     def _on_focused_set_name_editor(self, _set_name_eidtor, focused):
         if focused:
@@ -326,6 +327,9 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         last_screen = self.manager.last_screen
         self.manager.last_screen = "Controller Collections"
         self.manager.current = last_screen
+
+        if self.set_name_editor.is_open:
+            self._on_focused_set_name_editor(self.set_name_editor, False)
 
 
 class ClientUI(App):
