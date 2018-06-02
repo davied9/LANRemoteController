@@ -1,8 +1,10 @@
 from Common.KivyImporter import *
 from kivy.uix.screenmanager import CardTransition, SwapTransition, ShaderTransition, SlideTransition
 from kivy.uix.screenmanager import WipeTransition, FadeTransition, FallOutTransition, RiseInTransition
+from kivy.properties import ObjectProperty
 from Common.Exceptions import *
 import os, json
+
 
 Builder.load_string('''
 <ControllerCollectionScreen>:
@@ -65,38 +67,38 @@ Builder.load_string('''
                 id: button_container
                 cols: 1
                 size_hint: 1, None
-                height: 50
+                height: 1
                 spacing: 10
 
 
 <ControllerCollectionBuildScreen>:
-    display_title: title_input
+    display_title: title_button
     button_container: button_container
     background_widget: background_widget
-    set_name_editor: set_name_editor
+    set_name_editor: None
     FloatLayout:
         id: background_widget
         BoxLayout:
             orientation: 'vertical'
             padding: 30, 30
             Button:
-                id: title_input
+                id: title_button
                 text: 'Builder'
                 size_hint_max_y: 80
                 font_size: 43
                 background_color: [0, 0, 0, 0]
-                on_release: root._display_set_name_editor(self, self.text)
+                on_release: root._open_set_name_editor(self, self.text)
             ScrollView:
                 do_scroll_x: False
                 GridLayout:
                     id: button_container
                     cols: 1
                     size_hint: 1, None
-                    height: 50
+                    height: 1
                     spacing: 10
             BoxLayout:
-                size_hint_max_y: 50
-                padding: 10, 0
+                size_hint_max_y: 80
+                padding: 10, 30, 10, 0 # left, top, right, down
                 Button:
                     text: 'Back'
                     size_hint_max_x: 50
@@ -110,14 +112,7 @@ Builder.load_string('''
                 Button:
                     text: 'Add'
                     size_hint_max_x: 50
-                    on_release: root._add_new_button(self)
-        TextInput:
-            id: set_name_editor
-            pos: -50, -50
-            size_hint: None, None
-            size: 1, 1
-            multiline: False
-            is_open: False
+                    on_release: root._create_new_button(self)
 ''')
 
 
@@ -186,7 +181,7 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
 
     def _reset_controller_set_container(self):
         self.controller_set_container.clear_widgets()
-        self.controller_set_container.height = 50
+        self.controller_set_container.height = 1
 
     def _add_controller_set_button(self, controller_set):
         self.controller_set_container.add_widget(Button(
@@ -206,9 +201,6 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
         App.get_running_app().current_edit_set = None
         self.manager.last_screen = "Controller Collections"
         self.manager.current = 'Controller Collection Builder'
-
-
-    pass
 
 
 class ControllerScreen(Screen): # controller operation room
@@ -248,46 +240,68 @@ class ControllerScreen(Screen): # controller operation room
 
 
 class ControllerCollectionBuildScreen(Screen): # controller collection builder
+    '''Controller Collection Build Screen
+    use "set" instead of "Collection" in code for short
+
+    components:
+        display_title:      title Button
+        button_container:   button container for controllers
+        background_widget:  background FloatLayout
+        set_name_editor:    controller collection TextInput
+
+    '''
+
+    set_name_editor = ObjectProperty(None, allownone=True)
 
     def __init__(self, **kwargs):
         Screen.__init__(self, **kwargs)
 
-    def _display_set_name_editor(self, *args):
-        print('_display_set_name_editor', args)
+    # as callback for display_title on_press
+    def _open_set_name_editor(self, *args):
+        print('_open_set_name_editor', args)
+        # disable display_title to avoid re-call of _open_set_name_editor
+        self.display_title.disabled = True
+        # create set_name_editor
+        if self.set_name_editor is None:
+            self.set_name_editor = TextInput(
+                size_hint=[ None, None],
+                font_size=43,
+                multiline=False
+            )
+            self.background_widget.add_widget(self.set_name_editor)
+        self.set_name_editor.size = self.display_title.size
+        self.set_name_editor.pos  = self.display_title.pos
+        self.set_name_editor.text = self.display_title.text
+        self.set_name_editor.bind(focused=self._on_focused_set_name_editor)
         # bind size && pos, call sync once manually to sync pos && size
         self.display_title.bind(size=self._sync_display_title_size_to_set_name_editor)
         self.display_title.bind(pos=self._sync_display_title_pos_to_set_name_editor)
-        self._sync_display_title_size_to_set_name_editor(self.display_title, self.display_title.size)
-        self._sync_display_title_pos_to_set_name_editor(self.display_title, self.display_title.pos)
-        # disable display_title to avoid re-call of _display_set_name_editor
-        self.display_title.disabled = True
-        # sync name && unbind display
-        self.set_name_editor.text = self.display_title.text
-        self.set_name_editor.bind(focused=self._on_focused_set_name_editor)
-        self.set_name_editor.is_open = True
 
+    # as callback for set_name_editor focus
     def _on_focused_set_name_editor(self, _set_name_eidtor, focused):
         if focused:
             self.set_name_editor.select_all()
         else:
-            self._hide_set_name_editor()
-            self.set_name_editor.unbind(focused=self._on_focused_set_name_editor)
-            self.display_title.text = self.set_name_editor.text
+            self._close_set_name_editor()
 
-    def _hide_set_name_editor(self, *args):
-        # print('_hide_set_name_editor', args)
+    def _close_set_name_editor(self, *args):
+        print('_close_set_name_editor', args)
         self.display_title.unbind(size=self._sync_display_title_size_to_set_name_editor)
         self.display_title.unbind(pos=self._sync_display_title_pos_to_set_name_editor)
         self.display_title.disabled = False
-        self.set_name_editor.size = (1, 1)
-        self.set_name_editor.pos = (-50, -50)
+        self.display_title.text = self.set_name_editor.text
+        self.background_widget.remove_widget(self.set_name_editor)
+        self.set_name_editor = None
 
+    # as callback for display_title pos
     def _sync_display_title_pos_to_set_name_editor(self, _display_title, new_pos):
         self.set_name_editor.pos = new_pos
 
+    # as callback for display_title size
     def _sync_display_title_size_to_set_name_editor(self, _display_title, new_size):
         self.set_name_editor.size = new_size
 
+    # as callback for set_name_editor
     def _sync_set_name_to_display_title(self, _set_name_editor, text):
         self.display_title.text = text
 
@@ -307,23 +321,25 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
 
     def _reset_controller_set_container(self):
         self.button_container.clear_widgets()
-        self.button_container.height = 50
+        self.button_container.height = 1
 
+    # add controller button to controller container for exist controller collection
     def _add_controller_button(self, controller):
-        self.button_container.add_widget(Button(
-                text=controller.name,
-                size_hint=(1, None),
-                height=50
-            ))
+        button = Button( text=controller.name, size_hint=(1, None), height=50, on_press=self._edit_current_controller )
+        button.controller = controller
+        self.button_container.add_widget(button)
         self.button_container.height += 60
 
-    def _save_controller_set(self, button): # save this build to a controller set file
+    # as callback for "Save" button -- save this build to a controller set file
+    def _save_controller_set(self, button):
         pass
 
-    def _add_new_button(self, button): #
-        print('hello')
-        pass
+    # as callback for "Add" button -- add button for new created controller
+    def _create_new_button(self, button):
+        new_controller = Controller('New')
+        self._add_controller_button(new_controller)
 
+    # as callback for "Back" button
     def _go_back_last_screen(self, button):
         App.get_running_app().current_edit_set = self.display_title.text
 
@@ -331,11 +347,25 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         self.manager.last_screen = "Controller Collections"
         self.manager.current = last_screen
 
-        if self.set_name_editor.is_open:
-            self._on_focused_set_name_editor(self.set_name_editor, False)
+        if self.set_name_editor:
+            self._close_set_name_editor()
+
+    # as callback for controller button
+    def _edit_current_controller(self, controller_button):
+        print('editing {0} : {1}'.format(controller_button.controller.name, controller_button.controller.buttons) )
 
 
 class ClientUI(App):
+    '''Client Graphic User Interface
+
+    components:
+        screen_manager:                 screen manager
+        screen_manager.last_screen:     last screen
+        controller_sets:                all controller collections loaded from local files
+        current_edit_set:               current edited controller set
+
+    '''
+
 
     def build(self):
         print('working directory : {0}'.format( os.getcwd() ))
@@ -364,8 +394,6 @@ class ClientUI(App):
             win.minimum_width, win.minimum_height = [400, 600]
             win.size = [400, 600]
 
-    def on_test(self, inst):
-        pass
 
 def __test000():
     ClientUI().run()
