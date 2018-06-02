@@ -72,7 +72,10 @@ Builder.load_string('''
 <ControllerCollectionBuildScreen>:
     display_title: title_input
     button_container: button_container
+    background_widget: background_widget
+    set_name_editor: set_name_editor
     FloatLayout:
+        id: background_widget
         BoxLayout:
             orientation: 'vertical'
             padding: 30, 30
@@ -107,8 +110,11 @@ Builder.load_string('''
                     size_hint_max_x: 50
                     on_release: root._add_new_button(self)
         TextInput:
+            id: set_name_editor
+            pos: -50, -50
+            size_hint: None, None
+            size: 1, 1
             multiline: False
-            size_hint: 0.5, 0.1
 ''')
 
 
@@ -239,6 +245,48 @@ class ControllerScreen(Screen): # controller operation room
 
 
 class ControllerCollectionBuildScreen(Screen): # controller collection builder
+
+    def __init__(self, **kwargs):
+        Screen.__init__(self, **kwargs)
+        self.display_title.bind(on_touch_up=self._display_set_name_editor)
+
+    def _display_set_name_editor(self, *args):
+        # print('_display_set_name_editor', args)
+        self.display_title.unbind(on_touch_up=self._display_set_name_editor)
+
+        # bind size && pos, call sync once manually to sync pos && size
+        self.display_title.bind(size=self._sync_display_title_size_to_set_name_editor)
+        self.display_title.bind(pos=self._sync_display_title_pos_to_set_name_editor)
+        self._sync_display_title_size_to_set_name_editor(self.display_title, self.display_title.size)
+        self._sync_display_title_pos_to_set_name_editor(self.display_title, self.display_title.pos)
+        # sync name && unbind display
+        self.set_name_editor.text = self.display_title.text
+        self.set_name_editor.bind(focused=self._on_focused_set_name_editor)
+
+    def _on_focused_set_name_editor(self, _set_name_eidtor, focused):
+        if focused:
+            self.set_name_editor.select_all()
+        else:
+            self._hide_set_name_editor()
+            self.set_name_editor.unbind(focused=self._on_focused_set_name_editor)
+            self.display_title.bind(on_touch_up=self._display_set_name_editor)
+            self.display_title.text = self.set_name_editor.text
+
+    def _hide_set_name_editor(self, *args):
+        # print('_hide_set_name_editor', args)
+        self.display_title.unbind(size=self._sync_display_title_size_to_set_name_editor)
+        self.display_title.unbind(pos=self._sync_display_title_pos_to_set_name_editor)
+        self.set_name_editor.size = (1, 1)
+        self.set_name_editor.pos = (-50, -50)
+
+    def _sync_display_title_pos_to_set_name_editor(self, _display_title, new_pos):
+        self.set_name_editor.pos = new_pos
+
+    def _sync_display_title_size_to_set_name_editor(self, _display_title, new_size):
+        self.set_name_editor.size = new_size
+
+    def _sync_set_name_to_display_title(self, _set_name_editor, text):
+        self.display_title.text = text
 
     def on_pre_enter(self, *args):
         current_app = App.get_running_app()
