@@ -3,6 +3,7 @@ from kivy.uix.screenmanager import CardTransition, SwapTransition, ShaderTransit
 from kivy.uix.screenmanager import WipeTransition, FadeTransition, FallOutTransition, RiseInTransition
 from kivy.properties import ObjectProperty
 from Common.Exceptions import *
+from Controller.LRCController import Controller, ControllerSet, ControllerPackage
 import os, json
 
 
@@ -181,38 +182,6 @@ Builder.load_string('''
             height: 30
         Widget:
 ''')
-
-
-class Controller(object):
-
-    def __init__(self, name, *args):
-        self.name = name
-        self.buttons = []
-        for key in args:
-            self.buttons.append(key)
-
-    def serialize_instance(self):
-        return {self.name:self.buttons}
-
-
-class ControllerSet(object):
-
-    def __init__(self, name, **kwargs):
-        self.name = name
-        self.controllers = {}
-        print('    {0}'.format(self.name))
-        for name, config in kwargs.items():
-            print('        {0} : {1}'.format(name, config))
-            self.controllers[name] = (Controller(name, *config))
-
-        # print('re-dump : {0}'.format(json.dumps(self, default=self.serialize_instance)))
-
-    @staticmethod
-    def serialize_instance(inst):
-        controllers = {}
-        for controller in inst.controllers:
-            controllers.update( controller.serialize_instance() )
-        return {inst.name:controllers}
 
 
 class ControllerEditor(BoxLayout):
