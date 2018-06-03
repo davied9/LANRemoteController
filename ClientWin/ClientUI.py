@@ -117,12 +117,14 @@ Builder.load_string('''
 <ControllerEditor>:
     size_hint: 1, None
     height: 100
-    left_ctrl_checkbox:   left_ctrl_checkbox
-    right_ctrl_checkbox:  right_ctrl_checkbox
-    left_shift_checkbox:  left_shift_checkbox
-    right_shift_checkbox: right_shift_checkbox
-    left_alt_checkbox:    left_alt_checkbox
-    right_alt_checkbox:   right_alt_checkbox
+    left_ctrl_checkbox:     left_ctrl_checkbox
+    right_ctrl_checkbox:    right_ctrl_checkbox
+    left_shift_checkbox:    left_shift_checkbox
+    right_shift_checkbox:   right_shift_checkbox
+    left_alt_checkbox:      left_alt_checkbox
+    right_alt_checkbox:     right_alt_checkbox
+    controller_name_editor: controller_name_editor
+    controller_key_editor:  controller_key_editor
     GridLayout:
         cols: 3
         rows: 4
@@ -157,9 +159,27 @@ Builder.load_string('''
         CheckBox:
             id: right_alt_checkbox
             group: 'group_alternative'
-    Label:
-        text: 'button'
-        size_hint: 0.35, 1
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: 'name'
+        Label:
+            text: 'key'
+    BoxLayout:
+        orientation: 'vertical'
+        Widget:
+        TextInput:
+            id: controller_name_editor
+            multiline: False
+            size_hint: 1,None
+            height: 30
+        Widget:
+        TextInput:
+            id: controller_key_editor
+            multiline: False
+            size_hint: 1,None
+            height: 30
+        Widget:
 ''')
 
 
@@ -444,6 +464,9 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
             self.controller_editor.left_shift_checkbox.active = True
         if "alt" in buttons:
             self.controller_editor.left_alt_checkbox.active = True
+        # set editor name
+        self.controller_editor.controller_name_editor.text = controller.name
+        # set key
         key_found = False
         for key in buttons:
             pass
@@ -458,13 +481,21 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         # reset
         self.controller_editor = None
 
-    class ControllerButtonNotFoundError(NotFoundError):pass
+    class ControllerButtonNotFoundError(NotFoundError):
+
+        def __int__(self, controller_button, button_container, *args):
+            self.controller_button = controller_button
+            self.button_container  = button_container
+            NotFoundError.__init__(self, *args)
+
+        def __str__(self):
+            return ('Controller button {0} is not in button container {1}'.format(self.controller_button, self.button_container))
 
     def _get_controller_button_index(self, controller_button):
         for index in range(len(self.button_container.children)):
             if controller_button is self.button_container.children[index]:
                 return index
-        raise self.ControllerButtonNotFoundError('Controller {0} is not in button container'.format(controller_button))
+        raise self.ControllerButtonNotFoundError(controller_button, self.button_container)
 
 
 class ClientUI(App):
