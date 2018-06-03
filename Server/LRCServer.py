@@ -49,9 +49,10 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
 
     def __make_functional_key_dict(self):
         self._allowed_functional_key = ({
-            'control':self.keyboard.control_l_key,
-            'alt':self.keyboard.alt_l_key,
-            'shift':self.keyboard.shift_l_key
+            'control': self.keyboard.control_l_key,
+            'ctrl':    self.keyboard.control_l_key,
+            'alt':     self.keyboard.alt_l_key,
+            'shift':   self.keyboard.shift_l_key
         })
 
     def decode_message(self, message):

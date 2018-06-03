@@ -113,6 +113,53 @@ Builder.load_string('''
                     text: 'Add'
                     size_hint_max_x: 50
                     on_release: root._create_new_button(self)
+
+<ControllerEditor>:
+    size_hint: 1, None
+    height: 100
+    left_ctrl_checkbox:   left_ctrl_checkbox
+    right_ctrl_checkbox:  right_ctrl_checkbox
+    left_shift_checkbox:  left_shift_checkbox
+    right_shift_checkbox: right_shift_checkbox
+    left_alt_checkbox:    left_alt_checkbox
+    right_alt_checkbox:   right_alt_checkbox
+    GridLayout:
+        cols: 3
+        rows: 4
+        Widget:
+        Label:
+            text: 'left'
+        Label:
+            text: 'right'
+        Label:
+            text: 'ctrl'
+        CheckBox:
+            id: left_ctrl_checkbox
+            group: 'group_control'
+        CheckBox:
+            id: right_ctrl_checkbox
+            group: 'group_control'
+        Label:
+            id: shift_label
+            text: 'shift'
+        CheckBox:
+            id: left_shift_checkbox
+            group: 'group_shift'
+        CheckBox:
+            id: right_shift_checkbox
+            group: 'group_shift'
+        Label:
+            id: alt_label
+            text: 'alt'
+        CheckBox:
+            id: left_alt_checkbox
+            group: 'group_alternative'
+        CheckBox:
+            id: right_alt_checkbox
+            group: 'group_alternative'
+    Label:
+        text: 'button'
+        size_hint: 0.35, 1
 ''')
 
 
@@ -146,6 +193,18 @@ class ControllerSet(object):
         for controller in inst.controllers:
             controllers.update( controller.serialize_instance() )
         return {inst.name:controllers}
+
+
+class ControllerEditor(BoxLayout):
+    '''Controller Editor
+
+    components:
+        controller:     Controller that is being edit
+    '''
+    def __init__(self, **kwargs):
+        self.controller = kwargs["controller"]
+        del(kwargs['controller'])
+        BoxLayout.__init__(self, **kwargs)
 
 
 class ControllerCollectionScreen(Screen): # gallery of controller sets
@@ -252,6 +311,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
     '''
 
     set_name_editor = ObjectProperty(None, allownone=True)
+    controller_editor = ObjectProperty(None, allownone=True)
 
     def __init__(self, **kwargs):
         Screen.__init__(self, **kwargs)
@@ -325,10 +385,10 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
 
     # add controller button to controller container for exist controller collection
     def _add_controller_button(self, controller):
-        button = Button( text=controller.name, size_hint=(1, None), height=50, on_press=self._edit_current_controller )
+        button = Button( text=controller.name, size_hint=(1, None), height=50, on_release=self._on_controller_button_released )
         button.controller = controller
         self.button_container.add_widget(button)
-        self.button_container.height += 60
+        self.button_container.height += (button.height + self.button_container.spacing[1])
 
     # as callback for "Save" button -- save this build to a controller set file
     def _save_controller_set(self, button):
@@ -350,9 +410,61 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         if self.set_name_editor:
             self._close_set_name_editor()
 
+        if self.controller_editor:
+            self._close_controller_editor()
+
     # as callback for controller button
-    def _edit_current_controller(self, controller_button):
-        print('editing {0} : {1}'.format(controller_button.controller.name, controller_button.controller.buttons) )
+    def _on_controller_button_released(self, controller_button):
+        if not self.controller_editor:
+            self._open_controller_editor(controller_button)
+        elif self.controller_editor.controller is controller_button.controller:
+            self._close_controller_editor()
+        else: # another button is released
+            self._close_controller_editor()
+            self._open_controller_editor(controller_button)
+
+    def _open_controller_editor(self, controller_button):
+        controller = controller_button.controller
+        print('edit {0} -- {1}'.format(controller.name, controller.buttons) )
+        # create editor
+        self.controller_editor = ControllerEditor(controller=controller)
+        # add editor to layout
+        ix_button = self._get_controller_button_index(controller_button)
+        self.button_container.add_widget(self.controller_editor, index=ix_button)
+        self.button_container.height += (self.controller_editor.height + self.button_container.spacing[1])
+        # set checkboxes
+        controller = controller_button.controller
+        buttons = []
+        for btn in controller.buttons:
+            buttons.append(btn.lower())
+        controller.buttons = buttons
+        if "ctrl" in buttons:
+            self.controller_editor.left_ctrl_checkbox.active = True
+        if "shift" in buttons:
+            self.controller_editor.left_shift_checkbox.active = True
+        if "alt" in buttons:
+            self.controller_editor.left_alt_checkbox.active = True
+        key_found = False
+        for key in buttons:
+            pass
+
+
+    def _close_controller_editor(self):
+        controller = self.controller_editor.controller
+        print('close editor for {0} -- {1}'.format(controller.name, controller.buttons))
+        # remove editor from layout
+        self.button_container.remove_widget(self.controller_editor)
+        self.button_container.height -= (self.controller_editor.height + self.button_container.spacing[1])
+        # reset
+        self.controller_editor = None
+
+    class ControllerButtonNotFoundError(NotFoundError):pass
+
+    def _get_controller_button_index(self, controller_button):
+        for index in range(len(self.button_container.children)):
+            if controller_button is self.button_container.children[index]:
+                return index
+        raise self.ControllerButtonNotFoundError('Controller {0} is not in button container'.format(controller_button))
 
 
 class ClientUI(App):
