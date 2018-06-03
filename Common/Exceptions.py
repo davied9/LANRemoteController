@@ -2,7 +2,12 @@
 __all__ = ['ArgumentError', 'NotFoundError']
 
 class ArgumentError(Exception):
-    pass
+
+    def __str__(self):
+        return ('Argument not available.')
+
 
 class NotFoundError(Exception):
-    pass
+
+    def __str__(self):
+        return ('Not found.')

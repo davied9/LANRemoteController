@@ -11,6 +11,7 @@
       <sourceFolder url="file://$MODULE_DIR$/PyUserInput/pykeyboard" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/PyUserInput/pymouse" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Common" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/KeySettings" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
