@@ -1,15 +1,55 @@
 from PyUserInput import PyKeyboard
+from LRCController import Controller
+from Exceptions import ArgumentError
+
+class KeyCombinationNotAvailableError(ArgumentError):
+
+    def __init__(self, *args):
+        self.keys = []
+        for k in args:
+            self.keys.append(k)
+
+    def __str__(self):
+        n = len(self.keys)
+        if 0 == n:
+            return ('Key combination not available : no key found')
+        elif 1 == n:
+            return ('Key combination not available : {0}'.format(self.keys[0]))
+        elif 2 == n:
+            return ('Key combination not available : {0}, {1}'.format(self.keys[0], self.keys[1]))
+        elif 3 == n:
+            return ('Key combination not available : {0}, {1}, {2}'.format(self.keys[0], self.keys[1], self.keys[2] ))
+        else:
+            return ('Key combination not available : {0}, {1}, {2}, ...'.format(self.keys[0], self.keys[1], self.keys[2] ))
+
 
 class KeySettings(object):
     '''Key Settings for LAN Remote Controller
 
     components:
-
-
+        allowed_functional_keys:
+        allowed_special_keys:
+        key_map:
     '''
 
 
-    def __int__(self):
+    def __init__(self):
+
+        import sys
+
+        if sys.platform.startswith('java'):
+            raise NotImplementedError()
+            # from .java_ import PyKeyboard
+        elif sys.platform == 'darwin':
+            raise NotImplementedError()
+            # from .mac import PyKeyboard, PyKeyboardEvent
+        elif sys.platform == 'win32':
+            self._init_windows()
+        else:
+            raise NotImplementedError()
+            # from .x11 import PyKeyboard, PyKeyboardEvent
+
+    def _init_windows(self):
         keyboard = PyKeyboard()
 
         self.allowed_functional_keys = [
@@ -49,5 +89,8 @@ class KeySettings(object):
             ['alt',   'left alt',    'right alt',  ], # alt
         ]
 
+    def validate_key_combination(self, *args): # raise Error if validation failed
+
+        return
 
 
