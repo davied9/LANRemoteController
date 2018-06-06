@@ -260,5 +260,10 @@ paket-files/
 __pycache__/
 *.pyc
 
+# .git
+!.gitignore
+!.gitattributes
+
 # customized ignore
 /TopLevelTest.py
+
