@@ -385,7 +385,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
 
     # as callback for "Add" button -- add button for new created controller
     def _create_new_button(self, button):
-        new_controller = Controller('New')
+        new_controller = Controller('New', 'a')
         self._add_controller_button(new_controller)
 
     # as callback for "Back" button
@@ -414,7 +414,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
 
     def _open_controller_editor(self, controller_button):
         controller = controller_button.controller
-        print('edit {0} -- {1}'.format(controller.name, controller.buttons) )
+        print('edit {0}'.format(controller) )
         # create editor
         self.controller_editor = ControllerEditor(controller=controller)
         # add editor to layout
@@ -422,33 +422,71 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         self.button_container.add_widget(self.controller_editor, index=ix_button)
         self.button_container.height += (self.controller_editor.height + self.button_container.spacing[1])
         # set checkboxes
-        controller = controller_button.controller
-        buttons = []
-        for btn in controller.buttons:
-            buttons.append(btn.lower())
-        controller.buttons = buttons
-        if "ctrl" in buttons:
-            self.controller_editor.left_ctrl_checkbox.active = True
-        if "shift" in buttons:
-            self.controller_editor.left_shift_checkbox.active = True
-        if "alt" in buttons:
-            self.controller_editor.left_alt_checkbox.active = True
+        if controller.ctrl.enable:
+            if controller.ctrl.is_left:
+                self.controller_editor.left_ctrl_checkbox.active = True
+            else:
+                self.controller_editor.right_ctrl_checkbox.active = True
+        if controller.shift.enable:
+            if controller.shift.is_left:
+                self.controller_editor.left_shift_checkbox.active = True
+            else:
+                self.controller_editor.right_shift_checkbox.active = True
+        if controller.alt.enable:
+            if controller.alt.is_left:
+                self.controller_editor.left_alt_checkbox.active = True
+            else:
+                self.controller_editor.right_alt_checkbox.active = True
         # set editor name
         self.controller_editor.controller_name_editor.text = controller.name
         # set key
-        key_found = False
-        for key in buttons:
-            pass
-
+        self.controller_editor.controller_key_editor.text = controller.key
 
     def _close_controller_editor(self):
         controller = self.controller_editor.controller
-        print('close editor for {0} -- {1}'.format(controller.name, controller.buttons))
+        # save edit to controller set
+        Controller.validate_key(self.controller_editor.controller_key_editor.text)
+        # .. set key
+        controller.key = self.controller_editor.controller_key_editor.text
+        # .. set editor name
+        controller.name = self.controller_editor.controller_name_editor.text
+        # .. ctrl
+        if self.controller_editor.left_ctrl_checkbox.active:
+            controller.ctrl.enable  = True
+            controller.ctrl.is_left = True
+        elif self.controller_editor.right_ctrl_checkbox.active:
+            controller.ctrl.enable  = True
+            controller.ctrl.is_left = False
+        else:
+            controller.ctrl.enable  = False
+            controller.ctrl.is_left = True
+        # .. shift
+        if self.controller_editor.left_shift_checkbox.active:
+            controller.shift.enable  = True
+            controller.shift.is_left = True
+        elif self.controller_editor.right_shift_checkbox.active:
+            controller.shift.enable  = True
+            controller.shift.is_left = False
+        else:
+            controller.shift.enable  = False
+            controller.shift.is_left = True
+        # .. alt
+        if self.controller_editor.left_alt_checkbox.active:
+            controller.alt.enable  = True
+            controller.alt.is_left = True
+        elif self.controller_editor.right_alt_checkbox.active:
+            controller.alt.enable  = True
+            controller.alt.is_left = False
+        else:
+            controller.alt.enable  = False
+            controller.alt.is_left = True
         # remove editor from layout
         self.button_container.remove_widget(self.controller_editor)
         self.button_container.height -= (self.controller_editor.height + self.button_container.spacing[1])
         # reset
         self.controller_editor = None
+        # log
+        print('close editor for {0}'.format(controller))
 
     class ControllerButtonNotFoundError(NotFoundError):
 

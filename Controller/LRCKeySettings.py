@@ -1,5 +1,4 @@
 from PyUserInput import PyKeyboard
-from LRCController import Controller
 from Exceptions import ArgumentError
 
 class KeyCombinationNotAvailableError(ArgumentError):
@@ -23,12 +22,14 @@ class KeyCombinationNotAvailableError(ArgumentError):
             return ('Key combination not available : {0}, {1}, {2}, ...'.format(self.keys[0], self.keys[1], self.keys[2] ))
 
 
-class KeySetting(object):
+class KeySettings(object):
     '''Key Settings for LAN Remote Controller
 
     components:
-        allowed_functional_keys:
-        allowed_special_keys:
+        ctrl_keys:              keys for 'ctrl'
+        shift_keys:             keys for
+        alt_keys:
+        allowed_special_keys:   Special keys allows, i.e. 'space', 'left arrow'
         key_map:
     '''
 
@@ -51,11 +52,9 @@ class KeySetting(object):
     def _init_windows_setting(self):
         keyboard = PyKeyboard()
 
-        self.allowed_functional_keys = [
-            'ctrl',  'left ctrl',  'right ctrl',
-            'shift', 'left shift', 'right shift',
-            'alt',   'left alt',    'right alt',
-        ]
+        self.ctrl_keys  = ['ctrl',  'left ctrl',  'right ctrl', ] # control
+        self.shift_keys = ['shift', 'left shift', 'right shift',] # shift
+        self.alt_keys   = ['alt',   'left alt',    'right alt',  ] # alt
 
         self.allowed_special_keys = [
             'left arrow', 'right arrow', 'up arrow', 'down arrow',
@@ -84,15 +83,6 @@ class KeySetting(object):
             'end':          keyboard.end_key,
         }
 
-        self.ctrl_keys  = ['ctrl',  'left ctrl',  'right ctrl', ], # control
-        self.shift_keys = ['shift', 'left shift', 'right shift',], # shift
-        self.alt_keys   = ['alt',   'left alt',    'right alt',  ], # alt
 
-
-    def validate_key_combination(self, combination): # raise Error if validation failed
-
-        # mutex keys can not appear at the same time
-
-        return
 
 

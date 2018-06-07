@@ -1,11 +1,13 @@
 from kivy.properties import ObjectProperty
 from Exceptions import ArgumentError
+from Controller.LRCKeySettings import KeySettings
 
 class AlternateKey(object):
 
-    def __init__(self, enable, position='left'):
+    def __init__(self, enable, is_left=True):
         self.enable = enable # True or False
-        self.position = position # 'left' or 'right'
+        self.is_left = is_left # True or False
+
 
 class Controller(object):
     '''Controller for a key combination
@@ -19,83 +21,95 @@ class Controller(object):
 
     '''
 
-    import LRCKeySettings
-    setting = ObjectProperty(LRCKeySettings.KeySetting(), allownone=True)
+    settings = KeySettings()
+
+    class UnsupportedKeyFroControllerError(Exception):
+
+        def __init__(self, key):
+            self.key = key
+
+        def __str__(self):
+            return 'un-supported key "{0}" for Controller.'.format(self.key)
 
     def __init__(self, name, *args):
         self.name  = name
 
-        self.ctrl  = AlternateKey(False, 'left')
-        self.shift = AlternateKey(False, 'left')
-        self.alt   = AlternateKey(False, 'left')
+        self.ctrl  = AlternateKey(enable=False, is_left=True)
+        self.shift = AlternateKey(enable=False, is_left=True)
+        self.alt   = AlternateKey(enable=False, is_left=True)
 
         buffer = []
         for val in args:
             buffer.append(val)
 
-        if 'ctrl' in buffer:
-            self.ctrl.enable = True
-            buffer.remove('ctrl')
-        if 'left ctrl' in buffer:
-            self.ctrl.enable = True
-            buffer.remove('left ctrl')
-        if 'right ctrl' in buffer:
-            self.ctrl.enable = True
-            self.ctrl.position = 'right'
-            buffer.remove('right ctrl')
+        for ctrl_tag in Controller.settings.ctrl_keys:
+            if ctrl_tag in buffer:
+                self.ctrl.enable = True
+                self.ctrl.is_left = False if 'right' in ctrl_tag else True
+                buffer.remove(ctrl_tag)
 
-        if 'shift' in buffer:
-            self.shift.enable = True
-            buffer.remove('shift')
-        if 'left shift' in buffer:
-            self.shift.enable = True
-            buffer.remove('left shift')
-        if 'right shift' in buffer:
-            self.shift.enable = True
-            self.shift.position = 'right'
-            buffer.remove('right shift')
+        for shift_tag in Controller.settings.shift_keys:
+            if shift_tag in buffer:
+                self.shift.enable = True
+                self.shift.is_left = False if 'right' in shift_tag else True
+                buffer.remove(shift_tag)
 
-        if 'alt' in buffer:
-            self.alt.enable = True
-            buffer.remove('alt')
-        if 'left alt' in buffer:
-            self.alt.enable = True
-            buffer.remove('left alt')
-        if 'right alt' in buffer:
-            self.alt.enable = True
-            self.alt.position = 'right'
-            buffer.remove('right alt')
+        for alt_tag in Controller.settings.alt_keys:
+            if alt_tag in buffer:
+                self.alt.enable = True
+                self.alt.is_left = False if 'right' in alt_tag else True
+                buffer.remove(alt_tag)
 
         n_left = len(buffer)
         if 1 == n_left:
+            key = buffer[0]
+            Controller.validate_key(key)
+            self.key = key
+        else: # 0 == n_left or n_left > 1
+            raise ArgumentError('un-recongnized key in given keys for a Control (one special key or letter key should be provided) : {0}'.format(args) )
 
+    def __str__(self):
+        return '{0}'.format(Controller.serialize_instance(self))
 
-            self.key  = buffer[0]
-        elif 0 == n_left:
-            pass
-        else:
-            raise ArgumentError('un-recongnized key set for a Control : ', args)
-
-
-    def serialize_instance(self):
+    @staticmethod
+    def serialize_instance(inst):
         buttons = []
-        if self.ctrl.enable:
-            buttons.append(self.ctrl.position + ' ctrl')
-        if self.shift.enable:
-            buttons.append(self.shift.position + ' shift')
-        if self.alt.enable:
-            buttons.append(self.alt.position + ' alt')
-        return { self.name : buttons }
+        if inst.ctrl.enable:
+            if inst.ctrl.is_left:
+                buttons.append(Controller.settings.ctrl_keys[1])
+            else:
+                buttons.append(Controller.settings.ctrl_keys[2])
+        if inst.shift.enable:
+            if inst.shift.is_left:
+                buttons.append(Controller.settings.shift_keys[1])
+            else:
+                buttons.append(Controller.settings.shift_keys[2])
+        if inst.alt.enable:
+            if inst.alt.is_left:
+                buttons.append(Controller.settings.alt_keys[1])
+            else:
+                buttons.append(Controller.settings.alt_keys[2])
+        buttons.append(inst.key)
+        return { inst.name : buttons }
+
+    @staticmethod
+    def validate_key(key):
+        N = len(key)
+        if key in Controller.settings.allowed_special_keys:
+            return
+        elif 1 == N: # letter or number
+            if key.isalnum():
+                return
+            else:
+                raise Controller.UnsupportedKeyFroControllerError('expected a letter or a number string length of 1 as a key, but got : {0}'.format(key))
+        else:
+            raise Controller.UnsupportedKeyFroControllerError('un-supported special key : {0}'.format(key))
 
     def available(self):
-        if not self.key:
+        if self.key:
+            return True
+        else:
             return False
-        return True
-
-    @classmethod
-    def validate_(cls):
-
-        pass
 
 
 class ControllerSet(object):
@@ -114,15 +128,14 @@ class ControllerSet(object):
         for name, config in kwargs.items():
             print('        {0} : {1}'.format(name, config))
             self.controllers[name] = (Controller(name, *config))
-
         # print('re-dump : {0}'.format(json.dumps(self, default=self.serialize_instance)))
 
     @staticmethod
     def serialize_instance(inst):
         controllers = {}
         for controller in inst.controllers:
-            controllers.update( controller.serialize_instance() )
-        return {inst.name:controllers}
+            controllers.update( Controller.serialize_instance(controller) )
+        return { inst.name : controllers }
 
 
 class ControllerPackage(object):
