@@ -75,10 +75,11 @@ Builder.load_string('''
 <ControllerCollectionBuildScreen>:
     display_title: title_button
     button_container: button_container
-    background_widget: background_widget
+    background_floatlayout: background_floatlayout
+    info_label: info_label
     set_name_editor: None
     FloatLayout:
-        id: background_widget
+        id: background_floatlayout
         BoxLayout:
             orientation: 'vertical'
             padding: 30, 30
@@ -114,6 +115,11 @@ Builder.load_string('''
                     text: 'Add'
                     size_hint_max_x: 50
                     on_release: root._create_new_button(self)
+        Label:
+            id: info_label
+            font_size: 12
+            pos_hint: {'x':0, 'y':0}
+            size_hint_max_y: 15
 
 <ControllerEditor>:
     size_hint: 1, None
@@ -294,7 +300,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
     components:
         display_title:      title Button
         button_container:   button container for controllers
-        background_widget:  background FloatLayout
+        background_floatlayout:  background FloatLayout
         set_name_editor:    controller collection TextInput
 
     '''
@@ -304,6 +310,23 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
 
     def __init__(self, **kwargs):
         Screen.__init__(self, **kwargs)
+
+    def on_pre_enter(self, *args):
+        current_app = App.get_running_app()
+        if current_app.current_edit_set:
+            self.display_title.text = current_app.current_edit_set
+            self.is_new = False
+        else:
+            self.display_title.text = 'New'
+            self.is_new = True
+
+        self._reset_controller_set_container()
+        if not self.is_new:
+            for _, controller in current_app.controller_sets[current_app.current_edit_set].controllers.items():
+                self._add_controller_button(controller)
+
+    def present_info(self, info):
+        self.info_label.text = info
 
     # as callback for display_title on_press
     def _open_set_name_editor(self, *args):
@@ -317,7 +340,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
                 font_size=43,
                 multiline=False
             )
-            self.background_widget.add_widget(self.set_name_editor)
+            self.background_floatlayout.add_widget(self.set_name_editor)
         self.set_name_editor.size = self.display_title.size
         self.set_name_editor.pos  = self.display_title.pos
         self.set_name_editor.text = self.display_title.text
@@ -339,7 +362,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         self.display_title.unbind(pos=self._sync_display_title_pos_to_set_name_editor)
         self.display_title.disabled = False
         self.display_title.text = self.set_name_editor.text
-        self.background_widget.remove_widget(self.set_name_editor)
+        self.background_floatlayout.remove_widget(self.set_name_editor)
         self.set_name_editor = None
 
     # as callback for display_title pos
@@ -353,20 +376,6 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
     # as callback for set_name_editor
     def _sync_set_name_to_display_title(self, _set_name_editor, text):
         self.display_title.text = text
-
-    def on_pre_enter(self, *args):
-        current_app = App.get_running_app()
-        if current_app.current_edit_set:
-            self.display_title.text = current_app.current_edit_set
-            self.is_new = False
-        else:
-            self.display_title.text = 'New'
-            self.is_new = True
-
-        self._reset_controller_set_container()
-        if not self.is_new:
-            for _, controller in current_app.controller_sets[current_app.current_edit_set].controllers.items():
-                self._add_controller_button(controller)
 
     def _reset_controller_set_container(self):
         self.button_container.clear_widgets()
@@ -404,10 +413,16 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
 
     # as callback for controller button
     def _on_controller_button_released(self, controller_button):
-        if not self.controller_editor:
+        if not self.controller_editor: # not editing
             self._open_controller_editor(controller_button)
-        elif self.controller_editor.controller is controller_button.controller:
-            self._close_controller_editor()
+        elif self.controller_editor.controller is controller_button.controller: # editing this
+            try:
+                self._sync_controller_editor_to_controller()
+                self._close_controller_editor()
+            except Controller.UnsupportedKeyForControllerError as err: # unsupported key
+                self.present_info(str(err))
+            finally:
+                pass
         else: # another button is released
             self._close_controller_editor()
             self._open_controller_editor(controller_button)
@@ -444,13 +459,22 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
 
     def _close_controller_editor(self):
         controller = self.controller_editor.controller
+        print('close editor for {0}'.format(controller))
+        # remove editor from layout
+        self.button_container.remove_widget(self.controller_editor)
+        self.button_container.height -= (self.controller_editor.height + self.button_container.spacing[1])
+        # reset
+        self.controller_editor = None
+
+    def _sync_controller_editor_to_controller(self):
+        controller = self.controller_editor.controller
         # save edit to controller set
         Controller.validate_key(self.controller_editor.controller_key_editor.text)
-        # .. set key
+        # .. sync key
         controller.key = self.controller_editor.controller_key_editor.text
-        # .. set editor name
+        # .. sync editor name
         controller.name = self.controller_editor.controller_name_editor.text
-        # .. ctrl
+        # .. sync ctrl
         if self.controller_editor.left_ctrl_checkbox.active:
             controller.ctrl.enable  = True
             controller.ctrl.is_left = True
@@ -460,7 +484,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         else:
             controller.ctrl.enable  = False
             controller.ctrl.is_left = True
-        # .. shift
+        # .. sync shift
         if self.controller_editor.left_shift_checkbox.active:
             controller.shift.enable  = True
             controller.shift.is_left = True
@@ -470,7 +494,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         else:
             controller.shift.enable  = False
             controller.shift.is_left = True
-        # .. alt
+        # .. sync alt
         if self.controller_editor.left_alt_checkbox.active:
             controller.alt.enable  = True
             controller.alt.is_left = True
@@ -480,13 +504,6 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         else:
             controller.alt.enable  = False
             controller.alt.is_left = True
-        # remove editor from layout
-        self.button_container.remove_widget(self.controller_editor)
-        self.button_container.height -= (self.controller_editor.height + self.button_container.spacing[1])
-        # reset
-        self.controller_editor = None
-        # log
-        print('close editor for {0}'.format(controller))
 
     class ControllerButtonNotFoundError(NotFoundError):
 
@@ -502,7 +519,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         for index in range(len(self.button_container.children)):
             if controller_button is self.button_container.children[index]:
                 return index
-        raise self.ControllerButtonNotFoundError(controller_button, self.button_container)
+        raise ClientUI.ControllerButtonNotFoundError(controller_button, self.button_container)
 
 
 class ClientUI(App):
@@ -515,7 +532,6 @@ class ClientUI(App):
         current_edit_set:               current edited controller set
 
     '''
-
 
     def build(self):
         print('working directory : {0}'.format( os.getcwd() ))

@@ -23,13 +23,17 @@ class Controller(object):
 
     settings = KeySettings()
 
-    class UnsupportedKeyFroControllerError(Exception):
+    class UnsupportedKeyForControllerError(Exception):
 
-        def __init__(self, key):
+        def __init__(self, key, info=None):
             self.key = key
+            self.info = info
 
         def __str__(self):
-            return 'un-supported key "{0}" for Controller.'.format(self.key)
+            if self.info:
+                return 'un-supported key "{0}" for Controller : {1}.'.format(self.key, self.info)
+            else:
+                return 'un-supported key "{0}" for Controller.'.format(self.key)
 
     def __init__(self, name, *args):
         self.name  = name
@@ -101,9 +105,9 @@ class Controller(object):
             if key.isalnum():
                 return
             else:
-                raise Controller.UnsupportedKeyFroControllerError('expected a letter or a number string length of 1 as a key, but got : {0}'.format(key))
+                raise Controller.UnsupportedKeyForControllerError(key, 'expecting a letter or a number string length of 1 as a key')
         else:
-            raise Controller.UnsupportedKeyFroControllerError('un-supported special key : {0}'.format(key))
+            raise Controller.UnsupportedKeyForControllerError(key, 'un-supported special key')
 
     def available(self):
         if self.key:
