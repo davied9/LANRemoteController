@@ -73,7 +73,8 @@ class Controller(object):
             raise ArgumentError('un-recongnized key in given keys for a Control (one special key or letter key should be provided) : {0}'.format(args) )
 
     def __str__(self):
-        return '{0}'.format(Controller.serialize_instance(self))
+        structure = Controller.serialize_instance(self)
+        return '{0}  :  {1}'.format(self.name, structure[self.name])
 
     @staticmethod
     def serialize_instance(inst):

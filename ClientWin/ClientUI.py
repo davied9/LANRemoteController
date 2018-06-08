@@ -2,6 +2,7 @@ from Common.KivyImporter import *
 from kivy.uix.screenmanager import CardTransition, SwapTransition, ShaderTransition, SlideTransition
 from kivy.uix.screenmanager import WipeTransition, FadeTransition, FallOutTransition, RiseInTransition
 from kivy.properties import ObjectProperty
+from kivy.clock import Clock
 from Common.Exceptions import *
 from Controller.LRCController import Controller, ControllerSet, ControllerPackage
 import os, json
@@ -77,7 +78,6 @@ Builder.load_string('''
     button_container: button_container
     background_floatlayout: background_floatlayout
     info_label: info_label
-    set_name_editor: None
     FloatLayout:
         id: background_floatlayout
         BoxLayout:
@@ -118,6 +118,7 @@ Builder.load_string('''
         Label:
             id: info_label
             font_size: 12
+            color: 1, 0, 0, 1
             pos_hint: {'x':0, 'y':0}
             size_hint_max_y: 15
 
@@ -198,7 +199,8 @@ class ControllerEditor(BoxLayout):
     '''
     def __init__(self, **kwargs):
         self.controller = kwargs["controller"]
-        del(kwargs['controller'])
+        self.controller_button = kwargs["controller_button"]
+        del(kwargs['controller'], kwargs['controller_button'])
         BoxLayout.__init__(self, **kwargs)
 
 
@@ -307,6 +309,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
 
     set_name_editor = ObjectProperty(None, allownone=True)
     controller_editor = ObjectProperty(None, allownone=True)
+    clear_info_event = ObjectProperty(None, allownone=True)
 
     def __init__(self, **kwargs):
         Screen.__init__(self, **kwargs)
@@ -325,8 +328,15 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
             for _, controller in current_app.controller_sets[current_app.current_edit_set].controllers.items():
                 self._add_controller_button(controller)
 
-    def present_info(self, info):
+        self._clear_info_helper()
+
+    def present_info(self, info, time_last=5):
         self.info_label.text = info
+        self.clear_info_event = Clock.schedule_once(self._clear_info_helper, time_last)
+
+    def _clear_info_helper(self, *args): # the argument passed maybe the position of touch
+        self.info_label.text = ''
+        self.clear_info_event = None
 
     # as callback for display_title on_press
     def _open_set_name_editor(self, *args):
@@ -383,7 +393,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
 
     # add controller button to controller container for exist controller collection
     def _add_controller_button(self, controller):
-        button = Button( text=controller.name, size_hint=(1, None), height=50, on_release=self._on_controller_button_released )
+        button = Button( text=str(controller), size_hint=(1, None), height=50, on_release=self._on_controller_button_released )
         button.controller = controller
         self.button_container.add_widget(button)
         self.button_container.height += (button.height + self.button_container.spacing[1])
@@ -431,7 +441,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         controller = controller_button.controller
         print('edit {0}'.format(controller) )
         # create editor
-        self.controller_editor = ControllerEditor(controller=controller)
+        self.controller_editor = ControllerEditor(controller=controller, controller_button=controller_button)
         # add editor to layout
         ix_button = self._get_controller_button_index(controller_button)
         self.button_container.add_widget(self.controller_editor, index=ix_button)
@@ -470,10 +480,10 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         controller = self.controller_editor.controller
         # save edit to controller set
         Controller.validate_key(self.controller_editor.controller_key_editor.text)
+        # .. sync name
+        controller.name = self.controller_editor.controller_name_editor.text
         # .. sync key
         controller.key = self.controller_editor.controller_key_editor.text
-        # .. sync editor name
-        controller.name = self.controller_editor.controller_name_editor.text
         # .. sync ctrl
         if self.controller_editor.left_ctrl_checkbox.active:
             controller.ctrl.enable  = True
@@ -504,6 +514,9 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         else:
             controller.alt.enable  = False
             controller.alt.is_left = True
+        # .. sync text to controller button
+        self.controller_editor.controller_button.text = str(controller)
+
 
     class ControllerButtonNotFoundError(NotFoundError):
 
