@@ -129,7 +129,7 @@ class ControllerSet(object):
     def __init__(self, name, **kwargs):
         self.name = name
         self.controllers = {}
-        print('    {0}'.format(self.name))
+        print('    {0} (New Controller Set)'.format(self.name))
         for name, config in kwargs.items():
             print('        {0} : {1}'.format(name, config))
             self.controllers[name] = (Controller(name, *config))
@@ -141,6 +141,10 @@ class ControllerSet(object):
         for controller in inst.controllers:
             controllers.update( Controller.serialize_instance(controller) )
         return { inst.name : controllers }
+
+    def add_controller(self, controller):
+        print('        {0}'.format(Controller.serialize_instance(controller)))
+        self.controllers[controller.name] = controller
 
 
 class ControllerPackage(object):
