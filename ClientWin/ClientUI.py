@@ -240,9 +240,12 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
                 full_path = r+'/'+file_name
                 with open(full_path) as file_handle:
                     print('loading configuration from "{0}"'.format(full_path))
-                    info = json.load(file_handle)
-                    for name, config in info.items():
-                        controller_sets[name] = ControllerSet(name, **config)
+                    try:
+                        info = json.load(file_handle)
+                        for name, config in info.items():
+                            controller_sets[name] = ControllerSet(name, **config)
+                    except Exception as err:
+                        print('    failed with message : {0}'.format(err))
             break
 
         App.get_running_app().controller_sets = controller_sets
@@ -382,7 +385,9 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         if focused:
             _set_name_eidtor.select_all()
         else:
-            if not self._exist_duplicate_controller_set(self.set_name_editor.text):
+            current_app = App.get_running_app()
+            current_edit_set = current_app.controller_sets[current_app.current_edit_set]
+            if not self._exist_duplicate_controller_set(self.set_name_editor.text, current_edit_set):
                 self.display_title.text = self.set_name_editor.text
                 self._close_set_name_editor()
             else:
@@ -406,19 +411,27 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
 
     # add controller button to controller container for exist controller collection
     def _add_controller_button(self, controller):
-        button = Button( text=str(controller), size_hint=(1, None), height=50, on_release=self._on_controller_button_released )
+        structure = controller.dump()
+        for name, value in structure.items():
+            text = name + '  :  ' + str(value)
+        button = Button( text=text, size_hint=(1, None), height=50, on_release=self._on_controller_button_released )
         button.controller = controller
         self.button_container.add_widget(button)
         self.button_container.height += (button.height + self.button_container.spacing[1])
 
     # as callback for "Save" button -- save this build to a controller set file
     def _save_controller_set(self, button):
-        pass
+        current_app = App.get_running_app()
+        controller_set = current_app.controller_sets[current_app.current_edit_set]
+        controller_set.dump_to_file('./collections/test.json')
 
     # as callback for "Add" button -- add button for new created controller
     def _create_new_button(self, button):
-        new_controller = Controller(self._get_next_new_controller_name(), 'a')
+        current_app = App.get_running_app()
+        new_controller = Controller(self._get_next_new_controller_name(), 'n')
         self._add_controller_button(new_controller)
+        _set = current_app.controller_sets[current_app.current_edit_set]
+        _set.add_controller(new_controller)
 
     # as callback for "Back" button
     def _go_back_last_screen(self, button):
@@ -504,7 +517,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         # save edit to controller set
         Controller.validate_key(self.controller_editor.controller_key_editor.text)
         controller_name = self.controller_editor.controller_name_editor.text
-        if self._exist_duplicate_controller(controller_name):
+        if self._exist_duplicate_controller(controller_name, controller):
             raise ControllerCollectionBuildScreen.DuplicateError('Controller {0}'.format(controller_name))
         # .. sync name
         controller.name = controller_name
@@ -580,15 +593,15 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
                 except: pass
         return 'New{0}'.format(max_index+1)
 
-    def _exist_duplicate_controller(self, name):
+    def _exist_duplicate_controller(self, name, controller):
         for controller_button in self.button_container.children:
-            if name == controller_button.controller.name:
+            if name == controller_button.controller.name and controller is not controller_button.controller:
                 return True
         return False
 
-    def _exist_duplicate_controller_set(self, name):
-        for set_name, _ in App.get_running_app().controller_sets.items():
-            if name == set_name:
+    def _exist_duplicate_controller_set(self, name, controller_set):
+        for set_name, _controller_set in App.get_running_app().controller_sets.items():
+            if name == set_name and controller_set is not _controller_set:
                 return True
         return False
 
