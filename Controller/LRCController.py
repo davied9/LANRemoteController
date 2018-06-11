@@ -147,7 +147,6 @@ class ControllerSet(object):
             controllers.update( controller.dump() )
         return { self.name : controllers }
 
-
     def dump_to_file(self, file_path):
         with open(file_path, 'w') as fh:
             fh.write(self.dump_to_str())
@@ -158,6 +157,10 @@ class ControllerSet(object):
     def add_controller(self, controller):
         print('Added to {0}(ControllerSet) : {1}'.format(self.name, controller.dump()))
         self.controllers[controller.name] = controller
+
+    def remove_controller(self, controller):
+        del(self.controllers[controller.name])
+        print('Remove from {0}(ControllerSet) : {1}'.format(self.name, controller.dump()))
 
 
 class ControllerPackage(object):

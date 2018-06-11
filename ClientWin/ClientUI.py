@@ -320,10 +320,14 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         display_title:              title Button
         button_container:           button container for controllers
         background_floatlayout:     background FloatLayout
+        info_label:                 information label with read font, meant for error message
+
         set_name_editor:            controller collection TextInput
         controller_editor:          controller editor
         clear_info_event:           an event to clear info label
-        info_label:                 information label with read font, meant for error message
+
+        controller_button_process:  function handle of process -- delete or edit,
+                                    decide interactive feature of controller button
 
     '''
 
@@ -332,6 +336,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
     clear_info_event = ObjectProperty(None, allownone=True)
 
     def __init__(self, **kwargs):
+        self.controller_button_process = self._process_edit_interact
         Screen.__init__(self, **kwargs)
 
     def on_pre_enter(self, *args):
@@ -388,7 +393,9 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
             current_app = App.get_running_app()
             current_edit_set = current_app.controller_sets[current_app.current_edit_set]
             if not self._exist_duplicate_controller_set(self.set_name_editor.text, current_edit_set):
-                self.display_title.text = self.set_name_editor.text
+                new_set_name = self.set_name_editor.text
+                self.display_title.text = new_set_name
+                self._rename_current_edit_set(new_set_name)
                 self._close_set_name_editor()
             else:
                 self.present_info('Duplicate controller collection {0}'.format(self.set_name_editor.text))
@@ -401,6 +408,17 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         self.background_floatlayout.remove_widget(self.set_name_editor)
         self.set_name_editor = None
 
+    def _rename_current_edit_set(self, new_set_name):
+        current_app = App.get_running_app()
+        # get controller set and remove it from dict
+        _set = current_app.controller_sets[current_app.current_edit_set]
+        del(current_app.controller_sets[current_app.current_edit_set])
+        # rename && add to dict with new name
+        _set.name = new_set_name
+        current_app.controller_sets[new_set_name] = _set
+        # sync to tag
+        current_app.current_edit_set = new_set_name
+
     # as callback for display_title pos
     def _sync_display_title_pos_to_set_name_editor(self, _display_title, new_pos):
         self.set_name_editor.pos = new_pos
@@ -409,29 +427,31 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
     def _sync_display_title_size_to_set_name_editor(self, _display_title, new_size):
         self.set_name_editor.size = new_size
 
-    # add controller button to controller container for exist controller collection
+    # add controller button to controller container for controller
     def _add_controller_button(self, controller):
-        structure = controller.dump()
-        for name, value in structure.items():
+        for name, value in controller.dump().items():
             text = name + '  :  ' + str(value)
         button = Button( text=text, size_hint=(1, None), height=50, on_release=self._on_controller_button_released )
         button.controller = controller
         self.button_container.add_widget(button)
         self.button_container.height += (button.height + self.button_container.spacing[1])
 
+    # remove controller button from controller container
+    def _remove_controller_button(self, controller_button):
+        self.button_container.remove_widget(controller_button)
+        self.button_container.height -= (controller_button.height + self.button_container.spacing[1])
+
     # as callback for "Save" button -- save this build to a controller set file
     def _save_controller_set(self, button):
         current_app = App.get_running_app()
         controller_set = current_app.controller_sets[current_app.current_edit_set]
-        controller_set.dump_to_file('./collections/test.json')
+        controller_set.dump_to_file('./collections/{0}.json'.format(current_app.current_edit_set))
 
     # as callback for "Add" button -- add button for new created controller
     def _create_new_button(self, button):
-        current_app = App.get_running_app()
         new_controller = Controller(self._get_next_new_controller_name(), 'n')
         self._add_controller_button(new_controller)
-        _set = current_app.controller_sets[current_app.current_edit_set]
-        _set.add_controller(new_controller)
+        self._add_controller_to_editing_set(new_controller)
 
     # as callback for "Back" button
     def _go_back_last_screen(self, button):
@@ -441,19 +461,25 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         if self.controller_editor:
             self._close_controller_editor()
 
-        self._sync_builder_to_controller_container()
-
-        App.get_running_app().current_edit_set = self.display_title.text
-
         last_screen = self.manager.last_screen
         self.manager.last_screen = "Controller Collections"
         self.manager.current = last_screen
 
     # as callback for controller button
     def _on_controller_button_released(self, controller_button):
-        if not self.controller_editor: # not editing
+        self.controller_button_process(controller_button)
+
+    # as callback for "Delete" button
+    def _on_delete_button_released(self, button):
+        print('test')
+        #self.controller_button_process = self._process_delete_interact
+
+    def _process_edit_interact(self, controller_button):
+        # not editing
+        if not self.controller_editor:
             self._open_controller_editor(controller_button)
-        elif self.controller_editor.controller is controller_button.controller: # editing this
+        # editing this, sync and close
+        elif self.controller_editor.controller is controller_button.controller:
             try:
                 self._sync_controller_editor_to_controller()
                 self._close_controller_editor()
@@ -461,9 +487,29 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
                 self.present_info(str(err))
             except ControllerCollectionBuildScreen.DuplicateError as err: # duplicated Controller
                 self.present_info(str(err))
-        else: # another button is released
+        # another button is released, just close
+        else:
             self._close_controller_editor()
             self._open_controller_editor(controller_button)
+
+    def _process_delete_interact(self, controller_button):
+        # not editing or editing others, just delete
+        if self.controller_editor and self.controller_editor.controller is controller_button.controller:
+            self._close_controller_editor()
+        self._remove_controller_from_editing_set(controller_button.controller)
+        self._remove_controller_button(controller_button)
+
+    # add controller to current editing controller collection
+    def _add_controller_to_editing_set(self, controller):
+        current_app = App.get_running_app()
+        _set = current_app.controller_sets[current_app.current_edit_set]
+        _set.add_controller(controller)
+
+    # remove controller from current editing controller collection
+    def _remove_controller_from_editing_set(self, controller):
+        current_app = App.get_running_app()
+        _set = current_app.controller_sets[current_app.current_edit_set]
+        _set.remove_controller(controller)
 
     def _open_controller_editor(self, controller_button):
         controller = controller_button.controller
@@ -516,11 +562,14 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         controller = self.controller_editor.controller
         # save edit to controller set
         Controller.validate_key(self.controller_editor.controller_key_editor.text)
-        controller_name = self.controller_editor.controller_name_editor.text
-        if self._exist_duplicate_controller(controller_name, controller):
-            raise ControllerCollectionBuildScreen.DuplicateError('Controller {0}'.format(controller_name))
+        new_controller_name = self.controller_editor.controller_name_editor.text
+        if self._exist_duplicate_controller(new_controller_name, controller):
+            raise ControllerCollectionBuildScreen.DuplicateError('Controller {0}'.format(new_controller_name))
         # .. sync name
-        controller.name = controller_name
+        if controller.name != new_controller_name:
+            self._remove_controller_from_editing_set(controller)
+            controller.name = new_controller_name
+            self._add_controller_to_editing_set(controller)
         # .. sync key
         controller.key = self.controller_editor.controller_key_editor.text
         # .. sync ctrl
@@ -554,23 +603,13 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
             controller.alt.enable  = False
             controller.alt.is_left = True
         # .. sync text to controller button
-        self.controller_editor.controller_button.text = str(controller)
+        for name, value in controller.dump().items():
+            text = name + '  :  ' + str(value)
+        self.controller_editor.controller_button.text = text
 
     def _reset_controller_set_container(self):
         self.button_container.clear_widgets()
         self.button_container.height = 1
-
-    def _sync_builder_to_controller_container(self): # sync this builder to current edit controller collection
-        current_app = App.get_running_app()
-        old_set_name = current_app.current_edit_set
-        new_set_name = self.display_title.text
-        new_set = ControllerSet(new_set_name)
-
-        for controller_button in self.button_container.children:
-            new_set.add_controller(controller_button.controller)
-
-        del(current_app.controller_sets[old_set_name])
-        current_app.controller_sets[new_set_name] = new_set
 
     def _get_next_new_controller_name(self):
         max_index = 0
