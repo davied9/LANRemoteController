@@ -10,9 +10,12 @@ import os, json
 
 Builder.load_string('''
 <ControllerScreen>:
+    background_layout: background_layout
     button_container: button_container
     display_title: title_label
+    connector: connector
     BoxLayout:
+        id: background_layout
         orientation: 'vertical'
         padding: 30, 30
         BoxLayout:
@@ -39,10 +42,15 @@ Builder.load_string('''
                 size_hint: 1, None
                 height: 1
                 spacing: 10
+        LRCClientConnector:
+            id: connector
 ''')
 
 
 class ControllerScreen(Screen): # controller operation room
+
+    def __init__(self, **kwargs):
+        Screen.__init__(self, **kwargs)
 
     def on_pre_enter(self, *args):
         current_app = App.get_running_app()
@@ -58,11 +66,14 @@ class ControllerScreen(Screen): # controller operation room
         self.button_container.height = 50
 
     def _add_controller_button(self, controller):
-        self.button_container.add_widget(Button(
+        button = Button(
                 text=controller.name,
                 size_hint=(1, None),
-                height=50
-            ))
+                height=50,
+                on_release=self._on_controller_button_released
+            )
+        button.controller = controller
+        self.button_container.add_widget(button)
         self.button_container.height += 60
 
     def _go_back_last_screen(self, button):
@@ -76,4 +87,10 @@ class ControllerScreen(Screen): # controller operation room
         App.get_running_app().current_edit_set = self.display_title.text
         self.manager.last_screen = "Controller"
         self.manager.current = 'Controller Collection Builder'
+
+    def _on_controller_button_released(self, button):
+        self._execute_controller(button.controller)
+
+    def _execute_controller(self, controller):
+        self.connector.execute_controller(controller)
 

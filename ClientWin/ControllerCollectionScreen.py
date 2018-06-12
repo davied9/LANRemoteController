@@ -9,11 +9,13 @@ import os, json
 
 Builder.load_string('''
 <ControllerCollectionScreen>:
+    background_layout: background_layout
     controller_set_scrollview: controller_set_scrollview
     controller_set_container: controller_set_container
     display_title: title_label
     size_hint_min: 400, 600
     BoxLayout:
+        id: background_layout
         orientation: 'vertical'
         padding: 30, 30
         BoxLayout:
@@ -42,7 +44,7 @@ Builder.load_string('''
                 spacing: 10
                 size_hint: 1, None  # this will make this not in control of its parent
                 height: 50
-
+        LRCClientConnector:
 ''')
 
 

@@ -1,4 +1,5 @@
 from __future__ import print_function
+from Controller.LRCController import Controller
 
 try: # python 2
     from SocketServer import UDPServer
@@ -6,8 +7,6 @@ except ImportError:  # python 3
     from socketserver import UDPServer
 except:
     print('can not import packages for UDPServer.')
-finally:
-    pass
 
 
 class LRCServer ( UDPServer, object ):
@@ -44,7 +43,8 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
         self.message_encoding = message_encoding
         self.connect_server_address = connect_server_address
         self.keyboard = PyKeyboard()
-        self.key_matcher = re.compile(r'[a-zA-Z]+')
+        self.key_matcher = re.compile(r'[a-zA-Z ]+')
+        self.key_settings = Controller.settings
         self.__make_functional_key_dict()
 
     def __make_functional_key_dict(self):
@@ -57,23 +57,23 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
     def decode_message(self, message):
         return message.decode(self.message_encoding)
 
-    def validate_key_combination(self, key_combination):
+    def validate_key_combination(self, key_str_list):
         # to lower
-        for ix_key in range(len(key_combination)):
-            key_combination[ix_key] = key_combination[ix_key].lower()
+        for ix_key in range(len(key_str_list)):
+            key_str_list[ix_key] = key_str_list[ix_key].lower()
         # identify functional keys
         checked_combination = []
         for f_key in self._allowed_functional_key.keys():
-            if f_key in key_combination:
+            if f_key in key_str_list:
                 real_key = self._allowed_functional_key[ f_key ]
                 checked_combination.append( real_key )
         # identify normal keys
-        for key in key_combination:
+        for key in key_str_list:
             if len(key) == 1:
                 checked_combination.append( key )
             else:
                 if key not in self._allowed_functional_key.keys():
-                    raise KeyCombinationParseError
+                    raise KeyCombinationParseError()
         return checked_combination
 
     def parse_key_combination_message(self, key_combination_message):

@@ -9,6 +9,8 @@ import os, json
 from ControllerCollectionScreen import ControllerCollectionScreen
 from ControllerCollectionBuildScreen import ControllerCollectionBuildScreen
 from ControllerScreen import ControllerScreen
+from LRCClientConnector import LRCClientConnector
+from LRCClientWin import LRCClient
 
 
 class ClientUI(App):
@@ -19,6 +21,7 @@ class ClientUI(App):
         screen_manager.last_screen:     last screen
         controller_sets:                all controller collections loaded from local files
         current_edit_set:               current edited controller set
+        client:                         client ( LRCClientConnector ), provide access for LRCClient
 
     '''
 
@@ -27,7 +30,7 @@ class ClientUI(App):
 
         self.controller_sets = None
         self.current_edit_set = None # for sync between build screen and controller screen
-        self.LRCClient = None
+        self.client = LRCClient()
 
         self.screen_manager = ScreenManager(transition=RiseInTransition())
 
