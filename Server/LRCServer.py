@@ -1,5 +1,4 @@
 from __future__ import print_function
-from kivy.clock import Clock
 from functools import partial
 from Controller.LRCController import Controller
 from Common.logger import logger
@@ -32,13 +31,18 @@ class LRCServer ( UDPServer, object ):
     def finish_request(self, request, client_address):
         self.sendto( str(self.waiter_address) , client_address )
         if self.client_list:
-            self.client_list.append(client_address)
+            if client_address not in self.client_list:
+                self.client_list.append(client_address)
+                logger.info('Server: add client {0} to client list.'.format(client_address))
+
 
 class KeyCombinationParseError(Exception):
     pass
 
 from PyUserInput import PyKeyboard
 import re
+
+def test(*args): print('test', args)
 
 class LRCWaiter( UDPServer, object ): # waiter serve all the time
 
@@ -52,8 +56,7 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
         self.key_matcher = re.compile(r'[a-zA-Z ]+')
         self.key_settings = Controller.settings
         self.client_list = client_list
-        self.delay = 0
-        self.press_helper_event = None
+        self.execute_delay = 0
 
     def decode_message(self, message):
         return message.decode(self.message_encoding)
@@ -110,19 +113,16 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
         message = self.decode_message(request[0])
         key_combination = self.parse_key_combination_message(message)
         try:
-            if self.delay:
-                self.press_helper_event = Clock.schedule_once( partial(self._press_key_helper, key_combination), self.delay )
+            if self.execute_delay:
+                from threading import Timer
+                Timer( self.execute_delay, self.keyboard.press_keys, args=(key_combination,)).start()
+                logger.info('Waiter: schedule pressing keys in {2} seconds from {0} : {1}'.format(client_address, key_combination, self.execute_delay))
             else:
                 self.keyboard.press_keys(key_combination)
-            logger.info('Waiter: pressing keys from {0} : {1}'.format(client_address, key_combination))
+                logger.info('Waiter: pressing keys from {0} : {1}'.format(client_address, key_combination))
         except Exception as err:
             logger.info('Waiter: can\'t press key from {0} {1} : {2}'.format(client_address, key_combination, err.args))
-        finally:
-            pass
 
-    def _press_key_helper(self, key_combination_list):
-        logger.info('Waiter: actually do the press : {0}'.format(key_combination_list))
-        self.keyboard.press_keys(key_combination_list)
 
 def test000_async_server():
     import time
