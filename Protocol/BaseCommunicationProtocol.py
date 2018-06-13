@@ -1,9 +1,7 @@
-from Protocol.BaseCommunicationProtocol import BaseCommunicationProtocol
 
-class CommunicationProtocol(BaseCommunicationProtocol):
+class BaseCommunicationProtocol(object):
 
     def __init__(self):
-        BaseCommunicationProtocol.__init__(self)
         self.encoding = 'utf-8'
 
     def parse_message(self, message):
