@@ -14,10 +14,14 @@ Builder.load_string('''
     button_container: button_container
     display_title: title_label
     connector: connector
+    info_label: info_label
     BoxLayout:
         id: background_layout
         orientation: 'vertical'
-        padding: 30, 30
+        padding: 30, 0
+        Widget:
+            size_hint: 1, None
+            height: 30
         BoxLayout:
             size_hint_max_y: 50
             Button:
@@ -44,6 +48,12 @@ Builder.load_string('''
                 spacing: 10
         LRCClientConnector:
             id: connector
+        Label:
+            id: info_label
+            size_hint: 1, None
+            height: 30
+            font_size: 12
+            color: 1, 0, 0, 1
 ''')
 
 
@@ -54,6 +64,7 @@ class ControllerScreen(Screen): # controller operation room
         self.connector.ip_button.bind(on_release=self._on_ip_button_released)
         self.connector.port_button.bind(on_release=self._on_port_button_released)
         self.ip_and_port_input = None
+        self.connector.ext_err_logger = self.present_info
 
     def on_pre_enter(self, *args):
         current_app = App.get_running_app()
@@ -96,7 +107,11 @@ class ControllerScreen(Screen): # controller operation room
         self.manager.current = 'Controller Collection Builder'
 
     def _on_controller_button_released(self, button):
-        self._execute_controller(button.controller)
+        try:
+            self._execute_controller(button.controller)
+        except Exception as err:
+            info = 'Controller: failed to execute controller {0} : {1}'.format(button.controller, err.args)
+            self.present_info(info)
 
     def _execute_controller(self, controller):
         self.connector.execute_controller(controller)
@@ -132,3 +147,10 @@ class ControllerScreen(Screen): # controller operation room
             self.background_layout.remove_widget(input)
             self.ip_and_port_input = None
 
+    def present_info(self, info, time_last=5):
+        self.info_label.text = info
+        self.clear_info_event = Clock.schedule_once(self._clear_info_helper, time_last)
+
+    def _clear_info_helper(self, *args): # the argument passed maybe the position of touch
+        self.info_label.text = ''
+        self.clear_info_event = None

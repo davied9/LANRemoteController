@@ -16,11 +16,15 @@ Builder.load_string('''
     controller_set_container: controller_set_container
     display_title: title_label
     connector: connector
+    info_label: info_label
     size_hint_min: 400, 600
     BoxLayout:
         id: background_layout
         orientation: 'vertical'
-        padding: 30, 30
+        padding: 30, 0
+        Widget:
+            size_hint: 1, None
+            height: 30
         BoxLayout:
             orientation: 'horizontal'
             size_hint_max_y: 50
@@ -49,6 +53,13 @@ Builder.load_string('''
                 height: 50
         LRCClientConnector:
             id: connector
+        Label:
+            id: info_label
+            size_hint: 1, None
+            height: 30
+            font_size: 12
+            color: 1, 0, 0, 1
+
 ''')
 
 
@@ -59,6 +70,7 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
         self.connector.ip_button.bind(on_release=self._on_ip_button_released)
         self.connector.port_button.bind(on_release=self._on_port_button_released)
         self.ip_and_port_input = None
+        self.connector.ext_err_logger = self.present_info
 
     def on_pre_enter(self, *args):
         current_app = App.get_running_app()
@@ -155,3 +167,11 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
             input.sync_button.text = input.text
             self.background_layout.remove_widget(input)
             self.ip_and_port_input = None
+
+    def present_info(self, info, time_last=5):
+        self.info_label.text = info
+        self.clear_info_event = Clock.schedule_once(self._clear_info_helper, time_last)
+
+    def _clear_info_helper(self, *args): # the argument passed maybe the position of touch
+        self.info_label.text = ''
+        self.clear_info_event = None

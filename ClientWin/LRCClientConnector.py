@@ -50,6 +50,7 @@ class LRCClientConnector(BoxLayout):
         self.client = App.get_running_app().client
         BoxLayout.__init__(self, **kwargs)
         self.ip_matcher = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
+        self.ext_err_logger = None
 
     def execute_controller(self, controller):
         for _, comb in controller.dump().items():
@@ -64,12 +65,16 @@ class LRCClientConnector(BoxLayout):
             server_address = (ip, port)
         except ValueError as err:
             server_address = None
-            Logger.info('Connector: start server failed, unable to parse ip or port : {0}'.format(err.args))
+            info = 'Connector: start server failed, unable to parse ip or port : {0}'.format(err.args)
+            Logger.info(info)
+            if self.ext_err_logger: self.ext_err_logger(info)
         if server_address:
             try:
                 self.connect(server_address)
             except Exception as err:
-                Logger.info('Connector: try to connect to {0} failed: {1}'.format(server_address, err.args))
+                info = 'Connector: try to connect to {0} failed: {1}'.format(server_address, err.args)
+                Logger.info(info)
+                if self.ext_err_logger: self.ext_err_logger(info)
 
     def connect(self, server_address):
         self.client.connect(server_address)
