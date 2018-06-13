@@ -1,4 +1,6 @@
 from __future__ import print_function
+from kivy.clock import Clock
+from functools import partial
 from Controller.LRCController import Controller
 from Common.logger import logger
 
@@ -14,11 +16,12 @@ class LRCServer ( UDPServer, object ):
 
     allow_reuse_address = True
 
-    def __init__(self, server_address, waiter_address, verify_code, message_encoding='utf-8' ):
+    def __init__(self, server_address, waiter_address, verify_code, client_list=None, message_encoding='utf-8' ):
         UDPServer.__init__( self, server_address, None )
         self.waiter_address = waiter_address
         self.message_encoding = message_encoding
         self.verify_code = verify_code
+        self.client_list = client_list
 
     def encode_message(self, message):
         return message.encode(self.message_encoding)
@@ -28,6 +31,8 @@ class LRCServer ( UDPServer, object ):
 
     def finish_request(self, request, client_address):
         self.sendto( str(self.waiter_address) , client_address )
+        if self.client_list:
+            self.client_list.append(client_address)
 
 class KeyCombinationParseError(Exception):
     pass
@@ -39,13 +44,16 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
 
     allow_reuse_address = True
 
-    def __init__(self, waiter_address, connect_server_address, message_encoding='utf-8' ):
+    def __init__(self, waiter_address, connect_server_address, client_list=None, message_encoding='utf-8' ):
         UDPServer.__init__( self, waiter_address, None )
         self.message_encoding = message_encoding
         self.connect_server_address = connect_server_address
         self.keyboard = PyKeyboard()
         self.key_matcher = re.compile(r'[a-zA-Z ]+')
         self.key_settings = Controller.settings
+        self.client_list = client_list
+        self.delay = 0
+        self.press_helper_event = None
 
     def decode_message(self, message):
         return message.decode(self.message_encoding)
@@ -95,16 +103,26 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
 
     def finish_request(self, request, client_address):
         """Finish one request by instantiating RequestHandlerClass."""
+        if self.client_list:
+            if client_address not in self.client_list:
+                logger.warning('Waiter: unknown client request : {0}'.format(client_address))
+                return
         message = self.decode_message(request[0])
         key_combination = self.parse_key_combination_message(message)
         try:
-            self.keyboard.press_keys(key_combination)
+            if self.delay:
+                self.press_helper_event = Clock.schedule_once( partial(self._press_key_helper, key_combination), self.delay )
+            else:
+                self.keyboard.press_keys(key_combination)
             logger.info('Waiter: pressing keys from {0} : {1}'.format(client_address, key_combination))
         except Exception as err:
             logger.info('Waiter: can\'t press key from {0} {1} : {2}'.format(client_address, key_combination, err.args))
         finally:
             pass
 
+    def _press_key_helper(self, key_combination_list):
+        logger.info('Waiter: actually do the press : {0}'.format(key_combination_list))
+        self.keyboard.press_keys(key_combination_list)
 
 def test000_async_server():
     import time

@@ -52,7 +52,6 @@ class LRCClientConnector(BoxLayout):
         self.ip_matcher = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
 
     def execute_controller(self, controller):
-        sleep(3)
         for _, comb in controller.dump().items():
             combination = comb
         self.client.send_combinations(*combination)

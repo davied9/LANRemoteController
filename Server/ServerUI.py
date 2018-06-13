@@ -1,23 +1,26 @@
 # -*-coding:utf-8-*-
 from __future__ import print_function
 from Common.KivyImporter import *
-from multiprocessing import Process
+from multiprocessing import Process, Manager
 from threading import Thread
 from random import randint
 from time import sleep
+from Common.logger import logger
 import re
 
-def start_LRCServer(server_address, waiter_address, verify_code):
+def start_LRCServer(server_address, waiter_address, verify_code, client_list):
     from LRCServer import LRCServer
     LRCServer(server_address=server_address,
               waiter_address=waiter_address,
-              verify_code=verify_code).serve_forever()
+              verify_code=verify_code,
+              client_list=client_list).serve_forever()
 
 
-def start_LRCWaiter(waiter_address, server_address):
+def start_LRCWaiter(waiter_address, server_address, client_list):
     from LRCServer import LRCWaiter
     LRCWaiter(waiter_address=waiter_address,
-              connect_server_address=server_address).serve_forever()
+              connect_server_address=server_address,
+              client_list=client_list).serve_forever()
 
 
 class LRCServerUI(App):
@@ -63,6 +66,8 @@ class LRCServerUI(App):
         self.root.add_widget(self.log_window)
         # regexp
         self.ip_matcher = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
+        # client list
+        self.client_list = Manager().list()
         return self.root
 
     def on_start(self):
@@ -75,7 +80,7 @@ class LRCServerUI(App):
         self.stop_server()
 
     def log(self, *args):
-        print(*args)
+        logger.info(*args)
 
     def _sync_size_to_text_size(self, component, new_size):
         component.text_size = new_size
@@ -111,22 +116,22 @@ class LRCServerUI(App):
             server_address = (ip, port)
         except ValueError as err:
             server_address = None
-            self.log('start server failed, unable to parse ip or port :', err.args)
+            self.log('Server: start server failed, unable to parse ip or port : {0}'.format(err.args))
         if server_address:
             self.server_address =server_address
-            self.log('start server at :', self.server_address)
+            self.log('Server: start server at : {0}'.format(self.server_address))
             self.server_button.text = 'Close Server'
             self.server_code = str(randint(1000, 9999))
             self.server_info_label.text = 'code : ' + self.server_code + ', running ...'
             self.server_ip_input.disabled = True
             self.server_port_input.disabled = True
-            self.server_process = Process(target=start_LRCServer, args=(self.server_address, self.waiter_address, self.server_code))
+            self.server_process = Process(target=start_LRCServer, args=(self.server_address, self.waiter_address, self.server_code, self.client_list))
             self.server_process.start()
             Thread(target=self._server_watcher).start()
 
     def stop_server(self):
         if self.server_process:
-            self.log('terminate server ')
+            self.log('Server: terminate server ')
             self.server_process.terminate()
             self.server_process = None
             self.server_button.text = 'Start Server'
@@ -137,7 +142,7 @@ class LRCServerUI(App):
 
     def start_waiter(self):
         if not self.server_process:
-            self.log('server should be started first')
+            self.log('Server: server should be started first')
             return
         try:
             ip = self.parse_ip(self.waiter_ip_input.text)
@@ -145,23 +150,23 @@ class LRCServerUI(App):
             waiter_address = (ip, port)
         except ValueError as err:
             waiter_address = None
-            self.log('start server failed, unable to parse ip or port :', err.args)
+            self.log('Server: start server failed, unable to parse ip or port : {0}'.format(err.args))
         finally:
             pass
         if waiter_address:
             self.waiter_address = waiter_address
-            self.log('start waiter at :', self.waiter_address, ' binded to server ', self.server_address)
+            self.log('Server: start waiter at : {0} bind to server {1}'.format( self.waiter_address, self.server_address ))
             self.waiter_button.text = 'Close Waiter'
             self.waiter_info_label.text = 'running ...'
             self.waiter_ip_input.disabled = True
             self.waiter_port_input.disabled = True
-            self.waiter_process = Process(target=start_LRCWaiter, args=(self.waiter_address, self.server_address ))
+            self.waiter_process = Process(target=start_LRCWaiter, args=(self.waiter_address, self.server_address, self.client_list ))
             self.waiter_process.start()
             Thread(target=self._waiter_watcher).start()
 
     def stop_waiter(self):
         if self.waiter_process:
-            self.log('terminate waiter ')
+            self.log('Server: terminate waiter ')
             self.waiter_process.terminate()
             self.waiter_process = None
             self.waiter_button.text = 'Start Waiter'
@@ -202,8 +207,9 @@ class LRCServerUI(App):
 
 
 def __test001_basics():
+    logger.set_logger('kivy')
     LRCServerUI().run()
-    print('Done running')
+    logger.info('Done running')
     pass
 
 

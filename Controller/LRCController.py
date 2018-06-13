@@ -23,7 +23,7 @@ class Controller(object):
 
     '''
 
-    settings = KeySettings()
+    settings = KeySettings('win32')
 
     class UnsupportedKeyForControllerError(Exception):
 
