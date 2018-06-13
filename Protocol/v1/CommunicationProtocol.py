@@ -1,6 +1,8 @@
 
 class CommunicationProtocol(object):
-    pass
+
+    def __init__(self):
+        self.encoding = 'utf-8'
 
 
 
