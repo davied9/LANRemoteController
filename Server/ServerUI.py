@@ -8,6 +8,29 @@ from time import sleep
 from Common.logger import logger
 import re
 
+
+class _log_buffer(object):
+
+    def __init__(self, max_size=100, pop_size=5):
+        self.buffer = []
+        self.max_size = max_size
+        self.pop_size = pop_size
+
+    def clear(self):
+        self.buffer = []
+
+    def log(self, info):
+        if len(self.buffer) >= self.max_size:
+            self.buffer = self.buffer[self.pop_size:]
+        self.buffer.append(str(info))
+
+    def pack_messages(self):
+        str = ''
+        for info in self.buffer:
+            str += ( info + '\n')
+        return str
+
+
 def start_LRCServer(server_address, waiter_address, verify_code, client_list):
     from LRCServer import LRCServer
     LRCServer(server_address=server_address,
@@ -66,8 +89,13 @@ class LRCServerUI(App):
         self.root.add_widget(self.log_window)
         # regexp
         self.ip_matcher = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
+
+        manager = Manager()
         # client list
-        self.client_list = Manager().list()
+        self.client_list = manager.list()
+        # log buffer
+        self.log_mailbox = manager.list()
+        self.log_buffer = _log_buffer(max_size=30, pop_size=5)
         return self.root
 
     def on_start(self):
@@ -79,8 +107,10 @@ class LRCServerUI(App):
         self.stop_waiter()
         self.stop_server()
 
-    def log(self, *args):
-        logger.info(*args)
+    def log(self, message):
+        logger.info(message)
+        self.log_buffer.log(message)
+        self.log_window.text = self.log_buffer.pack_messages()
 
     def _sync_size_to_text_size(self, component, new_size):
         component.text_size = new_size
