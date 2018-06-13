@@ -6,8 +6,7 @@
     <ProjectHome>.</ProjectHome>
     <StartupFile>
     </StartupFile>
-    <SearchPath>
-    </SearchPath>
+    <SearchPath>..\LANRemoteController;ClientWin;Common;Controller;ClientWin\collections;Documents;Example;Protocol;Protocol\v1;PyUserInput;Server;Test;F:\Develop\Python35\Lib\site-packages\kivy;F:\Develop\Python35\Lib\site-packages\kivy</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>LRC</Name>

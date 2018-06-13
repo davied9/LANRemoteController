@@ -112,8 +112,6 @@ class LRCServerUI(App):
         except ValueError as err:
             server_address = None
             self.log('start server failed, unable to parse ip or port :', err.args)
-        finally:
-            pass
         if server_address:
             self.server_address =server_address
             self.log('start server at :', self.server_address)

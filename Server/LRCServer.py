@@ -1,4 +1,5 @@
 from __future__ import print_function
+from Controller.LRCController import Controller
 
 try: # python 2
     from SocketServer import UDPServer
@@ -6,8 +7,6 @@ except ImportError:  # python 3
     from socketserver import UDPServer
 except:
     print('can not import packages for UDPServer.')
-finally:
-    pass
 
 
 class LRCServer ( UDPServer, object ):
@@ -44,49 +43,53 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
         self.message_encoding = message_encoding
         self.connect_server_address = connect_server_address
         self.keyboard = PyKeyboard()
-        self.key_matcher = re.compile(r'[a-zA-Z]+')
-        self.__make_functional_key_dict()
-
-    def __make_functional_key_dict(self):
-        self._allowed_functional_key = ({
-            'ctrl':    self.keyboard.control_l_key,
-            'alt':     self.keyboard.alt_l_key,
-            'shift':   self.keyboard.shift_l_key
-        })
+        self.key_matcher = re.compile(r'[a-zA-Z ]+')
+        self.key_settings = Controller.settings
 
     def decode_message(self, message):
         return message.decode(self.message_encoding)
 
-    def validate_key_combination(self, key_combination):
+    def parse_key_combination_str(self, key_str_list):
         # to lower
-        for ix_key in range(len(key_combination)):
-            key_combination[ix_key] = key_combination[ix_key].lower()
+        str_list_to_check = []
+        for key_str in key_str_list:
+            str_list_to_check.append(key_str.lower())
         # identify functional keys
         checked_combination = []
-        for f_key in self._allowed_functional_key.keys():
-            if f_key in key_combination:
-                real_key = self._allowed_functional_key[ f_key ]
-                checked_combination.append( real_key )
+        for f_key in self.key_settings.ctrl_keys:
+            if f_key in str_list_to_check:
+                checked_combination.append( self.key_settings.key_map[ f_key ] )
+                str_list_to_check.remove(f_key)
+        for f_key in self.key_settings.shift_keys:
+            if f_key in str_list_to_check:
+                checked_combination.append( self.key_settings.key_map[ f_key ] )
+                str_list_to_check.remove(f_key)
+        for f_key in self.key_settings.alt_keys:
+            if f_key in str_list_to_check:
+                checked_combination.append( self.key_settings.key_map[ f_key ] )
+                str_list_to_check.remove(f_key)
+        # special keys
+        for s_key in self.key_settings.allowed_special_keys:
+            if s_key in str_list_to_check:
+                checked_combination.append( self.key_settings.key_map[ s_key ] )
+                str_list_to_check.remove(s_key)
         # identify normal keys
-        for key in key_combination:
+        for key in str_list_to_check:
             if len(key) == 1:
                 checked_combination.append( key )
             else:
-                if key not in self._allowed_functional_key.keys():
-                    raise KeyCombinationParseError
+                raise KeyCombinationParseError()
         return checked_combination
 
     def parse_key_combination_message(self, key_combination_message):
         key_combination = self.key_matcher.findall(key_combination_message)
         try:
-            key_combination = self.validate_key_combination(key_combination)
+            key_combination = self.parse_key_combination_str(key_combination)
         except KeyCombinationParseError:
             key_combination = None
             print('LRCWaiter : parse key combination failed from message :', key_combination_message)
         except Exception as err:
             key_combination = None
-        finally:
-            pass
         return key_combination
 
     def finish_request(self, request, client_address):

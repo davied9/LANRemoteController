@@ -1,6 +1,7 @@
 from kivy.properties import ObjectProperty
 from Exceptions import ArgumentError
 from Controller.LRCKeySettings import KeySettings
+import json
 
 class AlternateKey(object):
 
@@ -23,13 +24,17 @@ class Controller(object):
 
     settings = KeySettings()
 
-    class UnsupportedKeyFroControllerError(Exception):
+    class UnsupportedKeyForControllerError(Exception):
 
-        def __init__(self, key):
+        def __init__(self, key, info=None):
             self.key = key
+            self.info = info
 
         def __str__(self):
-            return 'un-supported key "{0}" for Controller.'.format(self.key)
+            if self.info:
+                return 'un-supported key "{0}" for Controller : {1}.'.format(self.key, self.info)
+            else:
+                return 'un-supported key "{0}" for Controller.'.format(self.key)
 
     def __init__(self, name, *args):
         self.name  = name
@@ -65,32 +70,36 @@ class Controller(object):
             key = buffer[0]
             Controller.validate_key(key)
             self.key = key
-        else: # 0 == n_left or n_left > 1
+        elif 0 == n_left: # 0 == n_left
+            self.key = None
+        else: # n_left > 1
             raise ArgumentError('un-recongnized key in given keys for a Control (one special key or letter key should be provided) : {0}'.format(args) )
 
     def __str__(self):
-        return '{0}'.format(Controller.serialize_instance(self))
+        return self.dump_to_str()
 
-    @staticmethod
-    def serialize_instance(inst):
+    def dump_to_str(self):
+        return json.dumps(self.dump())
+
+    def dump(self):
         buttons = []
-        if inst.ctrl.enable:
-            if inst.ctrl.is_left:
+        if self.ctrl.enable:
+            if self.ctrl.is_left:
                 buttons.append(Controller.settings.ctrl_keys[1])
             else:
                 buttons.append(Controller.settings.ctrl_keys[2])
-        if inst.shift.enable:
-            if inst.shift.is_left:
+        if self.shift.enable:
+            if self.shift.is_left:
                 buttons.append(Controller.settings.shift_keys[1])
             else:
                 buttons.append(Controller.settings.shift_keys[2])
-        if inst.alt.enable:
-            if inst.alt.is_left:
+        if self.alt.enable:
+            if self.alt.is_left:
                 buttons.append(Controller.settings.alt_keys[1])
             else:
                 buttons.append(Controller.settings.alt_keys[2])
-        buttons.append(inst.key)
-        return { inst.name : buttons }
+        buttons.append(self.key)
+        return { self.name : buttons }
 
     @staticmethod
     def validate_key(key):
@@ -101,9 +110,9 @@ class Controller(object):
             if key.isalnum():
                 return
             else:
-                raise Controller.UnsupportedKeyFroControllerError('expected a letter or a number string length of 1 as a key, but got : {0}'.format(key))
+                raise Controller.UnsupportedKeyForControllerError(key, 'expecting a letter or a number string length of 1 as a key')
         else:
-            raise Controller.UnsupportedKeyFroControllerError('un-supported special key : {0}'.format(key))
+            raise Controller.UnsupportedKeyForControllerError(key, 'un-supported special key')
 
     def available(self):
         if self.key:
@@ -124,18 +133,34 @@ class ControllerSet(object):
     def __init__(self, name, **kwargs):
         self.name = name
         self.controllers = {}
-        print('    {0}'.format(self.name))
+        print('New Controller Set : {0}'.format(self.name))
         for name, config in kwargs.items():
-            print('        {0} : {1}'.format(name, config))
+            print('    {0} : {1}'.format(name, config))
             self.controllers[name] = (Controller(name, *config))
-        # print('re-dump : {0}'.format(json.dumps(self, default=self.serialize_instance)))
 
-    @staticmethod
-    def serialize_instance(inst):
+    def __str__(self):
+        return self.dump_to_str()
+
+    def dump(self):
         controllers = {}
-        for controller in inst.controllers:
-            controllers.update( Controller.serialize_instance(controller) )
-        return { inst.name : controllers }
+        for _, controller in self.controllers.items():
+            controllers.update( controller.dump() )
+        return { self.name : controllers }
+
+    def dump_to_file(self, file_path):
+        with open(file_path, 'w') as fh:
+            fh.write(self.dump_to_str())
+
+    def dump_to_str(self):
+        return json.dumps(self.dump())
+
+    def add_controller(self, controller):
+        print('Added to {0}(ControllerSet) : {1}'.format(self.name, controller.dump()))
+        self.controllers[controller.name] = controller
+
+    def remove_controller(self, controller):
+        del(self.controllers[controller.name])
+        print('Remove from {0}(ControllerSet) : {1}'.format(self.name, controller.dump()))
 
 
 class ControllerPackage(object):
