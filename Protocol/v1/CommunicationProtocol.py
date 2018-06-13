@@ -1,0 +1,6 @@
+
+class CommunicationProtocol(object):
+    pass
+
+
+

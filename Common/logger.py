@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 
 class LRCLogger(object):
 
@@ -7,4 +9,8 @@ class LRCLogger(object):
     def log(self, *args):
         self.log_handler(*args)
 
+
 logger = LRCLogger()
+
+def log(*args):
+    logger.log(*args)
