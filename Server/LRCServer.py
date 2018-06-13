@@ -1,5 +1,6 @@
 from __future__ import print_function
 from Controller.LRCController import Controller
+from Common.logger import logger
 
 try: # python 2
     from SocketServer import UDPServer
@@ -87,7 +88,7 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
             key_combination = self.parse_key_combination_str(key_combination)
         except KeyCombinationParseError:
             key_combination = None
-            print('LRCWaiter : parse key combination failed from message :', key_combination_message)
+            logger.info('Waiter: parse key combination failed from message : {0}'.format(key_combination_message) )
         except Exception as err:
             key_combination = None
         return key_combination
@@ -98,9 +99,9 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
         key_combination = self.parse_key_combination_message(message)
         try:
             self.keyboard.press_keys(key_combination)
-            print('pressing keys from ', client_address, ' :', key_combination)
+            logger.info('Waiter: pressing keys from {0} : {1}'.format(client_address, key_combination))
         except Exception as err:
-            print('can\'t press key from ', client_address, key_combination, ':', err.args)
+            logger.info('Waiter: can\'t press key from {0} {1} : {2}'.format(client_address, key_combination, err.args))
         finally:
             pass
 

@@ -7,6 +7,7 @@ from Common.Exceptions import *
 from Controller.LRCController import Controller, ControllerSet, ControllerPackage
 import os, json
 from ControllerEditor import ControllerEditor
+from kivy.logger import Logger
 
 Builder.load_string('''
 
@@ -123,7 +124,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
 
     # as callback for display_title on_release
     def _open_set_name_editor(self, *args):
-        print('_open_set_name_editor', args)
+        Logger.info('Builder: open set name editor {0}'.format(self.display_title.text))
         # disable display_title to avoid re-call of _open_set_name_editor
         self.display_title.disabled = True
         # create set_name_editor
@@ -151,14 +152,17 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
             current_edit_set = current_app.controller_sets[current_app.current_edit_set]
             if not self._exist_duplicate_controller_set(self.set_name_editor.text, current_edit_set):
                 new_set_name = self.set_name_editor.text
-                self.display_title.text = new_set_name
-                self._rename_current_edit_set(new_set_name)
-                self._close_set_name_editor()
+                if new_set_name:
+                    self.display_title.text = new_set_name
+                    self._rename_current_edit_set(new_set_name)
+                    self._close_set_name_editor()
+                else:
+                    self.present_info('Controller collection name can not be empty')
             else:
                 self.present_info('Duplicate controller collection {0}'.format(self.set_name_editor.text))
 
     def _close_set_name_editor(self, *args):
-        print('_close_set_name_editor', args)
+        Logger.info('Builder: close set name editor {0}'.format(self.display_title.text))
         self.display_title.unbind(size=self._sync_display_title_size_to_set_name_editor)
         self.display_title.unbind(pos=self._sync_display_title_pos_to_set_name_editor)
         self.display_title.disabled = False
@@ -285,7 +289,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
 
     def _open_controller_editor(self, controller_button):
         controller = controller_button.controller
-        print('edit {0}'.format(controller) )
+        Logger.info('Builder: edit {0}'.format(controller) )
         # create editor
         self.controller_editor = ControllerEditor(controller=controller, controller_button=controller_button)
         # add editor to layout
@@ -315,7 +319,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
 
     def _close_controller_editor(self):
         controller = self.controller_editor.controller
-        print('close editor for {0}'.format(controller))
+        Logger.info('Builder: close editor for {0}'.format(controller))
         # remove editor from layout
         self.button_container.remove_widget(self.controller_editor)
         self.button_container.height -= (self.controller_editor.height + self.button_container.spacing[1])

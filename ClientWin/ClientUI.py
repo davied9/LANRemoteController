@@ -11,6 +11,8 @@ from ControllerCollectionBuildScreen import ControllerCollectionBuildScreen
 from ControllerScreen import ControllerScreen
 from LRCClientConnector import LRCClientConnector
 from LRCClientWin import LRCClient
+from kivy.logger import Logger
+import Common.logger
 
 
 class ClientUI(App):
@@ -26,7 +28,7 @@ class ClientUI(App):
     '''
 
     def build(self):
-        print('working directory : {0}'.format( os.getcwd() ))
+        Logger.info('Start: working directory : {0}'.format( os.getcwd() ))
 
         self.controller_sets = None
         self.current_edit_set = None # for sync between build screen and controller screen
@@ -56,8 +58,7 @@ class ClientUI(App):
             win.size = [400, 600]
 
 
-def __test000():
-    ClientUI().run()
-
 if '__main__' == __name__:
-    __test000()
+    Common.logger.logger.set_logger('kivy')
+    # start application
+    ClientUI().run()

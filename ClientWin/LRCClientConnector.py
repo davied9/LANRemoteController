@@ -1,6 +1,7 @@
 from kivy.lang.builder import Builder
 from kivy.uix.boxlayout import BoxLayout
 from kivy.app import App
+from kivy.logger import Logger
 from time import sleep
 import re
 
@@ -64,12 +65,12 @@ class LRCClientConnector(BoxLayout):
             server_address = (ip, port)
         except ValueError as err:
             server_address = None
-            print('start server failed, unable to parse ip or port :', err.args)
+            Logger.info('Connector: start server failed, unable to parse ip or port : {0}'.format(err.args))
         if server_address:
             try:
                 self.connect(server_address)
             except Exception as err:
-                print('try to connect to {0} failed: {1}'.format(server_address, err.args))
+                Logger.info('Connector: try to connect to {0} failed: {1}'.format(server_address, err.args))
 
     def connect(self, server_address):
         self.client.connect(server_address)

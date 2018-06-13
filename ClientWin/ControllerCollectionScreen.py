@@ -3,6 +3,7 @@ from kivy.uix.screenmanager import CardTransition, SwapTransition, ShaderTransit
 from kivy.uix.screenmanager import WipeTransition, FadeTransition, FallOutTransition, RiseInTransition
 from kivy.properties import ObjectProperty
 from kivy.clock import Clock
+from kivy.logger import Logger
 from Common.Exceptions import *
 from Controller.LRCController import Controller, ControllerSet, ControllerPackage
 import os, json
@@ -78,13 +79,13 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
                 if not file_name.endswith('.json'): continue
                 full_path = r+'/'+file_name
                 with open(full_path) as file_handle:
-                    print('loading configuration from "{0}"'.format(full_path))
+                    Logger.info('Collection: loading configuration from "{0}"'.format(full_path))
                     try:
                         info = json.load(file_handle)
                         for name, config in info.items():
                             controller_sets[name] = ControllerSet(name, **config)
                     except Exception as err:
-                        print('    failed with message : {0}'.format(err))
+                        Logger.info('Collection:     failed with message : {0}'.format(err))
             break
 
         App.get_running_app().controller_sets = controller_sets

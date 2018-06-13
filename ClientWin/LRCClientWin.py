@@ -1,3 +1,4 @@
+from Common.logger import logger
 from socket import *
 import time
 import re
@@ -16,7 +17,7 @@ class LRCClient(object):
         self.socket.sendto(self.encode_message('hello'), server_address)
         msg, server_address = self.socket.recvfrom(1024)
         self.waiter_address = self.parse_address_from_message(msg)
-        print('parse waiter address from :', msg, 'with waiter address :', self.waiter_address)
+        logger.info('ClientWin: parse waiter address from : {0} with waiter address : {1}'.format(msg, self.waiter_address))
 
     def send_message(self, message):
         self.socket.sendto(self.encode_message(message), self.waiter_address)
@@ -46,7 +47,7 @@ class LRCClient(object):
         if len(ip) == 1 and ( len(port) == 1 or len(port) == 5 ):
             return (ip[0][1:-1], int(port[-1]))
         else:
-            print('parse_address_from_message : can\'t parse address from message "%s"' % contents)
+            logger.info('ClientWin: parse_address_from_message : can\'t parse address from message "%s"' % contents)
 
     def encode_message(self, message):
         return message.encode(self.message_encoding)

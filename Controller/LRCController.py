@@ -1,4 +1,5 @@
 from kivy.properties import ObjectProperty
+from kivy.logger import Logger
 from Exceptions import ArgumentError
 from Controller.LRCKeySettings import KeySettings
 import json
@@ -133,9 +134,9 @@ class ControllerSet(object):
     def __init__(self, name, **kwargs):
         self.name = name
         self.controllers = {}
-        print('New Controller Set : {0}'.format(self.name))
+        Logger.info('Collection: New Controller Set : {0}'.format(self.name))
         for name, config in kwargs.items():
-            print('    {0} : {1}'.format(name, config))
+            Logger.info('Collection:     {0} : {1}'.format(name, config))
             self.controllers[name] = (Controller(name, *config))
 
     def __str__(self):
@@ -155,12 +156,12 @@ class ControllerSet(object):
         return json.dumps(self.dump())
 
     def add_controller(self, controller):
-        print('Added to {0}(ControllerSet) : {1}'.format(self.name, controller.dump()))
+        Logger.info('Collection: Added to {0}(ControllerSet) : {1}'.format(self.name, controller.dump()))
         self.controllers[controller.name] = controller
 
     def remove_controller(self, controller):
         del(self.controllers[controller.name])
-        print('Remove from {0}(ControllerSet) : {1}'.format(self.name, controller.dump()))
+        Logger.info('Collection: Remove from {0}(ControllerSet) : {1}'.format(self.name, controller.dump()))
 
 
 class ControllerPackage(object):

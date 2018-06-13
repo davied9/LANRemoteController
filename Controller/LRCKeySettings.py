@@ -1,5 +1,6 @@
 from PyUserInput import PyKeyboard
 from Exceptions import ArgumentError
+import sys
 
 class KeyCombinationNotAvailableError(ArgumentError):
 
@@ -33,21 +34,30 @@ class KeySettings(object):
         key_map:
     '''
 
-    def __init__(self):
-
-        import sys
-
-        if sys.platform.startswith('java'):
-            raise NotImplementedError()
-            # from .java_ import PyKeyboard
-        elif sys.platform == 'darwin':
-            raise NotImplementedError()
-            # from .mac import PyKeyboard, PyKeyboardEvent
-        elif sys.platform == 'win32':
-            self._init_windows_setting()
+    def __init__(self, platform=None):
+        if platform:
+            if platform.startswith('java'):
+                raise NotImplementedError()
+                # from .java_ import PyKeyboard
+            elif platform == 'darwin':
+                raise NotImplementedError()
+                # from .mac import PyKeyboard, PyKeyboardEvent
+            elif platform == 'win32':
+                self._init_windows_setting()
+            else:
+                raise NotImplementedError()
         else:
-            raise NotImplementedError()
-            # from .x11 import PyKeyboard, PyKeyboardEvent
+            if sys.platform.startswith('java'):
+                raise NotImplementedError()
+                # from .java_ import PyKeyboard
+            elif sys.platform == 'darwin':
+                raise NotImplementedError()
+                # from .mac import PyKeyboard, PyKeyboardEvent
+            elif sys.platform == 'win32':
+                self._init_windows_setting()
+            else:
+                raise NotImplementedError()
+                # from .x11 import PyKeyboard, PyKeyboardEvent
 
     def _init_windows_setting(self):
         keyboard = PyKeyboard()
