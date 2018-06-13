@@ -157,7 +157,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
                     self._rename_current_edit_set(new_set_name)
                     self._close_set_name_editor()
                 else:
-                    self.present_info('Controller collection name can not be empty')
+                    self.present_info('Duplicate controller collection {0}'.format(self.set_name_editor.text))
             else:
                 self.present_info('Duplicate controller collection {0}'.format(self.set_name_editor.text))
 

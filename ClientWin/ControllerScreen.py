@@ -51,6 +51,9 @@ class ControllerScreen(Screen): # controller operation room
 
     def __init__(self, **kwargs):
         Screen.__init__(self, **kwargs)
+        self.connector.ip_button.bind(on_release=self._on_ip_button_released)
+        self.connector.port_button.bind(on_release=self._on_port_button_released)
+        self.ip_and_port_input = None
 
     def on_pre_enter(self, *args):
         current_app = App.get_running_app()
@@ -93,4 +96,35 @@ class ControllerScreen(Screen): # controller operation room
 
     def _execute_controller(self, controller):
         self.connector.execute_controller(controller)
+
+    # ip_or_port = 'ip' or 'port'
+    def _open_ip_port_input(self, button, ip_or_port):
+        if not self.ip_and_port_input:
+            self.ip_and_port_input = TextInput(text=button.text, size_hint_max_y=30)
+            self.ip_and_port_input.bind(focused=self._on_ip_or_port_input_focused)
+            self.background_layout.add_widget(self.ip_and_port_input, 999)
+
+        if 'ip' == ip_or_port:
+            self.ip_and_port_input.sync_button = self.connector.ip_button
+        else:
+            self.ip_and_port_input.sync_button = self.connector.port_button
+
+        self.ip_and_port_input.text = self.ip_and_port_input.sync_button.text
+
+    # as callback for ip_button
+    def _on_ip_button_released(self, button):
+        self._open_ip_port_input(button, 'ip')
+
+    # as callback for port_button
+    def _on_port_button_released(self, button):
+        self._open_ip_port_input(button, 'port')
+
+    # as callback for ip or port input
+    def _on_ip_or_port_input_focused(self, input, focused):
+        if focused:
+            input.select_all()
+        else:
+            input.sync_button.text = input.text
+            self.background_layout.remove_widget(input)
+            self.ip_and_port_input = None
 

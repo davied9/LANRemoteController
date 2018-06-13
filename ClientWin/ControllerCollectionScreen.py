@@ -7,6 +7,7 @@ from kivy.logger import Logger
 from Common.Exceptions import *
 from Controller.LRCController import Controller, ControllerSet, ControllerPackage
 import os, json
+from functools import partial
 
 Builder.load_string('''
 <ControllerCollectionScreen>:
@@ -14,6 +15,7 @@ Builder.load_string('''
     controller_set_scrollview: controller_set_scrollview
     controller_set_container: controller_set_container
     display_title: title_label
+    connector: connector
     size_hint_min: 400, 600
     BoxLayout:
         id: background_layout
@@ -46,6 +48,7 @@ Builder.load_string('''
                 size_hint: 1, None  # this will make this not in control of its parent
                 height: 50
         LRCClientConnector:
+            id: connector
 ''')
 
 
@@ -53,12 +56,16 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
 
     def __init__(self, **kwargs):
         Screen.__init__(self, **kwargs)
+        self.connector.ip_button.bind(on_release=self._on_ip_button_released)
+        self.connector.port_button.bind(on_release=self._on_port_button_released)
+        self.ip_and_port_input = None
 
     def on_pre_enter(self, *args):
         if not App.get_running_app().controller_sets:
             self._reload_controller_set_from_local()
         else:
             self._reload_controller_set_from_app()
+
 
     def on_leave(self, *args):
         self._reset_controller_set_container()
@@ -114,3 +121,34 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
         App.get_running_app().current_edit_set = None
         self.manager.last_screen = "Controller Collections"
         self.manager.current = 'Controller Collection Builder'
+
+    # ip_or_port = 'ip' or 'port'
+    def _open_ip_port_input(self, button, ip_or_port):
+        if not self.ip_and_port_input:
+            self.ip_and_port_input = TextInput(text=button.text, size_hint_max_y=30)
+            self.ip_and_port_input.bind(focused=self._on_ip_or_port_input_focused)
+            self.background_layout.add_widget(self.ip_and_port_input, 999)
+
+        if 'ip' == ip_or_port:
+            self.ip_and_port_input.sync_button = self.connector.ip_button
+        else:
+            self.ip_and_port_input.sync_button = self.connector.port_button
+
+        self.ip_and_port_input.text = self.ip_and_port_input.sync_button.text
+
+    # as callback for ip_button
+    def _on_ip_button_released(self, button):
+        self._open_ip_port_input(button, 'ip')
+
+    # as callback for port_button
+    def _on_port_button_released(self, button):
+        self._open_ip_port_input(button, 'port')
+
+    # as callback for ip or port input
+    def _on_ip_or_port_input_focused(self, input, focused):
+        if focused:
+            input.select_all()
+        else:
+            input.sync_button.text = input.text
+            self.background_layout.remove_widget(input)
+            self.ip_and_port_input = None

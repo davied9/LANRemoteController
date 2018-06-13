@@ -9,9 +9,9 @@ Builder.load_string('''
 <LRCClientConnector>:
     size_hint_max_y: 30
     ip_label: ip_label
-    ip_input: ip_input
+    ip_button: ip_button
     port_label: port_label
-    port_input: port_input
+    port_button: port_button
     Widget:
     Button:
         text: 'Connect'
@@ -23,23 +23,23 @@ Builder.load_string('''
         text: 'IP'
         size_hint: None, 1
         width: 30
-    TextInput:
-        id: ip_input
+    Button:
+        id: ip_button
         text: '127.0.0.1'
         size_hint: None, 1
         width: 90
-        #background_color: [0, 0, 0, 0]
+        background_color: [0, 0, 0, 0]
     Label:
         id: port_label
         text: 'Port'
         size_hint: None, 1
         width: 50
-    TextInput:
-        id: port_input
+    Button:
+        id: port_button
         text: '35530'
         size_hint: None, 1
         width: 90
-        #background_color: [0, 0, 0, 0]
+        background_color: [0, 0, 0, 0]
     Widget:
 ''')
 
@@ -60,8 +60,8 @@ class LRCClientConnector(BoxLayout):
     # as callback for "Connect" button
     def on_connect_released(self, button):
         try:
-            ip = self.parse_ip(self.ip_input.text)
-            port = self.parse_port(self.port_input.text)
+            ip = self.parse_ip(self.ip_button.text)
+            port = self.parse_port(self.port_button.text)
             server_address = (ip, port)
         except ValueError as err:
             server_address = None
