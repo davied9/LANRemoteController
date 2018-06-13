@@ -64,6 +64,10 @@ class ControllerScreen(Screen): # controller operation room
 
         self.display_title.text = current_app.current_edit_set
 
+        if current_app.client.server_address:
+            self.connector.ip_button.text   = current_app.client.server_address[0]
+            self.connector.port_button.text = str(current_app.client.server_address[1])
+
     def _reset_button_container(self):
         self.button_container.clear_widgets()
         self.button_container.height = 50
