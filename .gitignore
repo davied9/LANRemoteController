@@ -264,6 +264,9 @@ __pycache__/
 !.gitignore
 !.gitattributes
 
-# customized ignore
+# test
 /TopLevelTest.py
 
+# build
+dist/
+build/
