@@ -270,3 +270,4 @@ __pycache__/
 # build
 dist/
 build/
+*.spec
