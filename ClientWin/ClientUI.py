@@ -1,16 +1,11 @@
 from Common.KivyImporter import *
 from kivy.uix.screenmanager import CardTransition, SwapTransition, ShaderTransition, SlideTransition
 from kivy.uix.screenmanager import WipeTransition, FadeTransition, FallOutTransition, RiseInTransition
-from kivy.properties import ObjectProperty
-from kivy.clock import Clock
-from Common.Exceptions import *
-from Controller.LRCController import Controller, ControllerSet, ControllerPackage
 import os, json
-from ControllerCollectionScreen import ControllerCollectionScreen
-from ControllerCollectionBuildScreen import ControllerCollectionBuildScreen
-from ControllerScreen import ControllerScreen
-from LRCClientConnector import LRCClientConnector
-from LRCClientWin import LRCClient
+from ClientWin.ControllerCollectionScreen import ControllerCollectionScreen
+from ClientWin.ControllerCollectionBuildScreen import ControllerCollectionBuildScreen
+from ClientWin.ControllerScreen import ControllerScreen
+from ClientWin.LRCClientWin import LRCClient
 from kivy.logger import Logger
 import Common.logger
 

@@ -1,5 +1,5 @@
 from PyUserInput import PyKeyboard
-from Exceptions import ArgumentError
+from Common.Exceptions import ArgumentError
 import sys
 
 class KeyCombinationNotAvailableError(ArgumentError):

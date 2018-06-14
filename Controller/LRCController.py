@@ -1,6 +1,6 @@
 from kivy.properties import ObjectProperty
 from kivy.logger import Logger
-from Exceptions import ArgumentError
+from Common.Exceptions import ArgumentError
 from Controller.LRCKeySettings import KeySettings
 import json
 

@@ -1,12 +1,9 @@
 from Common.KivyImporter import *
-from kivy.uix.screenmanager import CardTransition, SwapTransition, ShaderTransition, SlideTransition
-from kivy.uix.screenmanager import WipeTransition, FadeTransition, FallOutTransition, RiseInTransition
 from kivy.properties import ObjectProperty
 from kivy.clock import Clock
 from Common.Exceptions import *
 from Controller.LRCController import Controller, ControllerSet, ControllerPackage
-import os, json
-from ControllerEditor import ControllerEditor
+from ClientWin.ControllerEditor import ControllerEditor
 from kivy.logger import Logger
 
 Builder.load_string('''

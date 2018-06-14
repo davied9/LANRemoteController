@@ -2,7 +2,6 @@ from kivy.lang.builder import Builder
 from kivy.uix.boxlayout import BoxLayout
 from kivy.app import App
 from kivy.logger import Logger
-from time import sleep
 import re
 
 Builder.load_string('''

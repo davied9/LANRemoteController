@@ -1,6 +1,5 @@
 from Common.logger import logger
 from socket import *
-import time
 import re
 
 class LRCClient(object):
