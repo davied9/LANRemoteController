@@ -1,2 +1,2 @@
-from pykeyboard import *
-from pymouse import *
+from PyUserInput.pykeyboard import *
+from PyUserInput.pymouse import *
