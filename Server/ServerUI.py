@@ -11,7 +11,7 @@ import re
 
 class _log_buffer(object):
 
-    def __init__(self, max_size=100, pop_size=5):
+    def __init__(self, max_size=10, pop_size=1):
         self.buffer = []
         self.max_size = max_size
         self.pop_size = pop_size
@@ -95,7 +95,7 @@ class LRCServerUI(App):
         self.client_list = manager.list()
         # log buffer
         self.log_mailbox = manager.list()
-        self.log_buffer = _log_buffer(max_size=30, pop_size=5)
+        self.log_buffer = _log_buffer(max_size=30, pop_size=1)
         return self.root
 
     def on_start(self):
@@ -235,15 +235,8 @@ class LRCServerUI(App):
             self.start_waiter()
 
 
-
-def __test001_basics():
+if __name__ == '__main__':
     logger.set_logger('kivy')
     LRCServerUI().run()
-    logger.info('Done running')
-    pass
-
-
-if __name__ == '__main__':
-    __test001_basics()
     pass
 
