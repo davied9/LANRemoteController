@@ -56,7 +56,7 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
         self.key_matcher = re.compile(r'[a-zA-Z ]+')
         self.key_settings = Controller.settings
         self.client_list = client_list
-        self.execute_delay = 0
+        self.execute_delay = 3
 
     def decode_message(self, message):
         return message.decode(self.message_encoding)

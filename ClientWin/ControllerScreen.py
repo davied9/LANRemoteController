@@ -104,9 +104,8 @@ class ControllerScreen(Screen): # controller operation room
     def _on_controller_button_released(self, button):
         try:
             self._execute_controller(button.controller)
-        except Exception as err:
-            info = 'Controller: failed to execute controller {0} : {1}'.format(button.controller, err.args)
-            self.present_info(info)
+        except:
+            self.present_info('Controller: failed to execute controller, maybe server is not connected???')
 
     def _execute_controller(self, controller):
         self.connector.execute_controller(controller)

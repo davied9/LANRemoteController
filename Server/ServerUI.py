@@ -1,7 +1,7 @@
 # -*-coding:utf-8-*-
 from __future__ import print_function
 from Common.KivyImporter import *
-from multiprocessing import Process, Manager
+from multiprocessing import Process, Manager, freeze_support
 from threading import Thread
 from random import randint
 from time import sleep
@@ -48,11 +48,6 @@ def start_LRCWaiter(waiter_address, server_address, client_list):
 
 class LRCServerUI(App):
 
-    def __init__(self, **kwargs):
-        self.comm_manager = kwargs['comm_manager']
-        del(kwargs['comm_manager'])
-        App.__init__(self, **kwargs)
-
     def build(self):
         # servers
         self.server_address = ('127.0.0.1', 35530)
@@ -94,11 +89,11 @@ class LRCServerUI(App):
         self.root.add_widget(self.log_window)
         # regexp
         self.ip_matcher = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
-
+        self.comm_manager = Manager()
         # client list
-        self.client_list = None #self.comm_manager.list()
+        self.client_list = self.comm_manager.list()
         # log buffer
-        self.log_mailbox = None #self.comm_manager.list()
+        self.log_mailbox = self.comm_manager.list()
         self.log_buffer = _log_buffer(max_size=30, pop_size=1)
         return self.root
 
@@ -158,10 +153,6 @@ class LRCServerUI(App):
             server_address = None
             self.log('Server: start server failed, unable to parse ip or port : {0}'.format(err.args))
         if server_address:
-            if not self.comm_manager:
-                self.comm_manager = Manager()
-                self.client_list = self.comm_manager.list()
-                self.log_mailbox = self.comm_manager.list()
             self.server_address = server_address
             self.waiter_address = waiter_address
             self.log('Server: start server at : {0}, bind to waiter {1}'.format(self.server_address, self.waiter_address))
@@ -249,7 +240,8 @@ class LRCServerUI(App):
 
 
 if __name__ == '__main__':
+    freeze_support()
     logger.set_logger('kivy')
-    LRCServerUI(comm_manager=None).run()
+    LRCServerUI().run()
     pass
 
