@@ -53,6 +53,7 @@ class ClientUI(App):
             win.size = [400, 600]
 
 
+# this file should be renamed to main.py when copy to android for Kivy laucher
 if '__main__' == __name__:
     Common.logger.logger.set_logger('kivy')
     # start application
