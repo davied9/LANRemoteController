@@ -231,9 +231,7 @@ class LRCServerUI(App):
 
     def _mailbox_watcher(self):
         while True:
-            while not self.log_mailbox.empty():
-                self.log(self.log_mailbox.get_nowait())
-            sleep(0.1)
+            self.log(self.log_mailbox.get()) # get will block until there is data
 
     def on_start_server_pressed(self, inst):
         if self.server_process: # process is running, close it
