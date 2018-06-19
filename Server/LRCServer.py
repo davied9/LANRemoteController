@@ -15,12 +15,15 @@ class LRCServer ( UDPServer, object ):
 
     allow_reuse_address = True
 
-    def __init__(self, server_address, waiter_address, verify_code, client_list=None, message_encoding='utf-8' ):
-        UDPServer.__init__( self, server_address, None )
-        self.waiter_address = waiter_address
-        self.message_encoding = message_encoding
-        self.verify_code = verify_code
-        self.client_list = client_list
+    def __init__(self, **kwargs ):
+        UDPServer.__init__( self, kwargs["server_address"], None )
+        self.waiter_address     = kwargs["waiter_address"]
+        self.message_encoding   = kwargs["message_encoding"] if "message_encoding" in kwargs else 'utf-8'
+        self.verify_code        = kwargs["verify_code"] if "verify_code" in kwargs else None
+        self.client_list        = kwargs["client_list"] if "client_list" in kwargs else None
+        self.log_mailbox        = kwargs["log_mailbox"] if "log_mailbox" in kwargs else None
+        self.info       = self.log_mailbox.put_nowait if self.log_mailbox else logger.info
+        self.warning    = self.log_mailbox.put_nowait if self.log_mailbox else logger.warning
 
     def encode_message(self, message):
         return message.encode(self.message_encoding)
@@ -30,10 +33,9 @@ class LRCServer ( UDPServer, object ):
 
     def finish_request(self, request, client_address):
         self.sendto( str(self.waiter_address) , client_address )
-        if self.client_list:
-            if client_address not in self.client_list:
-                self.client_list.append(client_address)
-                logger.info('Server: add client {0} to client list.'.format(client_address))
+        if self.client_list is not None and client_address not in self.client_list:
+            self.client_list.append(client_address)
+            self.info('Server: add client {0} to client list.'.format(client_address))
 
 
 class KeyCombinationParseError(Exception):
@@ -48,14 +50,17 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
 
     allow_reuse_address = True
 
-    def __init__(self, waiter_address, connect_server_address, client_list=None, message_encoding='utf-8' ):
-        UDPServer.__init__( self, waiter_address, None )
-        self.message_encoding = message_encoding
-        self.connect_server_address = connect_server_address
+    def __init__(self, **kwargs ):
+        UDPServer.__init__( self, kwargs["waiter_address"], None )
+        self.message_encoding       = kwargs["message_encoding"] if "message_encoding" in kwargs else 'utf-8'
+        self.connect_server_address = kwargs["connect_server_address"]
+        self.client_list            = kwargs["client_list"] if "client_list" in kwargs else None
+        self.log_mailbox            = kwargs["log_mailbox"] if "log_mailbox" in kwargs else None
+        self.info       = self.log_mailbox.put_nowait if self.log_mailbox else logger.info
+        self.warning    = self.log_mailbox.put_nowait if self.log_mailbox else logger.warning
         self.keyboard = PyKeyboard()
         self.key_matcher = re.compile(r'[a-zA-Z ]+')
         self.key_settings = Controller.settings
-        self.client_list = client_list
         self.execute_delay = 3
 
     def decode_message(self, message):
@@ -99,29 +104,28 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
             key_combination = self.parse_key_combination_str(key_combination)
         except KeyCombinationParseError:
             key_combination = None
-            logger.info('Waiter: parse key combination failed from message : {0}'.format(key_combination_message) )
+            self.info('Waiter: parse key combination failed from message : {0}'.format(key_combination_message) )
         except Exception as err:
             key_combination = None
         return key_combination
 
     def finish_request(self, request, client_address):
         """Finish one request by instantiating RequestHandlerClass."""
-        if self.client_list:
-            if client_address not in self.client_list:
-                logger.warning('Waiter: unknown client request : {0}'.format(client_address))
-                return
+        if self.client_list is not None and client_address not in self.client_list:
+            self.warning('Waiter: unknown client request : {0}'.format(client_address))
+            return
         message = self.decode_message(request[0])
         key_combination = self.parse_key_combination_message(message)
         try:
             if self.execute_delay:
                 from threading import Timer
                 Timer( self.execute_delay, self.keyboard.press_keys, args=(key_combination,)).start()
-                logger.info('Waiter: schedule pressing keys in {2} seconds from {0} : {1}'.format(client_address, key_combination, self.execute_delay))
+                self.info('Waiter: schedule pressing keys in {2} seconds from {0} : {1}'.format(client_address, key_combination, self.execute_delay))
             else:
                 self.keyboard.press_keys(key_combination)
-                logger.info('Waiter: pressing keys from {0} : {1}'.format(client_address, key_combination))
+                self.info('Waiter: pressing keys from {0} : {1}'.format(client_address, key_combination))
         except Exception as err:
-            logger.info('Waiter: can\'t press key from {0} {1} : {2}'.format(client_address, key_combination, err.args))
+            self.info('Waiter: can\'t press key from {0} {1} : {2}'.format(client_address, key_combination, err.args))
 
 
 def test000_async_server():

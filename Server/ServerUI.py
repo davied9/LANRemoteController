@@ -31,19 +31,21 @@ class _log_buffer(object):
         return str
 
 
-def start_LRCServer(server_address, waiter_address, verify_code, client_list):
+def start_LRCServer(server_address, waiter_address, verify_code, client_list, log_mailbox):
     from Server.LRCServer import LRCServer
     LRCServer(server_address=server_address,
               waiter_address=waiter_address,
               verify_code=verify_code,
-              client_list=client_list).serve_forever()
+              client_list=client_list,
+              log_mailbox=log_mailbox).serve_forever()
 
 
-def start_LRCWaiter(waiter_address, server_address, client_list):
+def start_LRCWaiter(waiter_address, server_address, client_list, log_mailbox):
     from Server.LRCServer import LRCWaiter
     LRCWaiter(waiter_address=waiter_address,
               connect_server_address=server_address,
-              client_list=client_list).serve_forever()
+              client_list=client_list,
+              log_mailbox=log_mailbox).serve_forever()
 
 
 class LRCServerUI(App):
@@ -93,8 +95,9 @@ class LRCServerUI(App):
         # client list
         self.client_list = self.comm_manager.list()
         # log buffer
-        self.log_mailbox = self.comm_manager.list()
-        self.log_buffer = _log_buffer(max_size=30, pop_size=1)
+        self.log_mailbox = self.comm_manager.Queue()
+        self.log_buffer = _log_buffer(max_size=25, pop_size=1)
+        Thread(target=self._mailbox_watcher).start()
         return self.root
 
     def on_start(self):
@@ -161,7 +164,7 @@ class LRCServerUI(App):
             self.server_info_label.text = 'code : ' + self.server_code + ', running ...'
             self.server_ip_input.disabled = True
             self.server_port_input.disabled = True
-            self.server_process = Process(target=start_LRCServer, args=(self.server_address, self.waiter_address, self.server_code, self.client_list))
+            self.server_process = Process(target=start_LRCServer, args=(self.server_address, self.waiter_address, self.server_code, self.client_list, self.log_mailbox))
             self.server_process.start()
             Thread(target=self._server_watcher).start()
 
@@ -194,7 +197,7 @@ class LRCServerUI(App):
             self.waiter_info_label.text = 'running ...'
             self.waiter_ip_input.disabled = True
             self.waiter_port_input.disabled = True
-            self.waiter_process = Process(target=start_LRCWaiter, args=(self.waiter_address, self.server_address, self.client_list ))
+            self.waiter_process = Process(target=start_LRCWaiter, args=(self.waiter_address, self.server_address, self.client_list, self.log_mailbox ))
             self.waiter_process.start()
             Thread(target=self._waiter_watcher).start()
 
@@ -225,6 +228,12 @@ class LRCServerUI(App):
                 self.stop_waiter()
                 break
             sleep(self.watch_interval)
+
+    def _mailbox_watcher(self):
+        while True:
+            while not self.log_mailbox.empty():
+                self.log(self.log_mailbox.get_nowait())
+            sleep(0.1)
 
     def on_start_server_pressed(self, inst):
         if self.server_process: # process is running, close it
