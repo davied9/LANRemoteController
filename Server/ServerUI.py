@@ -6,8 +6,8 @@ from threading import Thread
 from random import randint
 from time import sleep
 from Common.logger import logger
-import re
-
+import re, os
+os.environ['KIVY_IMAGE'] = 'pil,sdl2'
 
 class _log_buffer(object):
 
