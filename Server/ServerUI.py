@@ -9,6 +9,7 @@ from Common.logger import logger
 import re, os
 os.environ['KIVY_IMAGE'] = 'pil,sdl2'
 
+
 class _log_buffer(object):
 
     def __init__(self, max_size=10, pop_size=1):
@@ -32,7 +33,7 @@ class _log_buffer(object):
 
 
 def start_LRCServer(server_address, waiter_address, verify_code, client_list, log_mailbox):
-    from Server.LRCServer import LRCServer
+    from LRCServer import LRCServer
     LRCServer(server_address=server_address,
               waiter_address=waiter_address,
               verify_code=verify_code,
@@ -41,7 +42,7 @@ def start_LRCServer(server_address, waiter_address, verify_code, client_list, lo
 
 
 def start_LRCWaiter(waiter_address, server_address, client_list, log_mailbox):
-    from Server.LRCServer import LRCWaiter
+    from LRCServer import LRCWaiter
     LRCWaiter(waiter_address=waiter_address,
               connect_server_address=server_address,
               client_list=client_list,
