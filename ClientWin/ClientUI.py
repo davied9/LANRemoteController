@@ -3,39 +3,17 @@ from Common.KivyImporter import *
 from kivy.logger import Logger
 import Common.logger
 
-try:
-    from kivy.uix.screenmanager import CardTransition
-except ImportError:
-    Logger.error('Import: can\'t import CardTransition')
-try:
-    from kivy.uix.screenmanager import SwapTransition
-except ImportError:
-    Logger.error('Import: can\'t import SwapTransition')
-try:
-    from kivy.uix.screenmanager import ShaderTransition
-except ImportError:
-    Logger.error('Import: can\'t import ShaderTransition')
-try:
-    from kivy.uix.screenmanager import SlideTransition
-except ImportError:
-    Logger.error('Import: can\'t import SlideTransition')
-try:
-    from kivy.uix.screenmanager import WipeTransition
-except ImportError:
-    Logger.error('Import: can\'t import WipeTransition')
-try:
-    from kivy.uix.screenmanager import FadeTransition
-except ImportError:
-    Logger.error('Import: can\'t import FadeTransition')
-try:
-    from kivy.uix.screenmanager import FallOutTransition
-except ImportError:
-    Logger.error('Import: can\'t import FallOutTransition')
-try:
-    from kivy.uix.screenmanager import RiseInTransition
-except ImportError:
-    Logger.error('Import: can\'t import RiseInTransition')
-
+# try:
+#     from kivy.uix.screenmanager import CardTransition
+# except ImportError:
+#     Logger.error('Import: can\'t import CardTransition')
+# from kivy.uix.screenmanager import SwapTransition
+# from kivy.uix.screenmanager import ShaderTransition
+# from kivy.uix.screenmanager import SlideTransition
+# from kivy.uix.screenmanager import WipeTransition
+# from kivy.uix.screenmanager import FadeTransition
+# from kivy.uix.screenmanager import FallOutTransition
+from kivy.uix.screenmanager import RiseInTransition
 import os, json
 from ClientWin.ControllerCollectionScreen import ControllerCollectionScreen
 from ClientWin.ControllerCollectionBuildScreen import ControllerCollectionBuildScreen
