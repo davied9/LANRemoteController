@@ -1,4 +1,4 @@
-from PyUserInput import PyKeyboard
+from Controller.win32keydefines import *
 from Common.Exceptions import ArgumentError
 import sys
 
@@ -60,7 +60,6 @@ class KeySettings(object):
                 # from .x11 import PyKeyboard, PyKeyboardEvent
 
     def _init_windows_setting(self):
-        keyboard = PyKeyboard()
 
         self.ctrl_keys  = ['ctrl',  'left ctrl',  'right ctrl', ] # control
         self.shift_keys = ['shift', 'left shift', 'right shift',] # shift
@@ -73,24 +72,24 @@ class KeySettings(object):
 
         self.key_map = {
             # functional key
-            'ctrl':          keyboard.control_l_key,
-            'left ctrl':    keyboard.control_l_key,
-            'right ctrl':   keyboard.control_r_key,
-            'alt':           keyboard.alt_l_key,
-            'left alt':      keyboard.alt_l_key,
-            'right alt':     keyboard.alt_r_key,
-            'shift':         keyboard.shift_l_key,
-            'left shift':    keyboard.shift_l_key,
-            'right shift':   keyboard.shift_r_key,
+            'ctrl':          VK_CONTROL,
+            'left ctrl':    VK_LCONTROL,
+            'right ctrl':   VK_RCONTROL,
+            'alt':           VK_LMENU,
+            'left alt':      VK_LMENU,
+            'right alt':     VK_RMENU,
+            'shift':         VK_SHIFT,
+            'left shift':    VK_LSHIFT,
+            'right shift':   VK_RSHIFT,
             # arrow key
-            'left arrow':   keyboard.left_key,
-            'right arrow':  keyboard.right_key,
-            'up arrow':     keyboard.up_key,
-            'down arrow':   keyboard.down_key,
+            'left arrow':   VK_LEFT,
+            'right arrow':  VK_RIGHT,
+            'up arrow':     VK_UP,
+            'down arrow':   VK_DOWN,
             # other
-            'space':        keyboard.space_key,
-            'home':         keyboard.home_key,
-            'end':          keyboard.end_key,
+            'space':        VK_SPACE,
+            'home':         VK_HOME,
+            'end':          VK_END,
         }
 
 
