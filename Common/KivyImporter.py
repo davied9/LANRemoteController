@@ -13,10 +13,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.factory import Factory
-try:
-    from kivy.lang.builder import Builder
-except ImportError:
-    from kivy.lang import Builder
+from kivy.lang import Builder
 
 
 __all__ = (['kivy', 'Builder', 'Factory', 'App',
