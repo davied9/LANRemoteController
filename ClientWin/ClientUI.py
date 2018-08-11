@@ -57,12 +57,6 @@ class ClientUI(App):
 
         return self.screen_manager
 
-    def on_start(self):
-        win = self.root.get_root_window()
-        if win:
-            win.minimum_width, win.minimum_height = [400, 600]
-            win.size = [400, 600]
-
 
 # this file should be renamed to main.py when copy to android for Kivy laucher
 if '__main__' == __name__:
