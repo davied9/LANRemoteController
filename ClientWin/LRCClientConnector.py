@@ -6,40 +6,32 @@ import re
 
 Builder.load_string('''
 <LRCClientConnector>:
-    size_hint_max_y: 30
     ip_label: ip_label
     ip_button: ip_button
     port_label: port_label
     port_button: port_button
-    Widget:
     Button:
         text: 'Connect'
-        size_hint: None, 1
-        width: 70
+        size_hint: 0.2, 1
         on_release: root.on_connect_released(self)
     Label:
         id: ip_label
         text: 'IP'
-        size_hint: None, 1
-        width: 30
+        size_hint: 0.1, 1
     Button:
         id: ip_button
         text: '127.0.0.1'
-        size_hint: None, 1
-        width: 90
+        size_hint: 0.3, 1
         background_color: [0, 0, 0, 0]
     Label:
         id: port_label
         text: 'Port'
-        size_hint: None, 1
-        width: 50
+        size_hint: 0.1, 1
     Button:
         id: port_button
         text: '35530'
-        size_hint: None, 1
-        width: 90
+        size_hint: 0.3, 1
         background_color: [0, 0, 0, 0]
-    Widget:
 ''')
 
 
