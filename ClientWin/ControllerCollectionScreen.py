@@ -6,56 +6,63 @@ from ClientWin.LRCClientConnector import LRCClientConnector
 from Controller.LRCController import Controller, ControllerSet, ControllerPackage
 import os, json
 
+
 Builder.load_string('''
 <ControllerCollectionScreen>:
+    # configuratins
+    button_height: 50
+    button_spacing: 10
+    # widgets
     background_layout: background_layout
     controller_set_scrollview: controller_set_scrollview
     controller_set_container: controller_set_container
     display_title: title_label
     connector: connector
     info_label: info_label
-    size_hint_min: 400, 600
-    BoxLayout:
-        id: background_layout
-        orientation: 'vertical'
-        padding: 30, 0
-        Widget:
-            size_hint: 1, None
-            height: 30
+    # layout begins
+    AnchorLayout:
+        anchor_x: 'center'
+        anchor_y: 'center'
         BoxLayout:
-            orientation: 'horizontal'
-            size_hint_max_y: 50
-            Button:
-                text: 'Reload'
-                size_hint_max: 50, 50
-                on_release: root._reload_controller_set_from_local(self)
+            id: background_layout
+            orientation: 'vertical'
+            size_hint: 0.95, 0.95
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint: 1, 0.1
+                Button:
+                    text: 'Reload'
+                    size_hint: 0.2, 1
+                    on_release: root._reload_controller_set_from_local(self)
+                Label:
+                    id: title_label
+                    text: 'Collections'
+                    font_size: 43
+                Button:
+                    text: 'Add'
+                    size_hint: 0.2, 1
+                    on_release: root._goto_builder_screen(self)
+            Widget:
+                size_hint: 1, 0.05
+            ScrollView:
+                id: controller_set_scrollview
+                do_scroll_x: False
+                color: 1, 1, 0, 1
+                GridLayout:
+                    id: controller_set_container
+                    cols: 1
+                    size_hint: 1, None
+                    spacing: root.button_spacing
+            Widget:
+                size_hint: 1, 0.05
+            LRCClientConnector:
+                id: connector
+                size_hint: 1, 0.05
             Label:
-                id: title_label
-                text: 'Collections'
-                font_size: 43
-            Button:
-                text: 'Add'
-                size_hint_max: 50, 50
-                on_release: root._goto_builder_screen(self)
-        Widget:
-            size_hint_max_y: 30
-        ScrollView:
-            id: controller_set_scrollview
-            do_scroll_x: False
-            GridLayout:
-                id: controller_set_container
-                cols: 1
-                spacing: 10
-                size_hint: 1, None  # this will make this not in control of its parent
-                height: 50
-        LRCClientConnector:
-            id: connector
-        Label:
-            id: info_label
-            size_hint: 1, None
-            height: 30
-            font_size: 12
-            color: 1, 0, 0, 1
+                id: info_label
+                size_hint: 1, 0.05
+                font_size: 12
+                color: 1, 0, 0, 1
 
 ''')
 
@@ -82,11 +89,17 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
     def on_leave(self, *args):
         self._reset_controller_set_container()
 
+    def _compute_button_size(self):
+        self.button_height = 0.2 * self.controller_set_scrollview.height
+        self.button_spacing = 0.05 * self.button_height
+
     def _reload_controller_set_from_app(self, *args):
+        self._compute_button_size()
         for name, _set in App.get_running_app().controller_sets.items():
             self._add_controller_set_button(_set)
 
     def _reload_controller_set_from_local(self, *args):
+        self._compute_button_size()
         self._reset_controller_set_container()
         for _set in self._load_controller_set_from_local().values():
             self._add_controller_set_button(_set)
@@ -118,11 +131,10 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
     def _add_controller_set_button(self, controller_set):
         self.controller_set_container.add_widget(Button(
             text=controller_set.name,
-            size_hint=(1,None),
-            height=50,
+            height=self.button_height,
             on_release=self._goto_controller_screen
         ))
-        self.controller_set_container.height += 60
+        self.controller_set_container.height += self.button_height + self.button_spacing
 
     def _goto_controller_screen(self, button): # goto controller screen to operate
         App.get_running_app().current_edit_set = button.text
