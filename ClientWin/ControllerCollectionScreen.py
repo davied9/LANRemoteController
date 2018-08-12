@@ -86,10 +86,13 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
 
     def on_pre_enter(self, *args):
         current_app = App.get_running_app()
+        if not current_app.controller_sets:
+            self._reload_controller_set_from_local()
+        else:
+            self._reload_controller_set_from_app()
         if current_app.client.server_address:
             self.connector.ip_button.text   = current_app.client.server_address[0]
             self.connector.port_button.text = str(current_app.client.server_address[1])
-        self._reload_controller_set()
 
     def on_leave(self, *args):
         self._reset_controller_set_container()
@@ -100,16 +103,8 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
             button.height = value
 
     def _compute_button_size(self, *args):
-        self.button_height = 0.2 * self.controller_set_scrollview.height
-        self.button_spacing = 0.05 * self.button_height
-
-    def _reload_controller_set(self, *args):
-        current_app = App.get_running_app()
-        if not current_app.controller_sets:
-            self._reload_controller_set_from_local()
-        else:
-            self._reload_controller_set_from_app()
-
+        self.button_height = int(0.2 * self.controller_set_scrollview.height)
+        self.button_spacing = int(0.05 * self.button_height)
 
     def _reload_controller_set_from_app(self, *args):
         for name, _set in App.get_running_app().controller_sets.items():
@@ -142,7 +137,6 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
 
     def _reset_controller_set_container(self):
         self.controller_set_container.clear_widgets()
-        self.controller_set_container.height = 1
 
     def _add_controller_set_button(self, controller_set):
         self.controller_set_container.add_widget(Button(
