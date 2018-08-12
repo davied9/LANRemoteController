@@ -6,9 +6,6 @@ from ClientWin.LRCClientConnector import LRCClientConnector
 
 Builder.load_string('''
 <ControllerScreen>:
-    # configurations
-    button_height: 50
-    button_spacing: 10
     # widgets
     background_layout: background_layout
     button_container: button_container

@@ -10,9 +10,6 @@ import os, json
 
 Builder.load_string('''
 <ControllerCollectionScreen>:
-    # configuratins
-    button_height: 50
-    button_spacing: 10
     # widgets
     background_layout: background_layout
     controller_set_scrollview: controller_set_scrollview
