@@ -1,6 +1,7 @@
 from Common.KivyImporter import *
 from kivy.clock import Clock
 from kivy.logger import Logger
+from kivy.properties import NumericProperty
 from Common.Exceptions import *
 from ClientWin.LRCClientConnector import LRCClientConnector
 from Controller.LRCController import Controller, ControllerSet, ControllerPackage
@@ -69,37 +70,52 @@ Builder.load_string('''
 
 class ControllerCollectionScreen(Screen): # gallery of controller sets
 
+    button_height = NumericProperty(0)
+    button_spacing = NumericProperty(0)
+
     def __init__(self, **kwargs):
         Screen.__init__(self, **kwargs)
         self.connector.ip_button.bind(on_release=self._on_ip_button_released)
         self.connector.port_button.bind(on_release=self._on_port_button_released)
         self.ip_and_port_input = None
         self.connector.ext_err_logger = self.present_info
+        self.controller_set_container.bind(minimum_height=self.controller_set_container.setter('height'))
+        self.bind(button_spacing=self.controller_set_container.setter('spacing'))
+        self.bind(button_height=self._on_button_height_change)
+        self.controller_set_scrollview.bind(height=self._compute_button_size)
 
     def on_pre_enter(self, *args):
+        current_app = App.get_running_app()
+        if current_app.client.server_address:
+            self.connector.ip_button.text   = current_app.client.server_address[0]
+            self.connector.port_button.text = str(current_app.client.server_address[1])
+        self._reload_controller_set()
+
+    def on_leave(self, *args):
+        self._reset_controller_set_container()
+
+    def _on_button_height_change(self, trigger, value):
+        if 0 == len(self.controller_set_container.children): return
+        for button in self.controller_set_container.children:
+            button.height = value
+
+    def _compute_button_size(self, *args):
+        self.button_height = 0.2 * self.controller_set_scrollview.height
+        self.button_spacing = 0.05 * self.button_height
+
+    def _reload_controller_set(self, *args):
         current_app = App.get_running_app()
         if not current_app.controller_sets:
             self._reload_controller_set_from_local()
         else:
             self._reload_controller_set_from_app()
-        if current_app.client.server_address:
-            self.connector.ip_button.text   = current_app.client.server_address[0]
-            self.connector.port_button.text = str(current_app.client.server_address[1])
 
-    def on_leave(self, *args):
-        self._reset_controller_set_container()
-
-    def _compute_button_size(self):
-        self.button_height = 0.2 * self.controller_set_scrollview.height
-        self.button_spacing = 0.05 * self.button_height
 
     def _reload_controller_set_from_app(self, *args):
-        self._compute_button_size()
         for name, _set in App.get_running_app().controller_sets.items():
             self._add_controller_set_button(_set)
 
     def _reload_controller_set_from_local(self, *args):
-        self._compute_button_size()
         self._reset_controller_set_container()
         for _set in self._load_controller_set_from_local().values():
             self._add_controller_set_button(_set)
@@ -131,10 +147,10 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
     def _add_controller_set_button(self, controller_set):
         self.controller_set_container.add_widget(Button(
             text=controller_set.name,
+            size_hint=(1,None),
             height=self.button_height,
             on_release=self._goto_controller_screen
         ))
-        self.controller_set_container.height += self.button_height + self.button_spacing
 
     def _goto_controller_screen(self, button): # goto controller screen to operate
         App.get_running_app().current_edit_set = button.text
