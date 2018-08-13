@@ -31,6 +31,9 @@ class ButtonContainer(ScrollView):
         button.height = self.button_height
         self.container.add_widget(button)
 
+    def clear_buttons(self):
+        self.container.clear_widgets()
+
     pass
 
 
