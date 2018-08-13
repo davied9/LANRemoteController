@@ -2,7 +2,7 @@ from kivy.lang import Builder
 from kivy.properties import NumericProperty
 from kivy.uix.scrollview import ScrollView
 
-Builder.load_file('ButtonContainer.kv')
+Builder.load_file('ClientWin/ButtonContainer.kv')
 
 class ButtonContainer(ScrollView):
 
