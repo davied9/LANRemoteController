@@ -112,15 +112,10 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
         return controller_sets
 
     def _reset_controller_set_container(self):
-        self.button_container.container.clear_widgets()
+        self.button_container.clear_buttons()
 
     def _add_controller_set_button(self, controller_set):
-        self.button_container.add_button(Button(
-            text=controller_set.name,
-            size_hint=(1,None),
-            height=self.button_container.button_height,
-            on_release=self._goto_controller_screen
-        ))
+        self.button_container.add_button(Button( text=controller_set.name, on_release=self._goto_controller_screen ))
 
     def _goto_controller_screen(self, button): # goto controller screen to operate
         App.get_running_app().current_edit_set = button.text
