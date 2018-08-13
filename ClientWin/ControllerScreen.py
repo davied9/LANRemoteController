@@ -2,14 +2,12 @@ from Common.KivyImporter import *
 from kivy.clock import Clock
 from kivy.properties import NumericProperty
 from ClientWin.LRCClientConnector import LRCClientConnector
-
+from ClientWin.ButtonContainer import ButtonContainer
 
 Builder.load_string('''
 <ControllerScreen>:
     # widgets
     background_layout: background_layout
-    button_container: button_container
-    scroll_view: scroll_view
     display_title: title_label
     connector: connector
     info_label: info_label
@@ -36,14 +34,8 @@ Builder.load_string('''
                 on_release: root._goto_builder_screen(self)
         Widget:
             size_hint: 1, 0.05
-        ScrollView:
-            id: scroll_view
-            do_scroll_x: False
-            GridLayout:
-                id: button_container
-                cols: 1
-                size_hint: 1, None
-                spacing: 10
+        Widget:
+            size_hint: 1, 0.05
         LRCClientConnector:
             id: connector
             size_hint: 1, 0.05
@@ -52,6 +44,7 @@ Builder.load_string('''
             size_hint: 1, 0.05
             font_size: 12
             color: 1, 0, 0, 1
+        # if any new components added, index of button_container in __init__ should be taken care of
 ''')
 
 
@@ -62,14 +55,16 @@ class ControllerScreen(Screen): # controller operation room
 
     def __init__(self, **kwargs):
         Screen.__init__(self, **kwargs)
+        # add button container
+        self.button_container = ButtonContainer()
+        self.background_layout.add_widget(self.button_container, 3)
+        # do some bindings
         self.connector.ip_button.bind(on_release=self._on_ip_button_released)
         self.connector.port_button.bind(on_release=self._on_port_button_released)
+        # initialize
         self.ip_and_port_input = None
         self.connector.ext_err_logger = self.present_info
-        self.button_container.bind(minimum_height=self.button_container.setter('height'))
-        self.bind(button_spacing=self.button_container.setter('spacing'))
-        self.bind(button_height=self._on_button_height_change)
-        self.scroll_view.bind(height=self._compute_button_size)
+
 
     def on_pre_enter(self, *args):
         current_app = App.get_running_app()
@@ -84,28 +79,14 @@ class ControllerScreen(Screen): # controller operation room
             self.connector.ip_button.text   = current_app.client.server_address[0]
             self.connector.port_button.text = str(current_app.client.server_address[1])
 
-    def _on_button_height_change(self, trigger, value):
-        if 0 == len(self.button_container.children): return
-        for button in self.button_container.children:
-            button.height = value
-
-    def _compute_button_size(self, *args):
-        self.button_height = int(0.2 * self.scroll_view.height)
-        self.button_spacing = int(0.05 * self.button_height)
 
     def _reset_button_container(self):
-        self.button_container.clear_widgets()
+        self.button_container.clear_buttons()
 
     def _add_controller_button(self, controller):
-        button = Button(
-                text=controller.name,
-                size_hint=(1, None),
-                height=self.button_height,
-                on_release=self._on_controller_button_released
-            )
+        button = Button( text=controller.name, on_release=self._on_controller_button_released )
         button.controller = controller
-        self.button_container.add_widget(button)
-        self.button_container.height += 60
+        self.button_container.add_button(button)
 
     def _go_back_last_screen(self, button):
         App.get_running_app().current_edit_set = self.display_title.text
