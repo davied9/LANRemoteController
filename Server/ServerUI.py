@@ -3,6 +3,7 @@ from __future__ import print_function
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
+from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
 from kivy.uix.label import Label
 from kivy.uix.button import Button
@@ -36,6 +37,10 @@ class _log_buffer(object):
             str += ( info + '\n')
         return str
 
+    @property
+    def size(self):
+        return len(self.buffer)
+
 
 def start_LRCServer(server_address, waiter_address, verify_code, client_list, log_mailbox):
     from Server.LRCServer import LRCServer
@@ -64,37 +69,44 @@ class LRCServerUI(App):
         self.waiter_process = None
         self.watch_interval = 0.5
         # UI
-        self.root = BoxLayout(orientation='vertical', pos_hint={'top': 1, 'x': 0}, size_hint_min=[800, 600])
+        self.root = BoxLayout(orientation='vertical')
         #   up : start/stop buttons
-        up_grid = GridLayout(cols=6, padding=10, spacing=10, size_hint_max_y=100)
+        width_button = 0.15
+        width_IP_label = 40
+        width_IP_input = 0.15
+        width_port_label = 60
+        width_port_input = 0.15
+        width_info_label = 1 - width_button - width_IP_input - width_port_input - 0.1
+        up_grid = GridLayout(cols=6, padding=10, spacing=10, size_hint=(1, None), height=100)
         self.root.add_widget(up_grid)
-        self.server_button      = Button(text="Start Server", size_hint_max_x=140, on_release=self.on_start_server_pressed)
-        self.server_info_label  = Label(halign='left', valign='center')
+        self.server_button      = Button(text="Start Server", size_hint_x=width_button, on_release=self.on_start_server_pressed)
+        self.server_info_label  = Label(halign='left', valign='center', size_hint_x=width_info_label)
         self.server_info_label.bind(size=self._sync_size_to_text_size)
-        self.server_ip_input    = TextInput(text=self.server_address[0], size_hint_max_x=140)
-        self.server_port_input  = TextInput(text=str(self.server_address[1]), size_hint_max_x=140)
-        self.waiter_button      = Button(text="Start Waiter", on_release=self.on_start_waiter_pressed)
-        self.waiter_info_label  = Label(halign='left', valign='center')
+        self.server_ip_input    = TextInput(text=self.server_address[0], size_hint_x=width_IP_input)
+        self.server_port_input  = TextInput(text=str(self.server_address[1]), size_hint_x=width_port_input)
+        self.waiter_button      = Button(text="Start Waiter", size_hint_x=width_button, on_release=self.on_start_waiter_pressed)
+        self.waiter_info_label  = Label(halign='left', valign='center', size_hint_x=width_info_label)
         self.waiter_info_label.bind(size=self._sync_size_to_text_size)
-        self.waiter_ip_input    = TextInput(text=self.waiter_address[0])
-        self.waiter_port_input  = TextInput(text=str(self.waiter_address[1]))
+        self.waiter_ip_input    = TextInput(text=self.waiter_address[0], size_hint_x=width_IP_input)
+        self.waiter_port_input  = TextInput(text=str(self.waiter_address[1]), size_hint_x=width_port_input)
         up_grid.add_widget(self.server_button)
-        up_grid.add_widget(Label(text="IP", size_hint_max_x=40))
+        up_grid.add_widget(Label(text="IP", size_hint_x=None, width=width_IP_label))
         up_grid.add_widget(self.server_ip_input)
-        up_grid.add_widget(Label(text="Port", size_hint_max_x=60))
+        up_grid.add_widget(Label(text="Port", size_hint_x=None, width=width_port_label))
         up_grid.add_widget(self.server_port_input)
         up_grid.add_widget(self.server_info_label)
         up_grid.add_widget(self.waiter_button)
-        up_grid.add_widget(Label(text="IP"))
+        up_grid.add_widget(Label(text="IP", size_hint_x=None, width=width_IP_label))
         up_grid.add_widget(self.waiter_ip_input)
-        up_grid.add_widget(Label(text="Port"))
+        up_grid.add_widget(Label(text="Port", size_hint_x=None, width=width_port_label))
         up_grid.add_widget(self.waiter_port_input)
         up_grid.add_widget(self.waiter_info_label)
         #   down : log window
-        self.log_window = Label(text='', size_hint=[0.9, 0.9], pos_hint={'center_x': 0.5, 'center_y': 0.5},
-                                halign='left', valign='top')
+        self.log_window = Label(size_hint_y=None)
         self.log_window.bind(size=self._sync_size_to_text_size)
-        self.root.add_widget(self.log_window)
+        scroll_view = ScrollView()
+        scroll_view.add_widget(self.log_window)
+        self.root.add_widget(scroll_view)
         # regexp
         self.ip_matcher = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
         self.comm_manager = Manager()
@@ -102,7 +114,7 @@ class LRCServerUI(App):
         self.client_list = self.comm_manager.list()
         # log buffer
         self.log_mailbox = self.comm_manager.Queue()
-        self.log_buffer = _log_buffer(max_size=25, pop_size=1)
+        self.log_buffer = _log_buffer(max_size=100, pop_size=1)
         # state
         self.running = False
         return self.root
@@ -120,6 +132,7 @@ class LRCServerUI(App):
     def log(self, message):
         logger.info(message)
         self.log_buffer.log(message)
+        self.log_window.height = self.log_buffer.size * (self.log_window.font_size * 1.25)
         self.log_window.text = self.log_buffer.pack_messages()
 
     def _sync_size_to_text_size(self, component, new_size):
