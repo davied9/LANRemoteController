@@ -1,4 +1,4 @@
-from ServerUI import LRCServerUI
+from Server.ServerUI import LRCServerUI
 
 __all__ = ['LRCServerUI']
 

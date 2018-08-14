@@ -1,6 +1,11 @@
 # -*-coding:utf-8-*-
 from __future__ import print_function
-from Common.KivyImporter import *
+from kivy.app import App
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.textinput import TextInput
+from kivy.uix.label import Label
+from kivy.uix.button import Button
 from multiprocessing import Process, Manager, freeze_support
 from threading import Thread
 from random import randint
@@ -33,7 +38,7 @@ class _log_buffer(object):
 
 
 def start_LRCServer(server_address, waiter_address, verify_code, client_list, log_mailbox):
-    from LRCServer import LRCServer
+    from Server.LRCServer import LRCServer
     LRCServer(server_address=server_address,
               waiter_address=waiter_address,
               verify_code=verify_code,
@@ -42,7 +47,7 @@ def start_LRCServer(server_address, waiter_address, verify_code, client_list, lo
 
 
 def start_LRCWaiter(waiter_address, server_address, client_list, log_mailbox):
-    from LRCServer import LRCWaiter
+    from Server.LRCServer import LRCWaiter
     LRCWaiter(waiter_address=waiter_address,
               connect_server_address=server_address,
               client_list=client_list,
