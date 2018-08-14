@@ -4,19 +4,22 @@ from kivy.clock import Clock
 from Common.Exceptions import *
 from Controller.LRCController import Controller, ControllerSet, ControllerPackage
 from ClientWin.ControllerEditor import ControllerEditor
+from ClientWin.ButtonContainer import ButtonContainer
+from ClientWin import ClientUI
 from kivy.logger import Logger
 
 Builder.load_string('''
 
 <ControllerCollectionBuildScreen>:
     display_title: title_button
-    button_container: button_container
     background_floatlayout: background_floatlayout
+    background_layout: background_layout
     delete_button: delete_button
     info_label: info_label
     FloatLayout:
         id: background_floatlayout
         BoxLayout:
+            id: background_layout
             orientation: 'vertical'
             padding: 30, 30
             Button:
@@ -26,14 +29,6 @@ Builder.load_string('''
                 font_size: 43
                 background_color: [0, 0, 0, 0]
                 on_release: root._open_set_name_editor(self, self.text)
-            ScrollView:
-                do_scroll_x: False
-                GridLayout:
-                    id: button_container
-                    cols: 1
-                    size_hint: 1, None
-                    height: 1
-                    spacing: 10
             BoxLayout:
                 size_hint_max_y: 80
                 padding: 10, 30, 10, 0 # left, top, right, down
@@ -93,6 +88,8 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
     def __init__(self, **kwargs):
         self.controller_button_process = self._process_edit_interact
         Screen.__init__(self, **kwargs)
+        self.button_container = ButtonContainer()
+        self.background_layout.add_widget(self.button_container, 1)
 
     def on_pre_enter(self, *args):
         current_app = App.get_running_app()
@@ -189,15 +186,13 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
     def _add_controller_button(self, controller):
         for name, value in controller.dump().items():
             text = name + '  :  ' + str(value)
-        button = Button( text=text, size_hint=(1, None), height=50, on_release=self._on_controller_button_released )
+        button = Button( text=text, on_release=self._on_controller_button_released )
         button.controller = controller
-        self.button_container.add_widget(button)
-        self.button_container.height += (button.height + self.button_container.spacing[1])
+        self.button_container.add_button(button)
 
     # remove controller button from controller container
     def _remove_controller_button(self, controller_button):
-        self.button_container.remove_widget(controller_button)
-        self.button_container.height -= (controller_button.height + self.button_container.spacing[1])
+        self.button_container.remove_button(controller_button)
 
     # as callback for "Save" button -- save this build to a controller set file
     def _save_controller_set(self, button):
@@ -291,8 +286,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         self.controller_editor = ControllerEditor(controller=controller, controller_button=controller_button)
         # add editor to layout
         ix_button = self._get_controller_button_index(controller_button)
-        self.button_container.add_widget(self.controller_editor, index=ix_button)
-        self.button_container.height += (self.controller_editor.height + self.button_container.spacing[1])
+        self.button_container.add_button(self.controller_editor, index=ix_button)
         # set checkboxes
         if controller.ctrl.enable:
             if controller.ctrl.is_left:
@@ -318,8 +312,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         controller = self.controller_editor.controller
         Logger.info('Builder: close editor for {0}'.format(controller))
         # remove editor from layout
-        self.button_container.remove_widget(self.controller_editor)
-        self.button_container.height -= (self.controller_editor.height + self.button_container.spacing[1])
+        self.button_container.remove_button(self.controller_editor)
         # reset
         self.controller_editor = None
 
@@ -381,12 +374,11 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         self.controller_editor.controller_button.text = text
 
     def _reset_controller_set_container(self):
-        self.button_container.clear_widgets()
-        self.button_container.height = 1
+        self.button_container.clear_buttons()
 
     def _get_next_new_controller_name(self):
         max_index = 0
-        for controller_button in self.button_container.children:
+        for controller_button in self.button_container.buttons:
             if controller_button is not self.controller_editor:
                 controller_name = controller_button.controller.name
                 if controller_name.startswith('New') and len(controller_name) > len('New'):
@@ -406,7 +398,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         return 'New{0}'.format(max_index+1)
 
     def _exist_duplicate_controller(self, name, controller):
-        for controller_button in self.button_container.children:
+        for controller_button in self.button_container.buttons:
             if name == controller_button.controller.name and controller is not controller_button.controller:
                 return True
         return False
@@ -428,7 +420,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
             return ('Controller button {0} is not in button container {1}'.format(self.controller_button, self.button_container))
 
     def _get_controller_button_index(self, controller_button):
-        for index in range(len(self.button_container.children)):
-            if controller_button is self.button_container.children[index]:
+        for index in range(len(self.button_container.buttons)):
+            if controller_button is self.button_container.buttons[index]:
                 return index
         raise ClientUI.ControllerButtonNotFoundError(controller_button, self.button_container)
