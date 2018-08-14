@@ -52,6 +52,7 @@ Builder.load_string('''
                     text: 'Add'
                     size_hint_max_x: 50
                     on_release: root._create_new_button(self)
+            # if new component added, index of button_container in __init__ should be taken care of
         Label:
             id: info_label
             font_size: 12
