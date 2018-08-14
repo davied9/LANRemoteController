@@ -103,15 +103,17 @@ class LRCServerUI(App):
         # log buffer
         self.log_mailbox = self.comm_manager.Queue()
         self.log_buffer = _log_buffer(max_size=25, pop_size=1)
-        Thread(target=self._mailbox_watcher).start()
+        # state
+        self.running = False
         return self.root
 
     def on_start(self):
-        win = self.root.get_root_window()
-        if win:
-            win.minimum_width, win.minimum_height = 800, 600
+        self.running = True
+        Thread(target=self._mailbox_watcher).start()
 
     def on_stop(self):
+        self.running = False
+        self.comm_manager.shutdown()
         self.stop_waiter()
         self.stop_server()
 
@@ -237,7 +239,14 @@ class LRCServerUI(App):
 
     def _mailbox_watcher(self):
         while True:
-            self.log(self.log_mailbox.get()) # get will block until there is data
+            try:
+                self.log(self.log_mailbox.get()) # get will block until there is data
+            except Exception as err:
+                if not self.running:
+                    self.log('Server : closing servers.')
+                    break
+                else:
+                    self.log('Error : {}'.format(err))
 
     def on_start_server_pressed(self, inst):
         if self.server_process: # process is running, close it
