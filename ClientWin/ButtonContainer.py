@@ -26,15 +26,20 @@ class ButtonContainer(ScrollView):
         self.button_height = int(0.2 * self.height)
         self.button_spacing = int(0.05 * self.button_height)
 
-    def add_button(self, button):
+    def add_button(self, button, index=0):
         button.size_hint = (1, None)
         button.height = self.button_height
-        self.container.add_widget(button)
+        self.container.add_widget(button, index)
+
+    def remove_button(self, button):
+        self.container.remove_widget(button)
 
     def clear_buttons(self):
         self.container.clear_widgets()
 
-    pass
+    @property
+    def buttons(self):
+        return self.container.children
 
 
 if '__main__' == __name__ :
