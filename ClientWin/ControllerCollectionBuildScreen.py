@@ -288,9 +288,10 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         Logger.info('Builder: edit {0}'.format(controller) )
         # create editor
         self.controller_editor = ControllerEditor(controller=controller, controller_button=controller_button)
+        self.controller_editor.height = int(1.5 * self.button_container.button_height)
         # add editor to layout
         ix_button = self._get_controller_button_index(controller_button)
-        self.button_container.add_button(self.controller_editor, index=ix_button)
+        self.button_container.container.add_widget(self.controller_editor, index=ix_button)
         # set checkboxes
         if controller.ctrl.enable:
             if controller.ctrl.is_left:
