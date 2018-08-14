@@ -1,8 +1,7 @@
-from kivy.lang import Builder
+from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import NumericProperty
 from kivy.uix.scrollview import ScrollView
 
-Builder.load_file('ClientWin/ButtonContainer.kv')
 
 class ButtonContainer(ScrollView):
 
@@ -11,9 +10,15 @@ class ButtonContainer(ScrollView):
 
     def __init__(self, **kwargs):
         super(ButtonContainer, self).__init__(**kwargs)
+        self.do_scroll_x = False
+        # initialize UI structure manually here
+        container = self.container = BoxLayout()
+        container.size_hint = (1, None)
+        container.orientation = 'vertical'
+        self.add_widget(container)
         # do some binding
-        self.container.bind(minimum_height=self.container.setter('height'))
-        self.bind(button_spacing=self.container.setter('spacing'))
+        container.bind(minimum_height=container.setter('height'))
+        self.bind(button_spacing=container.setter('spacing'))
         self.bind(button_height=self._on_button_height_change)
         self.bind(height=self._on_height_change)
 
