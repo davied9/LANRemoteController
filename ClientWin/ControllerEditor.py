@@ -15,6 +15,7 @@ Builder.load_string('''
     controller_name_editor: controller_name_editor
     controller_key_editor:  controller_key_editor
     GridLayout:
+        size_hint: 0.45, 1
         cols: 3
         rows: 4
         Widget:
@@ -49,26 +50,29 @@ Builder.load_string('''
             id: right_alt_checkbox
             group: 'group_alternative'
     BoxLayout:
+        size_hint: 0.2, 1
         orientation: 'vertical'
         Label:
             text: 'name'
         Label:
             text: 'key'
     BoxLayout:
+        size_hint: 0.35, 1
         orientation: 'vertical'
         Widget:
+            size_hint: 1,0.05
         TextInput:
+            size_hint: 1,0.4
             id: controller_name_editor
             multiline: False
-            size_hint: 1,None
-            height: 30
         Widget:
+            size_hint: 1,0.1
         TextInput:
+            size_hint: 1,0.4
             id: controller_key_editor
             multiline: False
-            size_hint: 1,None
-            height: 30
         Widget:
+            size_hint: 1,0.05
 ''')
 
 
@@ -78,6 +82,7 @@ class ControllerEditor(BoxLayout):
     components:
         controller:     Controller that is being edit
     '''
+
     def __init__(self, **kwargs):
         self.controller = kwargs["controller"]
         self.controller_button = kwargs["controller_button"]
