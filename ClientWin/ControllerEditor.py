@@ -1,4 +1,4 @@
-from Common.KivyImporter import Builder
+from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
 
 

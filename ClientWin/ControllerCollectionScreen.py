@@ -1,15 +1,18 @@
-from Common.KivyImporter import *
+from kivy.app import App
+from kivy.lang import Builder
+from kivy.uix.button import Button
+from kivy.uix.textinput import TextInput
+from kivy.uix.screenmanager import Screen
 from kivy.clock import Clock
 from kivy.logger import Logger
-from kivy.properties import NumericProperty
-from Common.Exceptions import *
-from ClientWin.LRCClientConnector import LRCClientConnector
 from ClientWin.ButtonContainer import ButtonContainer
-from Controller.LRCController import Controller, ControllerSet, ControllerPackage
+from Controller.LRCController import  ControllerSet
 import os, json
 
 
 Builder.load_string('''
+#:import LRCClientConnector ClientWin.LRCClientConnector
+
 <ControllerCollectionScreen>:
     # widgets
     background_layout: background_layout

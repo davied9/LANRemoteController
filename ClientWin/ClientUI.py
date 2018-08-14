@@ -1,12 +1,12 @@
-from Common.KivyImporter import *
-
+import os
+from kivy.app import App
+from kivy.uix.screenmanager import ScreenManager
 from kivy.logger import Logger
-import Common.logger
+from ClientWin.ControllerCollectionScreen import ControllerCollectionScreen
+from ClientWin.ControllerCollectionBuildScreen import ControllerCollectionBuildScreen
+from ClientWin.ControllerScreen import ControllerScreen
+from ClientWin.LRCClientWin import LRCClient
 
-# try:
-#     from kivy.uix.screenmanager import CardTransition
-# except ImportError:
-#     Logger.error('Import: can\'t import CardTransition')
 # from kivy.uix.screenmanager import SwapTransition
 # from kivy.uix.screenmanager import ShaderTransition
 # from kivy.uix.screenmanager import SlideTransition
@@ -14,11 +14,6 @@ import Common.logger
 # from kivy.uix.screenmanager import FadeTransition
 # from kivy.uix.screenmanager import FallOutTransition
 from kivy.uix.screenmanager import RiseInTransition
-import os, json
-from ClientWin.ControllerCollectionScreen import ControllerCollectionScreen
-from ClientWin.ControllerCollectionBuildScreen import ControllerCollectionBuildScreen
-from ClientWin.ControllerScreen import ControllerScreen
-from ClientWin.LRCClientWin import LRCClient
 
 
 class ClientUI(App):
@@ -60,6 +55,7 @@ class ClientUI(App):
 
 # this file should be renamed to main.py when copy to android for Kivy laucher
 if '__main__' == __name__:
+    import Common.logger
     Common.logger.logger.set_logger('kivy')
     # start application
     ClientUI().run()

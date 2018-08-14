@@ -1,10 +1,15 @@
-from Common.KivyImporter import *
+from kivy.app import App
+from kivy.lang import Builder
+from kivy.uix.textinput import TextInput
+from kivy.uix.button import Button
+from kivy.uix.screenmanager import Screen
 from kivy.clock import Clock
 from kivy.properties import NumericProperty
-from ClientWin.LRCClientConnector import LRCClientConnector
 from ClientWin.ButtonContainer import ButtonContainer
 
 Builder.load_string('''
+#:import LRCClientConnector ClientWin.LRCClientConnector
+
 <ControllerScreen>:
     # widgets
     background_layout: background_layout
