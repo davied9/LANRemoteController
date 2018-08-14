@@ -45,7 +45,7 @@ Builder.load_string('''
                 size_hint: 1, 0.05
             LRCClientConnector:
                 id: connector
-                size_hint: 1, 0.05
+                size_hint: 1, 0.1
             Label:
                 id: info_label
                 size_hint: 1, 0.05
