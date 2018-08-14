@@ -25,32 +25,35 @@ Builder.load_string('''
             Button:
                 id: title_button
                 text: 'Builder'
-                size_hint_max_y: 80
+                size_hint: 1, 0.2
                 font_size: 43
                 background_color: [0, 0, 0, 0]
                 on_release: root._open_set_name_editor(self, self.text)
             BoxLayout:
-                size_hint_max_y: 80
+                size_hint: 1, 0.2
                 padding: 10, 30, 10, 0 # left, top, right, down
                 Button:
                     text: 'Back'
-                    size_hint_max_x: 50
+                    size_hint: 0.2, 1
                     on_release: root._go_back_last_screen(self)
                 Widget:
+                    size_hint: 0.05, 1
                 ToggleButton:
                     id: delete_button
                     text: 'Delete'
-                    size_hint_max_x: 50
+                    size_hint: 0.2, 1
                     on_release: root._on_delete_button_released(self, self.state)
                 Widget:
+                    size_hint: 0.05, 1
                 Button:
                     text: 'Save'
-                    size_hint_max_x: 50
+                    size_hint: 0.2, 1
                     on_release: root._save_controller_set(self)
                 Widget:
+                    size_hint: 0.05, 1
                 Button:
                     text: 'Add'
-                    size_hint_max_x: 50
+                    size_hint: 0.2, 1
                     on_release: root._create_new_button(self)
             # if new component added, index of button_container in __init__ should be taken care of
         Label:
@@ -58,7 +61,7 @@ Builder.load_string('''
             font_size: 12
             color: 1, 0, 0, 1
             pos_hint: {'x':0, 'y':0}
-            size_hint_max_y: 15
+            size_hint: 1, 0.05
 
 ''')
 
