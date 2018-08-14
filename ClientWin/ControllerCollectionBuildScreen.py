@@ -5,7 +5,6 @@ from Common.Exceptions import *
 from Controller.LRCController import Controller, ControllerSet, ControllerPackage
 from ClientWin.ControllerEditor import ControllerEditor
 from ClientWin.ButtonContainer import ButtonContainer
-from ClientWin import ClientUI
 from kivy.logger import Logger
 
 Builder.load_string('''
@@ -428,4 +427,4 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         for index in range(len(self.button_container.buttons)):
             if controller_button is self.button_container.buttons[index]:
                 return index
-        raise ClientUI.ControllerButtonNotFoundError(controller_button, self.button_container)
+        raise self.ControllerButtonNotFoundError(controller_button, self.button_container)
