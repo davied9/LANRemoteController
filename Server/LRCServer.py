@@ -117,7 +117,7 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
         message = self.decode_message(request[0])
         key_combination = self.parse_key_combination_message(message)
         try:
-            if self.execute_delay:
+            if self.execute_delay > 0:
                 from threading import Timer
                 Timer( self.execute_delay, self.keyboard.press_keys, args=(key_combination,)).start()
                 self.info('Waiter: schedule pressing keys in {2} seconds from {0} : {1}'.format(client_address, key_combination, self.execute_delay))
