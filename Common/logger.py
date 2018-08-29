@@ -1,15 +1,26 @@
 from __future__ import print_function
+import os
 
+class Logger(object):
 
-class LRCLogger(object):
+    _counts = 0
 
-    def __init__(self, **kwargs):
-        self._info_handler = print
-        self._warning_handler = print
-        self._error_handler = print
-
-    def log(self, *args):
-        self._info_handler(*args)
+    def __init__(self, *args, **kwargs):
+        id = Logger._counts
+        Logger._counts += 1
+        # public
+        self.id                 = id
+        self.name               = 'not set' # logger name
+        self.stream_id          = None  # stream id, mostly file path
+        # protected
+        self._id_len            = 1
+        self._tag_len           = 8
+        self._stream            = None
+        self._info_handler      = print
+        self._warning_handler   = print
+        self._error_handler     = print
+        # initialize default logger
+        self.set_default_logger(*args, **kwargs)
 
     def info(self, *args):
         self._info_handler(*args)
@@ -29,11 +40,108 @@ class LRCLogger(object):
     def replace_error_handler(self, handler):
         self._error_handler = handler
 
-    def set_logger(self, keyword):
+    def set_logger(self, keyword, *args, **kwargs):
         if 'kivy' == keyword:
             import kivy.logger
             self._info_handler      = kivy.logger.Logger.info
             self._warning_handler   = kivy.logger.Logger.warning
             self._error_handler     = kivy.logger.Logger.error
+            self.info('logger : set logger to kivy logger.')
+        elif 'default' == keyword:
+            self.set_default_logger(*args, **kwargs)
+        else:
+            self.set_default_logger(*args, **kwargs)
+            self.info('logger : unrecognized logger {}, set to default.'.format(keyword))
 
-logger = LRCLogger()
+    def set_default_logger(self, *args, **kwargs):
+        # close stream if it's open
+        if self._stream:
+            self._stream.flush()
+            self._stream.close()
+            self._stream = None
+            self.stream_id = None
+        # try to parse log stream id
+        log_file = kwargs['log_file'] if 'log_file' in kwargs else None
+        if log_file is None:
+            import time
+            now = time.localtime()
+            log_file = 'logs\log_{}-{}-{}_{}{}{}.log'.format(now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
+        log_file = os.path.abspath(log_file)
+        try:
+            log_file_dir = os.path.dirname(log_file)
+            if not os.path.exists(log_file_dir):
+                os.mkdir(log_file_dir)
+            self.stream_id = log_file
+            self._stream = open(log_file, 'w')
+        except Exception as err:
+            print('[error  ] error while opening log_file, got : {}.'.format(err))
+        # if stream specified, use stream handler
+        if self._stream:
+            self._info_handler      = self._default_info_handler_with_stream
+            self._warning_handler   = self._default_warning_handler_with_stream
+            self._error_handler     = self._default_error_handler_with_stream
+            self.info('starting logging into stream : {}'.format(self.stream_id))
+        # if no stream specified, just log
+        else:
+            self._info_handler      = self._default_info_handler
+            self._warning_handler   = self._default_warning_handler
+            self._error_handler     = self._default_error_handler
+
+    def formatter(self, tag, *args):
+        _format = '[%{}s][%-{}s]'.format(self._id_len, self._tag_len)
+        return _format % (self.id, tag) + ' '.join(args)
+
+    def _default_info_handler(self, *args):
+        print(self.formatter('info', *args))
+
+    def _default_warning_handler(self, *args):
+        print(self.formatter('warning', *args))
+
+    def _default_error_handler(self, *args):
+        print(self.formatter('error', *args))
+
+    def _default_info_handler_with_stream(self, *args):
+        msg = self.formatter('info', *args)
+        print(msg)
+        self._stream.write(msg)
+        self._stream.write('\n')
+        self._stream.flush()
+
+    def _default_warning_handler_with_stream(self, *args):
+        msg = self.formatter('warning', *args)
+        print(msg)
+        self._stream.write(msg)
+        self._stream.write('\n')
+        self._stream.flush()
+
+    def _default_error_handler_with_stream(self, *args):
+        msg = self.formatter('error', *args)
+        print(msg)
+        self._stream.write(msg)
+        self._stream.write('\n')
+        self._stream.flush()
+
+
+logger = Logger()
+
+
+def _test_case_000():
+    logger.info('test info')
+    logger.warning('test warning')
+    logger.error('test error')
+
+def _test_case_001():
+    _logger = Logger(log_file=r'logs\test.log')
+    _logger.info('test info')
+    _logger.warning('test warning')
+    _logger.error('test error')
+
+def _test_case_002():
+    logger.set_default_logger(log_file='logs\\take_your_time.log')
+    logger.info('test info')
+    logger.warning('test warning')
+    logger.error('test error')
+
+if '__main__' == __name__: # test logger
+    _test_case_002()
+    pass
