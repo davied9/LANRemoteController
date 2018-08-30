@@ -22,6 +22,26 @@ class Logger(object):
         # initialize default logger
         self.set_default_logger(*args, **kwargs)
 
+    def __del__(self):
+        self.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def close(self):
+        self.info('closing logger.')
+        if self._stream:
+            self._stream.flush()
+            self._stream.close()
+            self._stream = None
+            self.stream_id = None
+            if 'default' != self.name:
+                self.name = 'default'
+            self._set_default_handlers()
+
     def info(self, *args):
         self._info_handler(*args)
 
@@ -75,21 +95,26 @@ class Logger(object):
             self._stream = open(log_file, 'w')
         except Exception as err:
             print('[error  ] error while opening log_file, got : {}.'.format(err))
-        # if stream specified, use stream handler
+        # set default handlers
         if self._stream:
-            self._info_handler      = self._default_info_handler_with_stream
-            self._warning_handler   = self._default_warning_handler_with_stream
-            self._error_handler     = self._default_error_handler_with_stream
+            self._set_default_handlers_with_stream()
             self.info('starting logging into stream : {}'.format(self.stream_id))
-        # if no stream specified, just log
         else:
-            self._info_handler      = self._default_info_handler
-            self._warning_handler   = self._default_warning_handler
-            self._error_handler     = self._default_error_handler
+            self._set_default_handlers()
 
     def formatter(self, tag, *args):
         _format = '[%{}s][%-{}s]'.format(self._id_len, self._tag_len)
         return _format % (self.id, tag) + ' '.join(args)
+
+    def _set_default_handlers(self):
+        self._info_handler      = self._default_info_handler
+        self._warning_handler   = self._default_warning_handler
+        self._error_handler     = self._default_error_handler
+
+    def _set_default_handlers_with_stream(self):
+        self._info_handler      = self._default_info_handler_with_stream
+        self._warning_handler   = self._default_warning_handler_with_stream
+        self._error_handler     = self._default_error_handler_with_stream
 
     def _default_info_handler(self, *args):
         print(self.formatter('info', *args))
@@ -125,23 +150,26 @@ class Logger(object):
 logger = Logger()
 
 
-def _test_case_000():
-    logger.info('test info')
-    logger.warning('test warning')
-    logger.error('test error')
-
-def _test_case_001():
-    _logger = Logger(log_file=r'logs\test.log')
-    _logger.info('test info')
-    _logger.warning('test warning')
-    _logger.error('test error')
-
-def _test_case_002():
-    logger.set_default_logger(log_file='logs\\take_your_time.log')
-    logger.info('test info')
-    logger.warning('test warning')
-    logger.error('test error')
-
 if '__main__' == __name__: # test logger
-    _test_case_002()
+
+    def _test_case_000():
+        logger.info('test info')
+        logger.warning('test warning')
+        logger.error('test error')
+
+    def _test_case_001():
+        _logger = Logger(log_file=r'logs\test.log')
+        _logger.info('test info')
+        _logger.warning('test warning')
+        _logger.error('test error')
+        _logger.close()
+        _logger.info('after closed')
+
+    def _test_case_002():
+        logger.set_default_logger(log_file='logs\\take_your_time.log')
+        logger.info('test info')
+        logger.warning('test warning')
+        logger.error('test error')
+
+    _test_case_001()
     pass
