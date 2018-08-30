@@ -20,7 +20,12 @@ class Logger(object):
         self._warning_handler   = print
         self._error_handler     = print
         # initialize default logger
-        self.set_default_logger(*args, **kwargs)
+        if 'name' in kwargs:
+            logger_name = kwargs['name']
+            del kwargs['name']
+            self.set_logger(logger_name, *args, **kwargs)
+        else:
+            self._set_default_logger(*args, **kwargs)
 
     def __del__(self):
         self.close()
@@ -32,15 +37,16 @@ class Logger(object):
         self.close()
 
     def close(self):
+        if 'not set' == self.name:
+            return
         self.info('closing logger.')
         if self._stream:
             self._stream.flush()
             self._stream.close()
             self._stream = None
             self.stream_id = None
-            if 'default' != self.name:
-                self.name = 'default'
-            self._set_default_handlers()
+        self.name = 'not set'
+        self._set_default_handlers()
 
     def info(self, *args):
         self._info_handler(*args)
@@ -61,25 +67,31 @@ class Logger(object):
         self._error_handler = handler
 
     def set_logger(self, keyword, *args, **kwargs):
+        self.close()
         if 'kivy' == keyword:
-            import kivy.logger
-            self._info_handler      = kivy.logger.Logger.info
-            self._warning_handler   = kivy.logger.Logger.warning
-            self._error_handler     = kivy.logger.Logger.error
-            self.info('logger : set logger to kivy logger.')
+            try:
+                import kivy.logger
+                self._info_handler      = kivy.logger.Logger.info
+                self._warning_handler   = kivy.logger.Logger.warning
+                self._error_handler     = kivy.logger.Logger.error
+                self.name = 'kivy'
+                self.info('logger : set to kivy logger')
+            except ImportError:
+                self._set_default_logger(*args, **kwargs)
+                self.name = 'default'
+                self.info('logger : can not import kivy logger(kivy not installed ???), set to default logger')
+            except Exception as err:
+                self._set_default_logger(*args, **kwargs)
+                self.name = 'default'
+                self.info('logger : got error {} when import kivy logger, set to default logger'.format(err))
         elif 'default' == keyword:
-            self.set_default_logger(*args, **kwargs)
+            self._set_default_logger(*args, **kwargs)
         else:
-            self.set_default_logger(*args, **kwargs)
+            self._set_default_logger(*args, **kwargs)
             self.info('logger : unrecognized logger {}, set to default.'.format(keyword))
+            return
 
-    def set_default_logger(self, *args, **kwargs):
-        # close stream if it's open
-        if self._stream:
-            self._stream.flush()
-            self._stream.close()
-            self._stream = None
-            self.stream_id = None
+    def _set_default_logger(self, *args, **kwargs):
         # try to parse log stream id
         log_file = kwargs['log_file'] if 'log_file' in kwargs else None
         if log_file is None:
@@ -101,6 +113,7 @@ class Logger(object):
             self.info('starting logging into stream : {}'.format(self.stream_id))
         else:
             self._set_default_handlers()
+        self.name = 'default'
 
     def formatter(self, tag, *args):
         _format = '[%{}s][%-{}s]'.format(self._id_len, self._tag_len)
@@ -166,10 +179,10 @@ if '__main__' == __name__: # test logger
         _logger.info('after closed')
 
     def _test_case_002():
-        logger.set_default_logger(log_file='logs\\take_your_time.log')
+        logger.set_logger('default', log_file='logs\\take_your_time.log')
         logger.info('test info')
         logger.warning('test warning')
         logger.error('test error')
 
-    _test_case_001()
+    _test_case_002()
     pass
