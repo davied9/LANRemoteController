@@ -8,7 +8,7 @@ from kivy.logger import Logger
 from Client.ControllerCollectionScreen import ControllerCollectionScreen
 from Client.ControllerCollectionBuildScreen import ControllerCollectionBuildScreen
 from Client.ControllerScreen import ControllerScreen
-from Client.LRCClientWin import LRCClient
+from Client.LRCClient import LRCClient
 
 # from kivy.uix.screenmanager import SwapTransition
 # from kivy.uix.screenmanager import ShaderTransition
