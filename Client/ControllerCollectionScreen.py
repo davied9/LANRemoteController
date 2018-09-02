@@ -136,7 +136,7 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
     # ip_or_port = 'ip' or 'port'
     def _open_ip_port_input(self, button, ip_or_port):
         if not self.ip_and_port_input:
-            self.ip_and_port_input = TextInput(text=button.text, size_hint_max_y=30)
+            self.ip_and_port_input = TextInput(text=button.text, size_hint_y=0.1)
             self.ip_and_port_input.bind(focused=self._on_ip_or_port_input_focused)
             self.background_layout.add_widget(self.ip_and_port_input, 999)
 
