@@ -51,28 +51,28 @@ class LRCClient(object):
     def encode_message(self, message):
         return message.encode(self.message_encoding)
 
-def __test000__():
-    import time
-
-    server_address = ('127.0.0.1',35530)
-    client = LRCClient()
-    client.connect(server_address)
-
-    time.sleep(5)
-    print('start tap keys now')
-
-    client.send_combinations('j')
-    client.send_combinations(' ')
-    client.send_combinations('o', 'shift')
-    client.send_combinations(' ')
-    client.send_combinations('k', 'shift')
-    client.send_combinations(' ')
-    client.send_combinations('e', 'r')
-
-    pass
-
 
 if '__main__' == __name__:
+    def __test000__():
+        import time
+
+        server_address = ('127.0.0.1',35530)
+        client = LRCClient()
+        client.connect(server_address)
+
+        time.sleep(5)
+        print('start tap keys now')
+
+        client.send_combinations('j')
+        client.send_combinations(' ')
+        client.send_combinations('o', 'shift')
+        client.send_combinations(' ')
+        client.send_combinations('k', 'shift')
+        client.send_combinations(' ')
+        client.send_combinations('e', 'r')
+
+        pass
+
     __test000__()
     pass
 

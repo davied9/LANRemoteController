@@ -44,8 +44,6 @@ class KeyCombinationParseError(Exception):
 from PyUserInput import PyKeyboard
 import re
 
-def test(*args): print('test', args)
-
 class LRCWaiter( UDPServer, object ): # waiter serve all the time
 
     allow_reuse_address = True
@@ -128,38 +126,39 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
             self.info('Waiter: can\'t press key from {0} {1} : {2}'.format(client_address, key_combination, err.args))
 
 
-def test000_async_server():
-    import time
-    from multiprocessing import Process
-    from threading import Thread
-
-    waiter_address = ('127.0.0.1',35527)
-    server_address = ('127.0.0.1',35530)
-
-    waiter = LRCWaiter(waiter_address=waiter_address, connect_server_address=server_address)
-    server = LRCServer(server_address=server_address, waiter_address=waiter_address)
-
-    st = Thread(target=server.serve_forever)
-    print('serve thread created :', st)
-    st.start()
-    print('start server at', server.server_address)
-
-    wt = Thread(target=waiter.serve_forever)
-    print('waiter thread created :', wt)
-    wt.start()
-    print('start wait at', waiter.server_address)
-
-
-    time.sleep(15)
-    server.shutdown()
-    waiter.shutdown()
-    print('force to close servers ')
-    print('server :', st, '-- closed :', server._BaseServer__is_shut_down.is_set())
-    print('waiter :', wt, '-- closed :', waiter._BaseServer__is_shut_down.is_set())
-    pass
-
 
 if '__main__' == __name__:
+
+    def test000_async_server():
+        import time
+        from multiprocessing import Process
+        from threading import Thread
+
+        waiter_address = ('127.0.0.1',35527)
+        server_address = ('127.0.0.1',35530)
+
+        waiter = LRCWaiter(waiter_address=waiter_address, connect_server_address=server_address)
+        server = LRCServer(server_address=server_address, waiter_address=waiter_address)
+
+        st = Thread(target=server.serve_forever)
+        print('serve thread created :', st)
+        st.start()
+        print('start server at', server.server_address)
+
+        wt = Thread(target=waiter.serve_forever)
+        print('waiter thread created :', wt)
+        wt.start()
+        print('start wait at', waiter.server_address)
+
+
+        time.sleep(15)
+        server.shutdown()
+        waiter.shutdown()
+        print('force to close servers ')
+        print('server :', st, '-- closed :', server._BaseServer__is_shut_down.is_set())
+        print('waiter :', wt, '-- closed :', waiter._BaseServer__is_shut_down.is_set())
+        pass
+
     test000_async_server()
 
     pass
