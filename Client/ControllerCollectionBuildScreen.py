@@ -7,8 +7,8 @@ from kivy.uix.screenmanager import Screen
 from kivy.logger import Logger
 from Common.Exceptions import NotFoundError
 from Controller.LRCController import Controller, ControllerSet
-from ClientWin.ControllerEditor import ControllerEditor
-from ClientWin.ButtonContainer import ButtonContainer
+from Client.ControllerEditor import ControllerEditor
+from Client.ButtonContainer import ButtonContainer
 
 Builder.load_string('''
 

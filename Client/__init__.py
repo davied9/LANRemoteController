@@ -1,4 +1,4 @@
-from ClientWin.LRCClientWin import LRCClient
-from ClientWin.ClientUI import ClientUI
+from Client.LRCClientWin import LRCClient
+from Client.ClientUI import ClientUI
 
 __all__ = ['ClientUI', 'LRCClient']

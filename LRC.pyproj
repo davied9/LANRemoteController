@@ -6,7 +6,7 @@
     <ProjectHome>.</ProjectHome>
     <StartupFile>
     </StartupFile>
-    <SearchPath>..\LANRemoteController;ClientWin;Common;Controller;ClientWin\collections;Documents;Example;Protocol;Protocol\v1;PyUserInput;Server;Test;F:\Develop\Python35\Lib\site-packages\kivy;F:\Develop\Python35\Lib\site-packages\kivy</SearchPath>
+    <SearchPath>..\LANRemoteController;Client;Common;Controller;Client\collections;Documents;Example;Protocol;Protocol\v1;PyUserInput;Server;Test;F:\Develop\Python35\Lib\site-packages\kivy;F:\Develop\Python35\Lib\site-packages\kivy</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>LRC</Name>
@@ -21,8 +21,8 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="ClientWin\" />
-    <Folder Include="ClientWin\collections\" />
+    <Folder Include="Client\" />
+    <Folder Include="Client\collections\" />
     <Folder Include="Common\" />
     <Folder Include="Controller\" />
     <Folder Include="Documents\" />
@@ -36,9 +36,9 @@
     <Folder Include="Test\" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClientWin\ClientUI.py" />
-    <Compile Include="ClientWin\LRCClientWin.py" />
-    <Compile Include="ClientWin\__init__.py" />
+    <Compile Include="Client\ClientUI.py" />
+    <Compile Include="Client\LRCClientWin.py" />
+    <Compile Include="Client\__init__.py" />
     <Compile Include="Common\Exceptions.py" />
     <Compile Include="Common\KivyImporter.py" />
     <Compile Include="Common\__init__.py" />
@@ -79,8 +79,8 @@
     <Compile Include="Test\T004_KivyBuilder.py" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ClientWin\collections\Kugou.json" />
-    <Content Include="ClientWin\collections\PotPlayer.json" />
+    <Content Include="Client\collections\Kugou.json" />
+    <Content Include="Client\collections\PotPlayer.json" />
     <Content Include="Documents\kivy-guide-chinese.pdf" />
     <Content Include="PyUserInput\pymouse\license_notice.txt" />
   </ItemGroup>

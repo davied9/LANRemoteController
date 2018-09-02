@@ -5,10 +5,10 @@ from kivy.uix.button import Button
 from kivy.uix.screenmanager import Screen
 from kivy.clock import Clock
 from kivy.properties import NumericProperty
-from ClientWin.ButtonContainer import ButtonContainer
+from Client.ButtonContainer import ButtonContainer
 
 Builder.load_string('''
-#:import LRCClientConnector ClientWin.LRCClientConnector
+#:import LRCClientConnector Client.LRCClientConnector
 
 <ControllerScreen>:
     # widgets

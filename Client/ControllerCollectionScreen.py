@@ -5,13 +5,13 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.screenmanager import Screen
 from kivy.clock import Clock
 from kivy.logger import Logger
-from ClientWin.ButtonContainer import ButtonContainer
+from Client.ButtonContainer import ButtonContainer
 from Controller.LRCController import  ControllerSet
 import os, json
 
 
 Builder.load_string('''
-#:import LRCClientConnector ClientWin.LRCClientConnector
+#:import LRCClientConnector Client.LRCClientConnector
 
 <ControllerCollectionScreen>:
     # widgets
