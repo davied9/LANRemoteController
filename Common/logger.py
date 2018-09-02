@@ -21,6 +21,7 @@ class Logger(object):
         self._info_handler      = print
         self._warning_handler   = print
         self._error_handler     = print
+        self._formatter         = self._default_formatter
         # initialize raw logger - take care of first time running --------------------------------------------------
         self.set_logger(**kwargs)
 
@@ -35,6 +36,45 @@ class Logger(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
+
+    def close(self):
+        if self._stream:
+            self._set_raw_logger()
+            self._stream.flush()
+            self._stream.close()
+            self._stream = None
+
+    def info(self, *args):
+        self._info_handler(*args)
+
+    def warning(self, *args):
+        self._warning_handler(*args)
+
+    def error(self, *args):
+        self._error_handler(*args)
+
+    def set_formatter(self, formatter=None):
+        try:
+            test_info = formatter('info', 'test')
+            self._formatter = formatter
+            return
+        except:
+            self._formatter = self._default_formatter
+
+    def replace_info_handler(self, handler):
+        self._info_handler = handler
+
+    def replace_warning_handler(self, handler):
+        self._warning_handler = handler
+
+    def replace_error_handler(self, handler):
+        self._error_handler = handler
+
+    def set_logger(self, name='default', **kwargs):
+        self.close()
+        self._set_raw_logger()
+        self.name = kwargs['name'] if 'name' in kwargs else name
+        self.stream_id = kwargs['log_file'] if 'log_file' in kwargs else None
 
     def _first_run(self, op, *args): # first time info/warning/error is called, is when handlers are set
         # initialize all handlers at first-time running
@@ -67,37 +107,6 @@ class Logger(object):
         except Exception as err:
             raise Exception('first call {} for logger failed with message : {}.'.format(op, err))
 
-    def close(self):
-        if self._stream:
-            self._set_raw_logger()
-            self._stream.flush()
-            self._stream.close()
-            self._stream = None
-
-    def info(self, *args):
-        self._info_handler(*args)
-
-    def warning(self, *args):
-        self._warning_handler(*args)
-
-    def error(self, *args):
-        self._error_handler(*args)
-
-    def replace_info_handler(self, handler):
-        self._info_handler = handler
-
-    def replace_warning_handler(self, handler):
-        self._warning_handler = handler
-
-    def replace_error_handler(self, handler):
-        self._error_handler = handler
-
-    def set_logger(self, name='default', **kwargs):
-        self.close()
-        self._set_raw_logger()
-        self.name = kwargs['name'] if 'name' in kwargs else name
-        self.stream_id = kwargs['log_file'] if 'log_file' in kwargs else None
-
     def _set_raw_logger(self, *args, **kwargs):
         self._info_handler      = partial( self._first_run, 'info')
         self._warning_handler   = partial( self._first_run, 'warning')
@@ -128,7 +137,7 @@ class Logger(object):
             self._set_default_handlers()
         self.name = 'default'
 
-    def formatter(self, tag, *args):
+    def _default_formatter(self, tag, *args):
         _format = '[%{}s][%-{}s]'.format(self._id_len, self._tag_len)
         return _format % (self.id, tag) + ' '.join(args)
 
@@ -143,30 +152,30 @@ class Logger(object):
         self._error_handler     = self._default_error_handler_with_stream
 
     def _default_info_handler(self, *args):
-        print(self.formatter('info', *args))
+        print(self._formatter('info', *args))
 
     def _default_warning_handler(self, *args):
-        print(self.formatter('warning', *args))
+        print(self._formatter('warning', *args))
 
     def _default_error_handler(self, *args):
-        print(self.formatter('error', *args))
+        print(self._formatter('error', *args))
 
     def _default_info_handler_with_stream(self, *args):
-        msg = self.formatter('info', *args)
+        msg = self._formatter('info', *args)
         print(msg)
         self._stream.write(msg)
         self._stream.write('\n')
         self._stream.flush()
 
     def _default_warning_handler_with_stream(self, *args):
-        msg = self.formatter('warning', *args)
+        msg = self._formatter('warning', *args)
         print(msg)
         self._stream.write(msg)
         self._stream.write('\n')
         self._stream.flush()
 
     def _default_error_handler_with_stream(self, *args):
-        msg = self.formatter('error', *args)
+        msg = self._formatter('error', *args)
         print(msg)
         self._stream.write(msg)
         self._stream.write('\n')
@@ -197,5 +206,13 @@ if '__main__' == __name__: # test logger
         logger.warning('test warning')
         logger.error('test error')
 
-    _test_case_002()
+    def _test_case_003():
+        logger.set_logger(name='default', log_file='logs\\take_your_time.log')
+        logger.info('test default formatter')
+        def formatter(tag, *args):
+            return '{} -- {}'.format(tag, ' * '.join(args))
+        logger.set_formatter(formatter)
+        logger.info('test default formatter', 'cannot be true')
+
+    _test_case_003()
     pass
