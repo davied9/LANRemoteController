@@ -3,7 +3,7 @@ if '__main__' == __name__:
     Config.read('Client/android.ini')
 
     from Common.logger import logger
-    from Client import ClientUI
+    from Client.ClientUI import ClientUI
 
     logger.set_logger('kivy')
 
