@@ -27,7 +27,7 @@ class ClientUI(App):
         screen_manager.last_screen:     last screen
         controller_sets:                all controller collections loaded from local files
         current_edit_set:               current edited controller set
-        client:                         client ( LRCClientConnector ), provide access for LRCClient
+        client:                         client ( LRCClient ), provide access for LRCClient
 
     '''
 
