@@ -1,5 +1,8 @@
 # -*-coding:utf-8-*-
 from __future__ import print_function
+import kivy
+kivy.require('1.10.1')
+
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout

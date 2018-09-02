@@ -1,3 +1,6 @@
+import kivy
+kivy.require('1.10.1')
+
 from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
 from kivy.app import App

@@ -1,3 +1,6 @@
+import kivy
+kivy.require('1.10.1')
+
 import os
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager
