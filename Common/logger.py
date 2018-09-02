@@ -97,7 +97,8 @@ class Logger(object):
         if log_file is None:
             import time
             now = time.localtime()
-            log_file = 'logs\log_%04d-%02d-%02d_%02d%02d%02d.log' % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
+            log_file = 'log_%04d-%02d-%02d_%02d%02d%02d.log' % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
+            log_file = os.path.join('logs', log_file)
         log_file = os.path.abspath(log_file)
         try:
             log_file_dir = os.path.dirname(log_file)
