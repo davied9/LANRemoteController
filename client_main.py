@@ -1,4 +1,6 @@
 if '__main__' == __name__:
+    import os, sys; sys.path.append(os.path.dirname(sys.argv[0]))
+    
     from kivy.config import Config
     Config.read('Client/android.ini')
 
