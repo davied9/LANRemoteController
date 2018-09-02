@@ -1,16 +1,18 @@
 from __future__ import print_function
+from functools import partial
 import os
 
 class Logger(object):
 
     _counts = 0
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
+        # initialize ----------------------------------------------------------------------------------------------
         id = Logger._counts
         Logger._counts += 1
         # public
-        self.id                 = id
-        self.name               = 'not set' # logger name
+        self.id                 = id # logger index, indicate the total number of logger
+        self.name               = 'not set' # logger name, such as 'default' 'kivy'
         self.stream_id          = None  # stream id, mostly file path
         # protected
         self._id_len            = 1
@@ -19,16 +21,14 @@ class Logger(object):
         self._info_handler      = print
         self._warning_handler   = print
         self._error_handler     = print
-        # initialize default logger
-        if 'name' in kwargs:
-            logger_name = kwargs['name']
-            del kwargs['name']
-            self.set_logger(logger_name, *args, **kwargs)
-        else:
-            self._set_default_logger(*args, **kwargs)
+        # initialize raw logger - take care of first time running --------------------------------------------------
+        self.set_logger(**kwargs)
 
     def __del__(self):
-        self.close()
+        try: # to make this more robust, somehow directly will generate error
+            self.close()
+        except:
+            pass
 
     def __enter__(self):
         return self
@@ -36,17 +36,43 @@ class Logger(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
+    def _first_run(self, op, *args): # first time info/warning/error is called, is when handlers are set
+        # initialize all handlers at first-time running
+        if 'kivy' == self.name:
+            try:
+                import kivy.logger
+                self._info_handler      = kivy.logger.Logger.info
+                self._warning_handler   = kivy.logger.Logger.warning
+                self._error_handler     = kivy.logger.Logger.error
+                self.name = 'kivy'
+                self.info('logger : set to kivy logger')
+            except ImportError:
+                self._set_default_logger()
+                self.name = 'default'
+                self.error('logger : can not import kivy logger(kivy not installed ???), set to default logger')
+            except Exception as err:
+                self._set_default_logger()
+                self.name = 'default'
+                self.error('logger : got error when import kivy logger, set to default logger.')
+                self.error('logger : error message : {}'.format(err))
+        elif 'default' == self.name:
+            self._set_default_logger()
+        else:
+            unrecognized_logger = self.name
+            self._set_default_logger()
+            self.info('logger : unrecognized logger {}, set to default.'.format(unrecognized_logger))
+        # answer first call
+        try:
+            getattr(self, op)(*args)
+        except Exception as err:
+            raise Exception('first call {} for logger failed with message : {}.'.format(op, err))
+
     def close(self):
-        if 'not set' == self.name:
-            return
-        self.info('closing logger.')
         if self._stream:
+            self._set_raw_logger()
             self._stream.flush()
             self._stream.close()
             self._stream = None
-            self.stream_id = None
-        self.name = 'not set'
-        self._set_default_handlers()
 
     def info(self, *args):
         self._info_handler(*args)
@@ -66,34 +92,20 @@ class Logger(object):
     def replace_error_handler(self, handler):
         self._error_handler = handler
 
-    def set_logger(self, keyword, *args, **kwargs):
+    def set_logger(self, name='default', **kwargs):
         self.close()
-        if 'kivy' == keyword:
-            try:
-                import kivy.logger
-                self._info_handler      = kivy.logger.Logger.info
-                self._warning_handler   = kivy.logger.Logger.warning
-                self._error_handler     = kivy.logger.Logger.error
-                self.name = 'kivy'
-                self.info('logger : set to kivy logger')
-            except ImportError:
-                self._set_default_logger(*args, **kwargs)
-                self.name = 'default'
-                self.info('logger : can not import kivy logger(kivy not installed ???), set to default logger')
-            except Exception as err:
-                self._set_default_logger(*args, **kwargs)
-                self.name = 'default'
-                self.info('logger : got error {} when import kivy logger, set to default logger'.format(err))
-        elif 'default' == keyword:
-            self._set_default_logger(*args, **kwargs)
-        else:
-            self._set_default_logger(*args, **kwargs)
-            self.info('logger : unrecognized logger {}, set to default.'.format(keyword))
-            return
+        self._set_raw_logger()
+        self.name = kwargs['name'] if 'name' in kwargs else name
+        self.stream_id = kwargs['log_file'] if 'log_file' in kwargs else None
 
-    def _set_default_logger(self, *args, **kwargs):
+    def _set_raw_logger(self, *args, **kwargs):
+        self._info_handler      = partial( self._first_run, 'info')
+        self._warning_handler   = partial( self._first_run, 'warning')
+        self._error_handler     = partial( self._first_run, 'error')
+
+    def _set_default_logger(self):
         # try to parse log stream id
-        log_file = kwargs['log_file'] if 'log_file' in kwargs else None
+        log_file = self.stream_id
         if log_file is None:
             import time
             now = time.localtime()
@@ -105,7 +117,7 @@ class Logger(object):
             if not os.path.exists(log_file_dir):
                 os.mkdir(log_file_dir)
             self.stream_id = log_file
-            self._stream = open(log_file, 'w')
+            self._stream = open(log_file, 'a')
         except Exception as err:
             print('[error  ] error while opening log_file, got : {}.'.format(err))
         # set default handlers
@@ -180,7 +192,7 @@ if '__main__' == __name__: # test logger
         _logger.info('after closed')
 
     def _test_case_002():
-        logger.set_logger('default', log_file='logs\\take_your_time.log')
+        logger.set_logger(name='default', log_file='logs\\take_your_time.log')
         logger.info('test info')
         logger.warning('test warning')
         logger.error('test error')
