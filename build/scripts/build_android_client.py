@@ -2,6 +2,7 @@ from __future__ import print_function
 
 if '__main__' == __name__ :
     import shutil
+    import os, sys
 
     # define utilities
     def empty(*args, **kwargs): pass
@@ -16,13 +17,13 @@ if '__main__' == __name__ :
     skip_files = ['android.txt', 'android.ini']
 
     # initialize
-    import os, sys
     script_file = sys.argv[0]
     working_dir, _ = os.path.split(script_file)
     working_dir, _ = os.path.split(working_dir)
     working_dir, _ = os.path.split(working_dir)
     os.chdir(working_dir)
     print('[info] working directory : {}'.format(working_dir))
+    sys.path.append(os.path.dirname(sys.argv[0]))
 
     from Common.logger import logger
 
