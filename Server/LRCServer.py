@@ -11,6 +11,22 @@ except:
     print('can not import packages for UDPServer.')
 
 
+
+def start_LRCServer(server_address, waiter_address, verify_code, client_list, log_mailbox=None):
+    LRCServer(server_address=server_address,
+              waiter_address=waiter_address,
+              verify_code=verify_code,
+              client_list=client_list,
+              log_mailbox=log_mailbox).serve_forever()
+
+
+def start_LRCWaiter(waiter_address, server_address, client_list, log_mailbox=None):
+    LRCWaiter(waiter_address=waiter_address,
+              connect_server_address=server_address,
+              client_list=client_list,
+              log_mailbox=log_mailbox).serve_forever()
+
+
 class LRCServer ( UDPServer, object ):
 
     allow_reuse_address = True

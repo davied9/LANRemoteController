@@ -15,6 +15,7 @@ from threading import Thread
 from random import randint
 from time import sleep
 from Common.logger import logger
+from Server.LRCServer import start_LRCServer, start_LRCWaiter
 import re, os
 os.environ['KIVY_IMAGE'] = 'pil,sdl2'
 
@@ -44,22 +45,6 @@ class _log_buffer(object):
     def size(self):
         return len(self.buffer)
 
-
-def start_LRCServer(server_address, waiter_address, verify_code, client_list, log_mailbox):
-    from Server.LRCServer import LRCServer
-    LRCServer(server_address=server_address,
-              waiter_address=waiter_address,
-              verify_code=verify_code,
-              client_list=client_list,
-              log_mailbox=log_mailbox).serve_forever()
-
-
-def start_LRCWaiter(waiter_address, server_address, client_list, log_mailbox):
-    from Server.LRCServer import LRCWaiter
-    LRCWaiter(waiter_address=waiter_address,
-              connect_server_address=server_address,
-              client_list=client_list,
-              log_mailbox=log_mailbox).serve_forever()
 
 
 class LRCServerUI(App):
