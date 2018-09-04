@@ -7,7 +7,7 @@ from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.screenmanager import Screen
 from kivy.clock import Clock
-from kivy.logger import Logger
+from Common.logger import logger
 from Client.ButtonContainer import ButtonContainer
 from Controller.LRCController import  ControllerSet
 import os, json
@@ -104,13 +104,13 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
                 if not file_name.endswith('.json'): continue
                 full_path = r+'/'+file_name
                 with open(full_path) as file_handle:
-                    Logger.info('Collection: loading configuration from "{0}"'.format(full_path))
+                    logger.info('Collection: loading configuration from "{0}"'.format(full_path))
                     try:
                         info = json.load(file_handle)
                         for name, config in info.items():
                             controller_sets[name] = ControllerSet(name, **config)
                     except Exception as err:
-                        Logger.info('Collection:     failed with message : {0}'.format(err))
+                        logger.info('Collection:     failed with message : {0}'.format(err))
             break
 
         App.get_running_app().controller_sets = controller_sets

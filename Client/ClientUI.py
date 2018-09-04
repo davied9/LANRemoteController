@@ -4,7 +4,7 @@ kivy.require('1.10.1')
 import os
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager
-from kivy.logger import Logger
+from Common.logger import logger
 from Client.ControllerCollectionScreen import ControllerCollectionScreen
 from Client.ControllerCollectionBuildScreen import ControllerCollectionBuildScreen
 from Client.ControllerScreen import ControllerScreen
@@ -32,7 +32,7 @@ class ClientUI(App):
     '''
 
     def build(self):
-        Logger.info('Start: working directory : {0}'.format( os.getcwd() ))
+        logger.info('Start: working directory : {0}'.format( os.getcwd() ))
 
         self.controller_sets = None
         self.current_edit_set = None # for sync between build screen and controller screen
