@@ -14,7 +14,7 @@ if '__main__' == __name__ :
     # configurations
     dirs_to_copy = ['Controller', 'Common', 'collections', 'Client']
     skip_dirs = ['logs', '__pycache__']
-    skip_files = ['android.txt', 'android.ini']
+    skip_files = ['android.txt']
 
     # initialize
     script_file = sys.argv[0]
@@ -67,14 +67,7 @@ if '__main__' == __name__ :
     copy(this_src, this_target)
     logger.info('done copy main.py.')
 
-    # copy android.ini and android.txt
-    logger.info('start copy android.txt/android.ini ...')
-    this_src = os.path.join(working_dir, 'Client', 'android.ini')
-    this_target = os.path.join(build_root, 'android.ini')
-    logger.info('copying {}'.format(this_src))
-    logger.info('    into {}'.format(this_target))
-    copy(this_src, this_target)
-
+    # copy android.txt
     this_src = os.path.join(working_dir, 'Client', 'android.txt')
     this_target = os.path.join(build_root, 'android.txt')
     logger.info('copying {}'.format(this_src))
