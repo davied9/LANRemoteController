@@ -23,6 +23,7 @@ if '__main__' == __name__ :
     working_dir, _ = os.path.split(working_dir)
     os.chdir(working_dir)
     print('[info] working directory : {}'.format(working_dir))
+    sys.path.append(working_dir)
     sys.path.append(os.path.dirname(sys.argv[0]))
 
     from Common.logger import logger
