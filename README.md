@@ -11,7 +11,22 @@ Basic implement thought :
     
 Things will work on all kinds of devices involved with keyboard, thanks to SavinaRoja/PyUserInput.
 
-De
+# Distribution
+
+build/scripts contains all distribution scripts
+
+## Server
+
+
+## Client
+
+### Android
+
+`cd build/scripts`
+`python -m build_android_client`
+
+the distribution package will be in build\client\android
+copy directory to sdcard/kivy, then run with kivy Laucher or pydroid (require kivy 1.10.1)
 
 # Thanks
 [PyUserInput by SavinaRoja](https://github.com/SavinaRoja/PyUserInput), distributed with GNU GENERAL PUBLIC LICENSE
