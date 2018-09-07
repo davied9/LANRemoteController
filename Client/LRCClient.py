@@ -16,6 +16,8 @@ class LRCClient(object):
         self.socket.sendto(self.encode_message('hello'), server_address)
         msg, server_address = self.socket.recvfrom(1024)
         self.waiter_address = self.parse_address_from_message(msg)
+        if self.waiter_address[0] in ['127.0.0.1', '0.0.0.0']: # if waiter is on server, then modify waiter address
+            self.waiter_address = (server_address[0], self.waiter_address[1])
         logger.info('Client: parse waiter address from : {0} with waiter address : {1}'.format(msg, self.waiter_address))
 
     def send_message(self, message):
