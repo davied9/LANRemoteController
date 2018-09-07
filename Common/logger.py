@@ -75,7 +75,7 @@ class Logger(object):
         if 'kivy' == self.name:
             try:
                 import kivy.logger
-                self._debug_handler     = kivy.logger.Logger.warning
+                self._debug_handler     = kivy.logger.Logger.debug
                 self._info_handler      = kivy.logger.Logger.info
                 self._warning_handler   = kivy.logger.Logger.warning
                 self._error_handler     = kivy.logger.Logger.error
