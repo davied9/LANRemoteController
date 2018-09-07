@@ -18,6 +18,7 @@ class Logger(object):
         self._id_len            = 1
         self._tag_len           = 8
         self._stream            = None
+        self._debug_handler     = print
         self._info_handler      = print
         self._warning_handler   = print
         self._error_handler     = print
@@ -43,6 +44,8 @@ class Logger(object):
             self._stream.flush()
             self._stream.close()
             self._stream = None
+    def debug(self, *args):
+        self._debug_handler(*args)
 
     def info(self, *args):
         self._info_handler(*args)
@@ -61,15 +64,6 @@ class Logger(object):
         except:
             self._formatter = self._default_formatter
 
-    def replace_info_handler(self, handler):
-        self._info_handler = handler
-
-    def replace_warning_handler(self, handler):
-        self._warning_handler = handler
-
-    def replace_error_handler(self, handler):
-        self._error_handler = handler
-
     def set_logger(self, name='default', **kwargs):
         self.close()
         self._set_raw_logger()
@@ -81,6 +75,7 @@ class Logger(object):
         if 'kivy' == self.name:
             try:
                 import kivy.logger
+                self._debug_handler     = kivy.logger.Logger.warning
                 self._info_handler      = kivy.logger.Logger.info
                 self._warning_handler   = kivy.logger.Logger.warning
                 self._error_handler     = kivy.logger.Logger.error
@@ -108,6 +103,7 @@ class Logger(object):
             raise Exception('first call {} for logger failed with message : {}.'.format(op, err))
 
     def _set_raw_logger(self, *args, **kwargs):
+        self._debug_handler     = partial( self._first_run, 'debug')
         self._info_handler      = partial( self._first_run, 'info')
         self._warning_handler   = partial( self._first_run, 'warning')
         self._error_handler     = partial( self._first_run, 'error')
@@ -142,14 +138,19 @@ class Logger(object):
         return _format % (self.id, tag) + ' '.join(args)
 
     def _set_default_handlers(self):
+        self._debug_handler     = self._default_debug_handler
         self._info_handler      = self._default_info_handler
         self._warning_handler   = self._default_warning_handler
         self._error_handler     = self._default_error_handler
 
     def _set_default_handlers_with_stream(self):
+        self._debug_handler     = self._default_debug_handler_with_stream
         self._info_handler      = self._default_info_handler_with_stream
         self._warning_handler   = self._default_warning_handler_with_stream
         self._error_handler     = self._default_error_handler_with_stream
+
+    def _default_debug_handler(self, *args):
+        print(self._formatter('DEBUG', *args))
 
     def _default_info_handler(self, *args):
         print(self._formatter('info', *args))
@@ -159,6 +160,13 @@ class Logger(object):
 
     def _default_error_handler(self, *args):
         print(self._formatter('error', *args))
+
+    def _default_debug_handler_with_stream(self, *args):
+        msg = self._formatter('DEBUG', *args)
+        print(msg)
+        self._stream.write(msg)
+        self._stream.write('\n')
+        self._stream.flush()
 
     def _default_info_handler_with_stream(self, *args):
         msg = self._formatter('info', *args)
@@ -188,12 +196,14 @@ logger = Logger()
 if '__main__' == __name__: # test logger
 
     def _test_case_000():
+        logger.debug('test debug')
         logger.info('test info')
         logger.warning('test warning')
         logger.error('test error')
 
     def _test_case_001():
         _logger = Logger(log_file=r'logs\test.log')
+        _logger.debug('test debug')
         _logger.info('test info')
         _logger.warning('test warning')
         _logger.error('test error')
@@ -202,6 +212,7 @@ if '__main__' == __name__: # test logger
 
     def _test_case_002():
         logger.set_logger(name='default', log_file='logs\\take_your_time.log')
+        logger.debug('test debug')
         logger.info('test info')
         logger.warning('test warning')
         logger.error('test error')
@@ -214,5 +225,5 @@ if '__main__' == __name__: # test logger
         logger.set_formatter(formatter)
         logger.info('test default formatter', 'cannot be true')
 
-    _test_case_003()
+    _test_case_001()
     pass
