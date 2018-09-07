@@ -51,9 +51,9 @@ class LRCServerUI(App):
 
     def build(self):
         # servers
-        self.server_address = ('127.0.0.1', 35530)
+        self.server_address = ('0.0.0.0', 35530)
         self.server_process = None
-        self.waiter_address = ('127.0.0.1', 35527)
+        self.waiter_address = ('0.0.0.0', 35527)
         self.waiter_process = None
         self.watch_interval = 0.5
         # UI
