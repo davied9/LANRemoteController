@@ -2,7 +2,7 @@
 Remote controller for LAN
 
 # Description
-Remote controller for LAN, based on [kivy UI framework](https://github.com/kivy/kivy).
+Remote controller for LAN, based on [kivy UI framework](https://github.com/kivy/kivy) and [PyUserInput](https://github.com/SavinaRoja/PyUserInput) .
 
 Basic implement thought :
 - Client : Send key combination information in LAN
@@ -14,9 +14,11 @@ Things will work on all kinds of devices involved with keyboard, thanks to Savin
 # Install
 
 Can install directly by pip :
+
 `python -m pip install LRC`
 
 Or install from git:
+
 `python -m pip install git+https://github.com/davied9/LANRemoteController@workspace_dav`
 
 # Distribution
