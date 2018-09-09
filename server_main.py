@@ -1,5 +1,4 @@
-
-if __name__ == '__main__':
+def main():
     import os, sys; sys.path.append(os.path.dirname(sys.argv[0]))
 
     def get_default_config():
@@ -15,3 +14,6 @@ if __name__ == '__main__':
     freeze_support()
     LRCServerUI().run()
 
+
+if __name__ == '__main__':
+    main()

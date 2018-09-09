@@ -13,7 +13,11 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/davied9/LANRemoteController",
     packages=setuptools.find_packages(),
-    classifiers=[
-        "Programming Language :: Python",
-    ],
+    entry_points="""
+    [console_scripts]
+    lrcclient = client_main:main
+    lrcserver = server_main:main
+    """,
+    classifiers=["Programming Language :: Python",],
+    setup_requires=['kivy>=1.10.1', 'PyUserInput>=0.1.11'],
 )
