@@ -4,7 +4,7 @@ kivy.require('1.10.1')
 from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
 from kivy.app import App
-from Common.logger import logger
+from LRC.Common.logger import logger
 import re
 
 Builder.load_string('''

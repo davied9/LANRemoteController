@@ -1,4 +1,4 @@
-from Protocol import BaseClientProtocol
+from LRC.Protocol import BaseClientProtocol
 
 class ClientProtocol(BaseClientProtocol):
 

@@ -7,11 +7,11 @@ from kivy.properties import ObjectProperty
 from kivy.uix.button import Button
 from kivy.clock import Clock
 from kivy.uix.screenmanager import Screen
-from Common.logger import logger
-from Common.Exceptions import NotFoundError
-from Controller.LRCController import Controller, ControllerSet
-from Client.ControllerEditor import ControllerEditor
-from Client.ButtonContainer import ButtonContainer
+from LRC.Common.logger import logger
+from LRC.Common.Exceptions import NotFoundError
+from LRC.Controller.LRCController import Controller, ControllerSet
+from LRC.Client.ControllerEditor import ControllerEditor
+from LRC.Client.ButtonContainer import ButtonContainer
 
 Builder.load_string('''
 

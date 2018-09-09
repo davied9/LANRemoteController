@@ -14,8 +14,8 @@ from multiprocessing import Process, Manager, freeze_support
 from threading import Thread
 from random import randint
 from time import sleep
-from Common.logger import logger
-from Server.LRCServer import start_LRCServer, start_LRCWaiter
+from LRC.Common.logger import logger
+from LRC.Server.LRCServer import start_LRCServer, start_LRCWaiter
 import re, os
 os.environ['KIVY_IMAGE'] = 'pil,sdl2'
 

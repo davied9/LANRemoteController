@@ -1,5 +1,5 @@
-from Controller.win32keydefines import *
-from Common.Exceptions import ArgumentError
+from LRC.Controller.win32keydefines import *
+from LRC.Common.Exceptions import ArgumentError
 import sys
 
 class KeyCombinationNotAvailableError(ArgumentError):

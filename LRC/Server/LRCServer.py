@@ -1,7 +1,7 @@
 from __future__ import print_function
 from functools import partial
-from Controller.LRCController import Controller
-from Common.logger import logger
+from LRC.Controller.LRCController import Controller
+from LRC.Common.logger import logger
 
 try: # python 2
     from SocketServer import UDPServer

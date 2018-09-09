@@ -1,4 +1,4 @@
-from Protocol import BaseServerProtocol
+from LRC.Protocol import BaseServerProtocol
 
 
 class ServerProtocol(BaseServerProtocol):

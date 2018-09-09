@@ -8,10 +8,10 @@ if __name__ == '__main__':
     def parse_arguments():
         pass
 
-    import Common.logger
+    from LRC.Common.logger import logger
     from multiprocessing import freeze_support
-    from Server.ServerUI import LRCServerUI
-    Common.logger.logger.set_logger('kivy')
+    from LRC.Server.ServerUI import LRCServerUI
+    logger.set_logger('kivy')
     freeze_support()
     LRCServerUI().run()
 

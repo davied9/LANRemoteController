@@ -7,8 +7,8 @@ if '__main__' == __name__ :
     # define utilities
     def empty(*args, **kwargs): pass
 
-    # copy = empty
-    copy = shutil.copy
+    copy = empty
+    #copy = shutil.copy
 
     # -------------------------------------------------------------------------------------------------------------
     # configurations
@@ -18,18 +18,19 @@ if '__main__' == __name__ :
 
     # initialize
     script_file = sys.argv[0]
-    working_dir, _ = os.path.split(script_file)
-    working_dir, _ = os.path.split(working_dir)
-    working_dir, _ = os.path.split(working_dir)
-    os.chdir(working_dir)
-    print('[info] working directory : {}'.format(working_dir))
+    project_root, _ = os.path.split(script_file)
+    project_root, _ = os.path.split(project_root)
+    project_root, _ = os.path.split(project_root)
+    working_dir = os.path.join(project_root, 'LRC')
+    os.chdir(project_root)
+
     sys.path.append(working_dir)
     sys.path.append(os.path.dirname(sys.argv[0]))
 
     from Common.logger import logger
 
     # start the dirty work
-    build_root = os.path.join(working_dir,'build','client','android')
+    build_root = os.path.join(project_root,'build','client','android')
     logger.info('copy files for android pydroid3 into {}.'.format(build_root))
     if os.path.exists(build_root):
         shutil.rmtree(build_root)

@@ -1,4 +1,4 @@
-from Common.logger import logger
+from LRC.Common.logger import logger
 from socket import *
 import re
 
