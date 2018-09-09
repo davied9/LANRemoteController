@@ -57,7 +57,7 @@ class LRCServer ( UDPServer, object ):
 class KeyCombinationParseError(Exception):
     pass
 
-from PyUserInput import PyKeyboard
+from pykeyboard import PyKeyboard
 import re
 
 class LRCWaiter( UDPServer, object ): # waiter serve all the time
