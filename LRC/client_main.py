@@ -1,6 +1,5 @@
 def main():
-    import os, sys; sys.path.append(os.path.dirname(sys.argv[0]))
-
+    import os
     from kivy.config import Config
     Config.read(os.path.join('Client', 'android.ini'))
 

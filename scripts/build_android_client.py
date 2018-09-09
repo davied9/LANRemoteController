@@ -7,12 +7,13 @@ if '__main__' == __name__ :
     # define utilities
     def empty(*args, **kwargs): pass
 
-    copy = empty
-    #copy = shutil.copy
+    # copy = empty
+    copy = shutil.copy
 
     # -------------------------------------------------------------------------------------------------------------
     # configurations
     dirs_to_copy = ['Controller', 'Common', 'collections', 'Client']
+    ext_to_copy = ['.py']
     skip_dirs = ['logs', '__pycache__']
     skip_files = ['android.txt']
 
@@ -20,35 +21,37 @@ if '__main__' == __name__ :
     script_file = sys.argv[0]
     project_root, _ = os.path.split(script_file)
     project_root, _ = os.path.split(project_root)
-    project_root, _ = os.path.split(project_root)
-    working_dir = os.path.join(project_root, 'LRC')
+    package_dir = os.path.join(project_root, 'LRC')
     os.chdir(project_root)
 
-    sys.path.append(working_dir)
+    sys.path.append(package_dir)
     sys.path.append(os.path.dirname(sys.argv[0]))
 
     from Common.logger import logger
 
     # start the dirty work
-    build_root = os.path.join(project_root,'build','client','android')
+    build_root = os.path.join(project_root,'dist','client','android')
     logger.info('copy files for android pydroid3 into {}.'.format(build_root))
     if os.path.exists(build_root):
         shutil.rmtree(build_root)
 
-    # copy files into build/client/android
+    # copy files into dist/client/android
     logger.info('start basic copy ...')
     for dir in dirs_to_copy:
-        for r, ds, fs in os.walk(os.path.join(working_dir, dir)):
+        for r, ds, fs in os.walk(os.path.join(package_dir, dir)):
             dir_name = os.path.basename(r)
             if dir_name in skip_dirs:
                 logger.info('skipping directory : {}'.format(r))
                 continue
-            dir_to_root = os.path.relpath(r, working_dir)
+            dir_to_root = os.path.relpath(r, package_dir)
             target_dir = os.path.join(build_root, dir_to_root)
-            source_dir = os.path.join(working_dir, dir_to_root)
+            source_dir = os.path.join(package_dir, dir_to_root)
             if not os.path.exists(target_dir):
                 os.makedirs(target_dir)
             for src in fs:
+                _, ext = os.path.splitext(src)
+                if ext not in ext_to_copy:
+                    continue
                 this_src = os.path.join(source_dir, src)
                 this_target = os.path.join(target_dir, src)
                 if src in skip_files:
@@ -61,7 +64,7 @@ if '__main__' == __name__ :
 
     # rename server_main.py into main.py
     logger.info('start copy main.py ...')
-    this_src = os.path.join(working_dir, 'client_main.py')
+    this_src = os.path.join(package_dir, 'client_main.py')
     this_target =  os.path.join(build_root, 'main.py')
     logger.info('copying {}'.format(this_src))
     logger.info('     to {}'.format(this_target))
@@ -69,7 +72,7 @@ if '__main__' == __name__ :
     logger.info('done copy main.py.')
 
     # copy android.txt
-    this_src = os.path.join(working_dir, 'Client', 'android.txt')
+    this_src = os.path.join(package_dir, 'Client', 'android.txt')
     this_target = os.path.join(build_root, 'android.txt')
     logger.info('copying {}'.format(this_src))
     logger.info('    into {}'.format(this_target))

@@ -1,5 +1,4 @@
 def main():
-    import os, sys; sys.path.append(os.path.dirname(sys.argv[0]))
 
     def get_default_config():
         pass

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="LRC",
-    version="0.0.1",
+    version="0.0.3",
     author="Davied Paul",
     author_email="wuwei_543333827@126.com",
     description="A lan remote controller to keyboard associated devices.",
@@ -15,9 +15,9 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     entry_points="""
     [console_scripts]
-    lrcclient = client_main:main
-    lrcserver = server_main:main
+    lrcclient = LRC.client_main:main
+    lrcserver = LRC.server_main:main
     """,
     classifiers=["Programming Language :: Python",],
-    setup_requires=['kivy>=1.10.1', 'PyUserInput>=0.1.11'],
+    setup_requires=['kivy>=1.10.1', 'PyUserInput>=0.1.9'],
 )

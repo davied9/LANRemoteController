@@ -269,6 +269,7 @@ __pycache__/
 
 # build
 dist/
+build/
 *.spec
 *.egg-info/
 .eggs/
