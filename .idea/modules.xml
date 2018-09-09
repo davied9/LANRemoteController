@@ -3,8 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/LANRemoteController.iml" filepath="$PROJECT_DIR$/.idea/LANRemoteController.iml" />
-      <module fileurl="file://G:/OpenSource/kivy/.idea/kivy.iml" filepath="G:/OpenSource/kivy/.idea/kivy.iml" />
-      <module fileurl="file://G:/PYM/Demos/PYM_Git/PYM_GIT/Assets/Utilities/util_tools/.idea/util_tools.iml" filepath="G:/PYM/Demos/PYM_Git/PYM_GIT/Assets/Utilities/util_tools/.idea/util_tools.iml" />
     </modules>
   </component>
 </project>
