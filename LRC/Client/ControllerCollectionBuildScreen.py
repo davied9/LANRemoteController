@@ -14,6 +14,7 @@ from LRC.Client.ControllerEditor import ControllerEditor
 from LRC.Client.ButtonContainer import ButtonContainer
 
 Builder.load_string('''
+#:import ButtonContainer    LRC.Client.ButtonContainer
 
 <ControllerCollectionBuildScreen>:
     display_title: title_button
@@ -21,6 +22,7 @@ Builder.load_string('''
     background_layout: background_layout
     delete_button: delete_button
     info_label: info_label
+    button_container: button_container
     FloatLayout:
         id: background_floatlayout
         BoxLayout:
@@ -34,6 +36,8 @@ Builder.load_string('''
                 font_size: 43
                 background_color: [0, 0, 0, 0]
                 on_release: root._open_set_name_editor(self, self.text)
+            ButtonContainer:
+                id: button_container
             BoxLayout:
                 size_hint: 1, 0.2
                 padding: 10, 30, 10, 0 # left, top, right, down
@@ -60,7 +64,6 @@ Builder.load_string('''
                     text: 'Add'
                     size_hint: 0.2, 1
                     on_release: root._create_new_button(self)
-            # if new component added, index of button_container in __init__ should be taken care of
         Label:
             id: info_label
             font_size: 12
@@ -97,8 +100,6 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
     def __init__(self, **kwargs):
         self.controller_button_process = self._process_edit_interact
         Screen.__init__(self, **kwargs)
-        self.button_container = ButtonContainer()
-        self.background_layout.add_widget(self.button_container, 1)
 
     def on_pre_enter(self, *args):
         current_app = App.get_running_app()

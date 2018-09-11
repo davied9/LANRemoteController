@@ -12,6 +12,7 @@ from LRC.Client.ButtonContainer import ButtonContainer
 
 Builder.load_string('''
 #:import LRCClientConnector LRC.Client.LRCClientConnector
+#:import ButtonContainer    LRC.Client.ButtonContainer
 
 <ControllerScreen>:
     # widgets
@@ -19,6 +20,7 @@ Builder.load_string('''
     display_title: title_label
     connector: connector
     info_label: info_label
+    button_container: button_container
     # layout
     BoxLayout:
         id: background_layout
@@ -42,6 +44,8 @@ Builder.load_string('''
                 on_release: root._goto_builder_screen(self)
         Widget:
             size_hint: 1, 0.05
+        ButtonContainer:
+            id: button_container
         Widget:
             size_hint: 1, 0.05
         LRCClientConnector:
@@ -52,7 +56,6 @@ Builder.load_string('''
             size_hint: 1, 0.05
             font_size: 12
             color: 1, 0, 0, 1
-        # if any new components added, index of button_container in __init__ should be taken care of
 ''')
 
 
@@ -63,14 +66,14 @@ class ControllerScreen(Screen): # controller operation room
 
     def __init__(self, **kwargs):
         Screen.__init__(self, **kwargs)
-        # add button container
-        self.button_container = ButtonContainer()
-        self.background_layout.add_widget(self.button_container, 3)
+        self.ip_and_port_input = None
+        Clock.schedule_once(self._delayed_init)
+
+    def _delayed_init(self, *args):
         # do some bindings
         self.connector.ip_button.bind(on_release=self._on_ip_button_released)
         self.connector.port_button.bind(on_release=self._on_port_button_released)
         # initialize
-        self.ip_and_port_input = None
         self.connector.ext_err_logger = self.present_info
 
 
