@@ -1,5 +1,4 @@
-from kivy.properties import ObjectProperty
-from kivy.logger import Logger
+from LRC.Common.logger import logger
 from LRC.Common.Exceptions import ArgumentError
 from LRC.Controller.LRCKeySettings import KeySettings
 import json
@@ -134,9 +133,9 @@ class ControllerSet(object):
     def __init__(self, name, **kwargs):
         self.name = name
         self.controllers = {}
-        Logger.info('Collection: New Controller Set : {0}'.format(self.name))
+        logger.info('Collection: New Controller Set : {0}'.format(self.name))
         for name, config in kwargs.items():
-            Logger.info('Collection:     {0} : {1}'.format(name, config))
+            logger.info('Collection:     {0} : {1}'.format(name, config))
             self.controllers[name] = (Controller(name, *config))
 
     def __str__(self):
@@ -156,12 +155,12 @@ class ControllerSet(object):
         return json.dumps(self.dump())
 
     def add_controller(self, controller):
-        Logger.info('Collection: Added to {0}(ControllerSet) : {1}'.format(self.name, controller.dump()))
+        logger.info('Collection: Added to {0}(ControllerSet) : {1}'.format(self.name, controller.dump()))
         self.controllers[controller.name] = controller
 
     def remove_controller(self, controller):
         del(self.controllers[controller.name])
-        Logger.info('Collection: Remove from {0}(ControllerSet) : {1}'.format(self.name, controller.dump()))
+        logger.info('Collection: Remove from {0}(ControllerSet) : {1}'.format(self.name, controller.dump()))
 
 
 class ControllerPackage(object):
