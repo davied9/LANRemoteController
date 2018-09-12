@@ -241,13 +241,13 @@ class LRCServerUI(App):
     def _mailbox_watcher(self):
         while True:
             try:
-                self.log(self.log_mailbox.get()) # get will block until there is data
+                self.info(self.log_mailbox.get()) # get will block until there is data
             except Exception as err:
                 if not self.running:
-                    self.log('Server : closing servers.')
+                    self.info('Server : closing servers.')
                     break
                 else:
-                    self.log('Error : {}'.format(err))
+                    self.error('Error : {}'.format(err))
 
     def on_start_server_pressed(self, inst):
         if self.server_process: # process is running, close it
