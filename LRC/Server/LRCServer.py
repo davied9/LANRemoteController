@@ -1,5 +1,4 @@
 from __future__ import print_function
-from functools import partial
 from LRC.Controller.LRCController import Controller
 from LRC.Common.logger import logger
 
@@ -140,7 +139,6 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
                 self.info('Waiter: pressing keys from {0} : {1}'.format(client_address, key_combination))
         except Exception as err:
             self.info('Waiter: can\'t press key from {0} {1} : {2}'.format(client_address, key_combination, err.args))
-
 
 
 if '__main__' == __name__:
