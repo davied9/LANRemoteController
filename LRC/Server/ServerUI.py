@@ -120,7 +120,7 @@ class LRCServerUI(App):
     def log(self, message):
         logger.info(message)
         self.log_buffer.log(message)
-        self.log_window.height = self.log_buffer.size * (self.log_window.font_size * 1.25)
+        self.log_window.height = (self.log_buffer.size + 1) * (self.log_window.font_size * 1.25)
         self.log_window.text = self.log_buffer.pack_messages()
 
     def _sync_size_to_text_size(self, component, new_size):
