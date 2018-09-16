@@ -1,7 +1,7 @@
 from LRC.Protocol.BaseProtocol import BaseProtocol
 
 
-class ServerProtocol(BaseProtocol):
+class WaiterServerProtocol(BaseProtocol):
 
     def __init__(self, **kwargs):
         BaseProtocol.__init__(self, **kwargs)
@@ -23,7 +23,6 @@ class ServerProtocol(BaseProtocol):
         :return *args:      information unpacked
         '''
         return ''
-
     # functional
 
 

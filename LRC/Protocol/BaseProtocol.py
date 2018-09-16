@@ -1,53 +1,58 @@
+from LRC.Protocol.BaseCommunicationProtocol import BaseCommunicationProtocol
 
-class BaseProtocol:
+class BaseProtocol(BaseCommunicationProtocol):
 
     """Base class for protocol
 
      Methods for the caller:
 
     - __init__()
-    - validate() -> is_available
 
     Methods that may be overridden:
 
-    - next()
-        next move for request, main part of protocol
+    - pack_message(*args, **kwargs) -> encoded message
+      pack message from application information
+    - unpack_message(message) -> *args (info from decoded message)
+      unpack message, and parse information from it
 
     Methods for derived classes:
 
-    - next()
+    - encode() -> encoded message
+      encode message
+    - decode() -> decoded message
+      decode message
 
     Class variables that may be overridden by derived classes or
     instances:
 
-    - necessary_attributes
+    -
 
     Instance variables:
 
-    -
+    - encoding
+      encoding for basic encode process (included in encode/decode)
 
     """
 
-    necessary_attributes = []
+    def __init__(self, **kwargs):
+        BaseCommunicationProtocol.__init__(self, **kwargs)
 
-    def __init__(self):
-        pass
+    def pack_message(self, *args, **kwargs):
+        '''
+        pack message from given information
+        :param args:        information from application
+        :param kwargs:      information from application
+        :return message:    message to send
+        '''
+        return self.encode('')
 
-    @classmethod
-    def validate(cls, server_or_client_class):
-        """validate server or client class is available for this protocol
+    def unpack_message(self, message):
+        '''
+        unpack message into application information
+        :param message:     message to parse from
+        :return *args:      information unpacked
+        '''
+        return ''
 
-        before using protocol, make sure this server/client is available for protocol
-
-        :param server_or_client_class:
-        :return is_available:
-        """
-        # mostly 'if !hasattr(server_or_client_class)' is writen here
-        avail = True
-        for attr in cls.necessary_attributes:
-            if not hasattr(server_or_client_class, attr):
-                avail = False
-                print(server_or_client_class.__name__, 'do not have necessary attribute', attr, 'for protocol', cls.__name__)
-        return avail
 
 
