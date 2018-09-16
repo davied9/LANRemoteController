@@ -74,7 +74,7 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
         self.keyboard = PyKeyboard()
         self.key_matcher = re.compile(r'[a-zA-Z ]+')
         self.key_settings = Controller.settings
-        self.execute_delay = 3
+        self.execute_delay = 0
 
     def decode_message(self, message):
         return message.decode(self.message_encoding)
