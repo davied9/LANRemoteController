@@ -29,5 +29,3 @@ class LRCServerConfig(object):
                 self.verify_code
         )
 
-def get_default_server_config():
-    return LRCServerConfig()
