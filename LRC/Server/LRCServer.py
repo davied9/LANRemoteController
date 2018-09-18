@@ -6,8 +6,6 @@ try: # python 2
     from SocketServer import UDPServer
 except ImportError:  # python 3
     from socketserver import UDPServer
-except:
-    print('can not import packages for UDPServer.')
 
 
 
@@ -40,17 +38,19 @@ class LRCServer ( UDPServer, object ):
         self.info       = self.log_mailbox.put_nowait if self.log_mailbox else logger.info
         self.warning    = self.log_mailbox.put_nowait if self.log_mailbox else logger.warning
 
-    def encode_message(self, message):
-        return message.encode(self.message_encoding)
-
-    def sendto(self, message, client_address):
-        self.socket.sendto(self.encode_message(message), client_address)
-
+    # interfaces
     def finish_request(self, request, client_address):
         self.sendto( str(self.waiter_address) , client_address )
         if self.client_list is not None and client_address not in self.client_list:
             self.client_list.append(client_address)
             self.info('Server: add client {0} to client list.'.format(client_address))
+
+    # functional
+    def encode_message(self, message):
+        return message.encode(self.message_encoding)
+
+    def sendto(self, message, client_address):
+        self.socket.sendto(self.encode_message(message), client_address)
 
 
 class KeyCombinationParseError(Exception):
@@ -76,6 +76,26 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
         self.key_settings = Controller.settings
         self.execute_delay = 0
 
+    # interfaces
+    def finish_request(self, request, client_address):
+        """Finish one request by instantiating RequestHandlerClass."""
+        if self.client_list is not None and client_address not in self.client_list:
+            self.warning('Waiter: unknown client request : {0}'.format(client_address))
+            return
+        message = self.decode_message(request[0])
+        key_combination = self.parse_key_combination_message(message)
+        try:
+            if self.execute_delay > 0:
+                from threading import Timer
+                Timer( self.execute_delay, self.keyboard.press_keys, args=(key_combination,)).start()
+                self.info('Waiter: schedule pressing keys in {2} seconds from {0} : {1}'.format(client_address, key_combination, self.execute_delay))
+            else:
+                self.keyboard.press_keys(key_combination)
+                self.info('Waiter: pressing keys from {0} : {1}'.format(client_address, key_combination))
+        except Exception as err:
+            self.info('Waiter: can\'t press key from {0} {1} : {2}'.format(client_address, key_combination, err.args))
+
+    # functional
     def decode_message(self, message):
         return message.decode(self.message_encoding)
 
@@ -121,24 +141,6 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
         except Exception as err:
             key_combination = None
         return key_combination
-
-    def finish_request(self, request, client_address):
-        """Finish one request by instantiating RequestHandlerClass."""
-        if self.client_list is not None and client_address not in self.client_list:
-            self.warning('Waiter: unknown client request : {0}'.format(client_address))
-            return
-        message = self.decode_message(request[0])
-        key_combination = self.parse_key_combination_message(message)
-        try:
-            if self.execute_delay > 0:
-                from threading import Timer
-                Timer( self.execute_delay, self.keyboard.press_keys, args=(key_combination,)).start()
-                self.info('Waiter: schedule pressing keys in {2} seconds from {0} : {1}'.format(client_address, key_combination, self.execute_delay))
-            else:
-                self.keyboard.press_keys(key_combination)
-                self.info('Waiter: pressing keys from {0} : {1}'.format(client_address, key_combination))
-        except Exception as err:
-            self.info('Waiter: can\'t press key from {0} {1} : {2}'.format(client_address, key_combination, err.args))
 
 
 if '__main__' == __name__:
