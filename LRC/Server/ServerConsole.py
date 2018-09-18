@@ -16,83 +16,149 @@ except ImportError:  # python 3
 class CommandServer(UDPServer):
 
     commands = {
-        'quit'          :   Command(name='exit', execute=exit, args=None),
-        'test_comm'    :   Command(name='exit', execute=print, args=('test')),
+        'quit'              :   Command(name='quit', execute=None, args=None),
     }
 
     # interfaces
     def __init__(self, **kwargs):
-        self.port = kwargs["port"]
-        self.ip = kwargs["ip"] if 'ip' in kwargs else '127.0.0.1'
+        # initial configuration
+        self.verbose = True if 'verbose' in kwargs else False
+        # initialize command server
+        self.server_address = kwargs["server_address"] if 'server_address' in kwargs else ('127.0.0.1', 35589)
+        if 'port' in kwargs:
+            self.port = kwargs["port"]
+        if 'ip' in kwargs:
+            self.ip = kwargs["ip"]
+        UDPServer.__init__(self, server_address=self.server_address, RequestHandlerClass=None, bind_and_activate=False)
+        # initialize protocol
         self.protocol = CommandServerProtocol()
-        UDPServer.__init__(self, self.server_address, None)
-
+        # initialize commands
+        self._init_commands()
+        # initialize communication components
+        self.comm_manager = None
+        self.log_mailbox = None
+        self.client_list = None
 
     def finish_request(self, request, client_address):
+        self._verbose_info('CommandServer : got request {} from client {}'.format(request, client_address))
         # parse command from request
-        cmd = self.protocol.unpack_message(request[0])
+        tag, args = self.protocol.unpack_message(request[0])
+        self._verbose_info('CommandServer : unpack result : {}, {}'.format(tag, args))
         # execute command
-        self._execute_command(cmd)
+        if 'command' == tag:
+            self._execute_command(args['name'])
+        elif 'request' == tag:
+            self._respond_request(client_address, args['name'], **args)
+
+    def start(self):
+        '''
+        start lrc command server
+        :return:
+        '''
+        try:
+            self.server_bind()
+            self.server_activate()
+            self.comm_manager = Manager()
+            self.log_mailbox = self.comm_manager.Queue()
+            self.client_list = self.comm_manager.list()
+        except:
+            self.server_close()
+            raise
+        logger.info('CommandServer : start command server at {}'.format(self.server_address))
+        Thread(target=self.serve_forever).start()
+
+    def quit(self):
+        def shutdown_tunnel(server):
+            server.shutdown()
+            server.comm_manager.shutdown()
+        # shutdown must be called in another thread, or it will be blocked forever
+        Thread(target=shutdown_tunnel, args=(self,)).start()
+
+    def send_command(self, command):
+        self._verbose_info('CommandServer : send command {} to {}'.format(command, self.server_address))
+        self.socket.sendto(self.protocol.pack_message(command=command), self.server_address)
 
     # properties
     @property
-    def server_address(self):
-        return (self.ip, self.port)
+    def ip(self):
+        return self.server_address[0]
 
-    # functional interfaces
+    @ip.setter
+    def ip(self, val):
+        self.server_address = (val, self.server_address[1])
+
+    @property
+    def port(self):
+        return self.server_address[1]
+
+    @port.setter
+    def port(self, val):
+        self.server_address = (self.server_address[0], val)
+
+    @property
+    def is_running(self):
+        try:
+            from socket import socket, AF_INET, SOCK_DGRAM
+            soc = socket(family=AF_INET, type=SOCK_DGRAM)
+            soc.settimeout(0.5)
+            soc.sendto(self.protocol.pack_message(command='running_test'), self.server_address)
+            respond, server = soc.recvfrom(1024)
+            tag, _ = self.protocol.unpack_message(respond)
+            if 'running_test' == tag:
+                return True
+        except Exception as err:
+            self._verbose_info('CommandServer : running_test : {}'.format(err.args))
+        return False
+
+    @property
+    def verbose(self):
+        return self.__empty == self._verbose_info_handler
+
+    @verbose.setter
+    def verbose(self, val):
+        if val:
+            self._verbose_info_handler = logger.info
+        else:
+            self._verbose_info_handler = self.__empty
+
+
+    # functional
+    def _init_commands(self):
+        self.commands['quit']._execute_handler = self.quit
+
     def _execute_command(self, command, *args):
+        if command not in self.commands.keys():
+            logger.error('CommandServer : command {} not registered'.format(command))
+            return
         try:
-            logger.info('ComandServer : executing command {}'.format(command))
-            self.commands[command].execute()
-        except Exception as err:
-            logger.error('ComandServer : failed with {}'.format(err))
-
-
-
-
-def _mailbox_watcher(mail_box):
-    while True:
-        try:
-            logger.info(mail_box.get()) # get will block until there is data
-        except Exception as err:
-            if not logger.running:
-                logger.info('Server : closing servers.')
-                break
+            self._verbose_info('ComandServer : executing command {}'.format(command))
+            if len(args) == 0:
+                self.commands[command].execute()
             else:
-                logger.error('Error : {}'.format(err))
+                self.commands[command].execute_external(*args)
+        except Exception as err:
+            logger.error('ComandServer : failed executing command {} with {}'.format(command, err.args))
 
+    def _respond_request(self, client_address, request, **kwargs):
+        if 'running_test' == request:
+            self.socket.sendto(self.protocol.pack_message(respond='running_test'), client_address)
 
-def start_lrc_server_console(config=LRCServerConfig()):
-    manager = Manager()
-    client_list = manager.list()
-    mail_box = manager.Queue()
+    def _verbose_info(self, message):
+        self._verbose_info_handler('CommandServer : verbose : {}'.format(message))
 
-    logger.info('starting console with config : {}'.format(config))
+    @classmethod
+    def __empty(*args): pass
 
-    waiter_process = Process( target=start_LRCServer, args=(
-                config.server_address,
-                config.waiter_address,
-                config.verify_code,
-                client_list,
-                mail_box
-    ))
-    waiter_process.start()
-
-    server_process = Process( target=start_LRCWaiter, args=(
-            config.waiter_address,
-            config.server_address,
-            client_list,
-            mail_box
-    ))
-    server_process.start()
-
-    # watcher_thread = Thread(
-    #
-    #
-    # )
-
-    return
-
+def start_lrc_server_console():
+    import sys
+    config = LRCServerConfig()
+    # start a new command server if necessary
+    command_server = CommandServer(port=35777, verbose=True)
+    if not command_server.is_running:
+        command_server.start()
+    # send the command
+    for i in range(1,len(sys.argv)):
+        command_server.send_command(sys.argv[i])
 
 if '__main__' == __name__:
 
@@ -100,4 +166,21 @@ if '__main__' == __name__:
         start_lrc_server_console()
         return
 
-    __test_case_000()
+    def __test_case_001():
+        # start a Command Server
+        CommandServer.commands['test_comm'] = Command(name='test_comm', execute=logger.info, args=('test_comm called',))
+        s = CommandServer(port=35777, verbose=True)
+        t = Thread(target=s.serve_forever)
+        t.start()
+        # connect
+        from socket import socket, AF_INET, SOCK_DGRAM
+        soc = socket(family=AF_INET, type=SOCK_DGRAM)
+        soc.connect(s.server_address)
+        p = CommandServerProtocol()
+        # try command test_comm
+        soc.send(p.pack_message(command='test_comm'))
+        # try command quit
+        soc.send(p.pack_message(command='quit'))
+        return
+
+    __test_case_001()
