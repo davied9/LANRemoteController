@@ -77,6 +77,10 @@ class CommandServer(UDPServer):
         # shutdown must be called in another thread, or it will be blocked forever
         Thread(target=shutdown_tunnel, args=(self,)).start()
 
+    @classmethod
+    def register_command(cls, command):
+        cls.commands[command.name] = command
+
     def send_command(self, command):
         self._verbose_info('CommandServer : send command {} to {}'.format(command, self.server_address))
         self.socket.sendto(self.protocol.pack_message(command=command), self.server_address)
