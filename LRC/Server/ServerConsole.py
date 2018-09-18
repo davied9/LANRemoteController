@@ -1,7 +1,9 @@
 from __future__ import print_function
-from LRC.Server.Config import get_default_server_config
+from LRC.Server.Config import LRCServerConfig
+from LRC.Server.Command import Command
 from LRC.Server.LRCServer import start_LRCWaiter, start_LRCServer
 from LRC.Common.logger import logger
+from LRC.Protocol.v1.CommandServerProtocol import CommandServerProtocol
 from multiprocessing import Process, Manager
 from threading import Thread
 
@@ -9,21 +11,44 @@ try: # python 2
     from SocketServer import UDPServer
 except ImportError:  # python 3
     from socketserver import UDPServer
-except:
-    print('can not import packages for UDPServer.')
 
 
 class CommandServer(UDPServer):
 
+    commands = {
+        'quit'          :   Command(name='exit', execute=exit, args=None),
+        'test_comm'    :   Command(name='exit', execute=print, args=('test')),
+    }
+
+    # interfaces
     def __init__(self, **kwargs):
-        UDPServer.__init__(self, kwargs["server_address"], None)
+        self.port = kwargs["port"]
+        self.ip = kwargs["ip"] if 'ip' in kwargs else '127.0.0.1'
+        self.protocol = CommandServerProtocol()
+        UDPServer.__init__(self, self.server_address, None)
+
 
     def finish_request(self, request, client_address):
+        # parse command from request
+        cmd = self.protocol.unpack_message(request[0])
+        # execute command
+        self._execute_command(cmd)
+
+    # properties
+    @property
+    def server_address(self):
+        return (self.ip, self.port)
+
+    # functional interfaces
+    def _execute_command(self, command, *args):
+        try:
+            logger.info('ComandServer : executing command {}'.format(command))
+            self.commands[command].execute()
+        except Exception as err:
+            logger.error('ComandServer : failed with {}'.format(err))
 
 
-        return
 
-    
 
 def _mailbox_watcher(mail_box):
     while True:
@@ -37,7 +62,7 @@ def _mailbox_watcher(mail_box):
                 logger.error('Error : {}'.format(err))
 
 
-def start_lrc_server_console(config=get_default_server_config()):
+def start_lrc_server_console(config=LRCServerConfig()):
     manager = Manager()
     client_list = manager.list()
     mail_box = manager.Queue()
