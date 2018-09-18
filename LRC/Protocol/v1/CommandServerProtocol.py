@@ -5,7 +5,7 @@ import re
 
 class CommandServerProtocol(BaseProtocol):
 
-    __tag_exp = re.compile(r'(\w+)\=')
+    __tag_exp = re.compile(r'^(\w+)\=')
     __arg_exp = re.compile(r'([\w\.\-]+)\=([\w\.\-]+)')
 
     def __init__(self, **kwargs):
@@ -44,7 +44,7 @@ class CommandServerProtocol(BaseProtocol):
     # functional
     def _unpack_tag(self, message):
         try:
-            tag = self.__tag_exp.match(message).group()[:-1]
+            tag = self.__tag_exp.findall(message)[0]
             return tag
         except:
             return ''
