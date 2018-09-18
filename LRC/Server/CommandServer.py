@@ -1,10 +1,9 @@
 from __future__ import print_function
 from LRC.Server.Config import LRCServerConfig
 from LRC.Server.Command import Command
-from LRC.Server.LRCServer import start_LRCWaiter, start_LRCServer
 from LRC.Common.logger import logger
 from LRC.Protocol.v1.CommandServerProtocol import CommandServerProtocol
-from multiprocessing import Process, Manager
+from multiprocessing import Manager
 from threading import Thread
 
 try: # python 2
@@ -138,7 +137,7 @@ class CommandServer(UDPServer):
             logger.error('CommandServer : command {} not registered'.format(command))
             return
         try:
-            self._verbose_info('ComandServer : executing command {}'.format(command))
+            self._verbose_info('CommandServer : executing command {}'.format(command))
             if len(args) == 0:
                 self.commands[command].execute()
             else:
@@ -156,22 +155,8 @@ class CommandServer(UDPServer):
     @classmethod
     def __empty(*args): pass
 
-def start_lrc_server_console():
-    import sys
-    config = LRCServerConfig()
-    # start a new command server if necessary
-    command_server = CommandServer(port=35777, verbose=True)
-    if not command_server.is_running:
-        command_server.start()
-    # send the command
-    for i in range(1,len(sys.argv)):
-        command_server.send_command(sys.argv[i])
 
 if '__main__' == __name__:
-
-    def __test_case_000():
-        start_lrc_server_console()
-        return
 
     def __test_case_001():
         # start a Command Server
