@@ -56,16 +56,19 @@ class CommandServer(UDPServer):
         :return:
         '''
         try:
+            # start command server
             self.server_bind()
             self.server_activate()
+            Thread(target=self.serve_forever).start()
+            # start process communication server
             self.comm_manager = Manager()
             self.log_mailbox = self.comm_manager.Queue()
             self.client_list = self.comm_manager.list()
+            # log
+            logger.info('CommandServer : start command server at {}'.format(self.server_address))
         except:
             self.server_close()
             raise
-        logger.info('CommandServer : start command server at {}'.format(self.server_address))
-        Thread(target=self.serve_forever).start()
 
     def quit(self):
         def shutdown_tunnel(server):
