@@ -41,3 +41,10 @@ if '__main__' == __name__ :
         result = 'normal' if result is None else result
         print(' {}   {}   {}'.format(comb[0], comb[1], result))
 
+    # situations (o means REUSE flag is set)
+    # (1) (2)  result
+    #  o   o   normal
+    #  o   x   (10048, '通常每个套接字地址(协议/网络地址/端口)只允许使用一次。', None, 10048, None)
+    #  x   o   (10013, '以一种访问权限不允许的方式做了一个访问套接字的尝试。', None, 10013, None)
+    #  x   x   (10048, '通常每个套接字地址(协议/网络地址/端口)只允许使用一次。', None, 10048, None)
+
