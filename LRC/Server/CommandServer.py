@@ -14,10 +14,6 @@ except ImportError:  # python 3
 
 class CommandServer(UDPServer):
 
-    commands = {
-        'quit'              :   Command(name='quit', execute=None, args=None),
-    }
-
     # interfaces
     def __init__(self, **kwargs):
         # initial configuration
@@ -32,6 +28,7 @@ class CommandServer(UDPServer):
         # initialize protocol
         self.protocol = CommandServerProtocol()
         # initialize commands
+        self.__commands = dict()
         self._init_commands()
         # initialize communication components
         self.comm_manager = None
@@ -76,9 +73,8 @@ class CommandServer(UDPServer):
         # shutdown must be called in another thread, or it will be blocked forever
         Thread(target=shutdown_tunnel, args=(self,)).start()
 
-    @classmethod
-    def register_command(cls, command):
-        cls.commands[command.name] = command
+    def register_command(self, command):
+        self.__commands[command.name] = command
 
     def send_command(self, command):
         self._verbose_info('CommandServer : send command {} to {}'.format(command, self.server_address))
@@ -108,7 +104,7 @@ class CommandServer(UDPServer):
             soc = socket(family=AF_INET, type=SOCK_DGRAM)
             soc.settimeout(0.5)
             soc.sendto(self.protocol.pack_message(command='running_test'), self.server_address)
-            respond, server = soc.recvfrom(1024)
+            respond, _ = soc.recvfrom(1024)
             tag, _ = self.protocol.unpack_message(respond)
             if 'running_test' == tag:
                 return True
@@ -127,10 +123,14 @@ class CommandServer(UDPServer):
         else:
             self._verbose_info_handler = self.__empty
 
+    @property
+    def commands(self):
+        return self.__commands
 
     # functional
     def _init_commands(self):
-        self.commands['quit']._execute_handler = self.quit
+        self.__commands['quit']= Command(name='quit', execute=self.quit, args=None)
+        self.__commands['list_commands']= Command(name='list_commands', execute=self._list_commands, args=None)
 
     def _execute_command(self, command, *args):
         if command not in self.commands.keys():
@@ -149,6 +149,12 @@ class CommandServer(UDPServer):
         if 'running_test' == request:
             self.socket.sendto(self.protocol.pack_message(respond='running_test'), client_address)
 
+    def _list_commands(self):
+        message = 'CommandServer : list commands : \n'
+        for v in self.commands.values():
+            message += '\t{}\n'.format(v)
+        logger.info(message)
+
     def _verbose_info(self, message):
         self._verbose_info_handler('CommandServer : verbose : {}'.format(message))
 
@@ -160,19 +166,12 @@ if '__main__' == __name__:
 
     def __test_case_001():
         # start a Command Server
-        CommandServer.commands['test_comm'] = Command(name='test_comm', execute=logger.info, args=('test_comm called',))
         s = CommandServer(port=35777, verbose=True)
-        t = Thread(target=s.serve_forever)
-        t.start()
-        # connect
-        from socket import socket, AF_INET, SOCK_DGRAM
-        soc = socket(family=AF_INET, type=SOCK_DGRAM)
-        soc.connect(s.server_address)
-        p = CommandServerProtocol()
-        # try command test_comm
-        soc.send(p.pack_message(command='test_comm'))
-        # try command quit
-        soc.send(p.pack_message(command='quit'))
+        s.register_command(Command(name='test_comm', execute=logger.info, args=('test_comm called',)))
+        s.start()
+        # try commands
+        s.send_command(command='test_comm')
+        s.send_command(command='quit')
         return
 
     __test_case_001()
