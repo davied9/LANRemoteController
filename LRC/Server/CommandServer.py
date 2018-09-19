@@ -44,7 +44,9 @@ class CommandServer(UDPServer):
         if 'command' == tag:
             self._execute_command(args['name'])
         elif 'request' == tag:
-            self._respond_request(client_address, args['name'], **args)
+            self._respond_request(client_address, request=args['name'], **args)
+        elif 'running_test' == tag:
+            self._respond_running_test(client_address)
 
     def start(self):
         '''
@@ -103,10 +105,10 @@ class CommandServer(UDPServer):
             from socket import socket, AF_INET, SOCK_DGRAM
             soc = socket(family=AF_INET, type=SOCK_DGRAM)
             soc.settimeout(0.5)
-            soc.sendto(self.protocol.pack_message(command='running_test'), self.server_address)
+            soc.sendto(self.protocol.pack_message(running_test=None, state='request'), self.server_address)
             respond, _ = soc.recvfrom(1024)
-            tag, _ = self.protocol.unpack_message(respond)
-            if 'running_test' == tag:
+            tag, args = self.protocol.unpack_message(respond)
+            if 'running_test' == tag and 'confirm' == args['state']:
                 return True
         except Exception as err:
             self._verbose_info('CommandServer : running_test : {}'.format(err.args))
@@ -146,9 +148,12 @@ class CommandServer(UDPServer):
             logger.error('ComandServer : failed executing command {} with {}'.format(command, err.args))
 
     def _respond_request(self, client_address, request, **kwargs):
-        if 'running_test' == request:
-            self.socket.sendto(self.protocol.pack_message(respond='running_test'), client_address)
+        self.socket.sendto(self.protocol.pack_message(respond=request+' confirm'), client_address)
 
+    def _respond_running_test(self, client_address):
+        self.socket.sendto(self.protocol.pack_message(running_test=None, state='confirm'), client_address)
+
+    # command entry
     def _list_commands(self):
         message = 'CommandServer : list commands : \n'
         for v in self.commands.values():
