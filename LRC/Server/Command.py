@@ -2,25 +2,21 @@ from __future__ import print_function
 
 class Command(object):
 
-    def __init__(self, name, execute=None, args=None, **kwargs):
+    def __init__(self, name, execute, args=(), kwargs={},
+                 *, delayed_expansion=False):
         self.name = name
         self._execute_handler = execute
         self.args = args
-        self.delayed_expansion = False if 'delayed_expansion' not in kwargs else kwargs['delayed_expansion']
+        self.kwargs = kwargs
+        self.delayed_expansion = delayed_expansion
+
 
     def __str__(self):
-        return  '{} {} {}'.format(self.name, self._execute_handler, self.args)
+        return  '{} {} {} {}'.format(self.name, self._execute_handler, self.args, self.kwargs)
 
-    def execute(self):
-        if self._execute_handler is not None:
-            if self.args is not None:
-                self._execute_handler(*self.args)
-            else:
-                self._execute_handler()
-
-    def execute_external(self, *args):
-        if self._execute_handler is not None:
-            self._execute_handler(*args)
+    def execute(self, **kwargs):
+        kwargs.update(self.kwargs)
+        self._execute_handler(*self.args, **kwargs)
 
     @classmethod
     def parse_from_string(cls, string):

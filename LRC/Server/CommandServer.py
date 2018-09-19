@@ -37,16 +37,19 @@ class CommandServer(UDPServer):
 
     def finish_request(self, request, client_address):
         self._verbose_info('CommandServer : got request {} from client {}'.format(request, client_address))
-        # parse command from request
-        tag, args = self.protocol.unpack_message(request[0])
-        self._verbose_info('CommandServer : unpack result : {}, {}'.format(tag, args))
-        # execute command
-        if 'command' == tag:
-            self._execute_command(args['name'])
-        elif 'request' == tag:
-            self._respond_request(client_address, request=args['name'], **args)
-        elif 'running_test' == tag:
-            self._respond_running_test(client_address)
+        try:
+            # parse command from request
+            tag, args = self.protocol.unpack_message(request[0])
+            self._verbose_info('CommandServer : unpack result : {}, {}'.format(tag, args))
+            # execute command
+            if 'command' == tag:
+                self._execute_command(args['name'])
+            elif 'request' == tag:
+                self._respond_request(client_address, request=args['name'], **args)
+            elif 'running_test' == tag:
+                self._respond_running_test(client_address)
+        except Exception as err:
+            logger.error('CommandServer : failed to process request {} from {}'.format(request, client_address))
 
     def start(self):
         '''
@@ -68,15 +71,15 @@ class CommandServer(UDPServer):
             self.server_close()
             raise
 
-    def quit(self):
+    def quit(self, *args, **kwargs):
         def shutdown_tunnel(server):
             server.shutdown()
             server.comm_manager.shutdown()
         # shutdown must be called in another thread, or it will be blocked forever
         Thread(target=shutdown_tunnel, args=(self,)).start()
 
-    def register_command(self, command):
-        self.__commands[command.name] = command
+    def register_command(self, key, command):
+        self.__commands[key] = command
 
     def send_command(self, command):
         self._verbose_info('CommandServer : send command {} to {}'.format(command, self.server_address))
@@ -131,21 +134,21 @@ class CommandServer(UDPServer):
 
     # functional
     def _init_commands(self):
-        self.__commands['quit']= Command(name='quit', execute=self.quit, args=None)
-        self.__commands['list_commands']= Command(name='list_commands', execute=self._list_commands, args=None)
+        self.__commands['quit']= Command(name='quit', execute=self.quit, args=dict())
+        self.__commands['list_commands']= Command(name='list_commands', execute=self._list_commands, args=dict())
 
     def _execute_command(self, command, *args):
         if command not in self.commands.keys():
             logger.error('CommandServer : command {} not registered'.format(command))
             return
         try:
-            self._verbose_info('CommandServer : executing command {}'.format(command))
+            logger.info('CommandServer : executing command {}'.format(command))
             if len(args) == 0:
                 self.commands[command].execute()
             else:
                 self.commands[command].execute_external(*args)
         except Exception as err:
-            logger.error('ComandServer : failed executing command {} with {}'.format(command, err.args))
+            logger.error('ComandServer : failed executing command {} with error {}'.format(command, err.args))
 
     def _respond_request(self, client_address, request, **kwargs):
         self.socket.sendto(self.protocol.pack_message(respond=request+' confirm'), client_address)
@@ -154,7 +157,7 @@ class CommandServer(UDPServer):
         self.socket.sendto(self.protocol.pack_message(running_test=None, state='confirm'), client_address)
 
     # command entry
-    def _list_commands(self):
+    def _list_commands(self,  *args, **kwargs):
         message = 'CommandServer : list commands : \n'
         for v in self.commands.values():
             message += '\t{}\n'.format(v)
@@ -172,7 +175,7 @@ if '__main__' == __name__:
     def __test_case_001():
         # start a Command Server
         s = CommandServer(port=35777, verbose=True)
-        s.register_command(Command(name='test_comm', execute=logger.info, args=('test_comm called',)))
+        s.register_command('test_comm', Command(name='test_comm', execute=logger.info, args=('test_comm called',)))
         s.start()
         # try commands
         s.send_command(command='test_comm')

@@ -23,7 +23,7 @@ class CommandServerProtocol(BaseProtocol):
         elif 'command' in kwargs:
             raw_message = self._pack_message('command',**kwargs)
         elif 'respond' in kwargs:
-            raw_message = self._pack_message('respond',**kwargs)
+            raw_message = self._pack_respond(**kwargs)
         elif 'running_test' in kwargs:
             del kwargs['running_test']
             raw_message = self._pack_running_test_message(**kwargs)
@@ -61,6 +61,7 @@ class CommandServerProtocol(BaseProtocol):
     def _pack_message(self, tag, **kwargs):
         '''
         pack request to raw_message
+        :param tag:     tag, such as request, command, respond, ...
         :param kwargs:  specifications for a request/command/respond
         :return:        raw_message to send
         '''
@@ -71,6 +72,21 @@ class CommandServerProtocol(BaseProtocol):
         for k, v in kwargs.items():
             raw_message += k + '=' + v + ','
         return raw_message
+
+    def _pack_respond(self, **kwargs):
+        '''
+        pack request to raw_message
+        :param kwargs:  specifications for a request/command/respond
+        :return:        raw_message to send
+        '''
+        # raw message format : request=name,arg0,arg1,arg2,...
+        raw_message = 'respond='
+        raw_message += 'content=' + kwargs['respond'] + ','
+        del kwargs['respond']
+        for k, v in kwargs.items():
+            raw_message += k + '=' + v + ','
+        return raw_message
+
 
     def _pack_running_test_message(self, **kwargs):
         '''

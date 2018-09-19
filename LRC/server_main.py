@@ -3,10 +3,10 @@ from __future__ import print_function
 
 def start_lrc_server_console():
     from LRC.Server.Config import LRCServerConfig
+    from LRC.Common.logger import logger
 
     config = LRCServerConfig()
     if config.enable_ui:
-        from LRC.Common.logger import logger
         from multiprocessing import freeze_support
         from LRC.Server.ServerUI import LRCServerUI
 
@@ -17,7 +17,7 @@ def start_lrc_server_console():
         from LRC.Server.CommandServer import CommandServer
         import sys
         # start a new command server if necessary
-        command_server = CommandServer(port=35777, verbose=True)
+        command_server = CommandServer(verbose=True)
         if not command_server.is_running:
             command_server.start()
         # send the command

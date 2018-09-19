@@ -3,6 +3,7 @@
 class LRCServerConfig(object):
 
     def __init__(self):
+        self.config_file = None
         self.enable_ui = False
         self.command_ip = '127.0.0.1'
         self.command_port = 32781
@@ -27,6 +28,7 @@ class LRCServerConfig(object):
 
     def __str__(self):
         return '''
+    config_file     : {},
     UI enabled      : {},
     command address : {},
     server address  : {},
@@ -34,6 +36,7 @@ class LRCServerConfig(object):
     verify code     : {},
     verbose         : {},
 '''.format(
+            self.config_file,
             self.enable_ui,
             self.command_address,
             self.server_address,
