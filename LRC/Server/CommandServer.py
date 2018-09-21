@@ -48,7 +48,8 @@ class CommandServer(UDPServer):
             elif 'request' == tag:
                 self._respond_request(client_address, request=args['name'], **args)
             elif 'running_test' == tag:
-                self._respond_running_test(client_address)
+                if 'CommandServer' == args['target']:
+                    self._respond_running_test(client_address)
         except Exception as err:
             logger.error('CommandServer : failed to process request {} from {}'.format(request, client_address))
 
@@ -132,10 +133,10 @@ class CommandServer(UDPServer):
             from socket import socket, AF_INET, SOCK_DGRAM
             soc = socket(family=AF_INET, type=SOCK_DGRAM)
             soc.settimeout(0.5)
-            soc.sendto(self.protocol.pack_message(running_test=None, state='request'), self.server_address)
+            soc.sendto(self.protocol.pack_message(running_test='CommandServer', state='request'), self.server_address)
             respond, _ = soc.recvfrom(1024)
             tag, args = self.protocol.unpack_message(respond)
-            if 'running_test' == tag and 'confirm' == args['state']:
+            if 'running_test' == tag and 'CommandServer' == args['target'] and 'confirm' == args['state']:
                 return True
         except Exception as err:
             self._verbose_info('CommandServer : running_test : {}'.format(err.args))
@@ -176,7 +177,7 @@ class CommandServer(UDPServer):
         self.socket.sendto(self.protocol.pack_message(respond=request+' confirm'), client_address)
 
     def _respond_running_test(self, client_address):
-        self.socket.sendto(self.protocol.pack_message(running_test=None, state='confirm'), client_address)
+        self.socket.sendto(self.protocol.pack_message(running_test='CommandServer', state='confirm'), client_address)
 
     # command entry
     def _list_commands(self,  *args, **kwargs):
