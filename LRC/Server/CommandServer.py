@@ -1,10 +1,11 @@
 from __future__ import print_function
 from LRC.Server.Config import LRCServerConfig
-from LRC.Server.Command import Command
+from LRC.Server.Command import Command, parse_command
 from LRC.Common.logger import logger
 from LRC.Protocol.v1.CommandServerProtocol import CommandServerProtocol
 from multiprocessing import Manager
 from threading import Thread
+import json
 
 try: # python 2
     from SocketServer import UDPServer
@@ -79,11 +80,34 @@ class CommandServer(UDPServer):
         Thread(target=shutdown_tunnel, args=(self,)).start()
 
     def register_command(self, key, command):
+        logger.info('CommandServer : add command {} {}'.format(key, command))
         self.__commands[key] = command
 
     def send_command(self, command):
         self._verbose_info('CommandServer : send command {} to {}'.format(command, self.server_address))
         self.socket.sendto(self.protocol.pack_message(command=command), self.server_address)
+
+    def load_commands_from_file(self, command_file):
+        logger.info('CommandServer : add command from file {}'.format(command_file))
+        try:
+            with open(command_file, 'r') as fp:
+                config_string = fp.read()
+            config_dict = json.loads(config_string)
+        except Exception as err:
+            logger.error('CommandServer : add command from file {} failed with {}'.format(command_file, err.args))
+            return
+        success=0
+        fail=0
+        for command_name, command_body in config_dict.items():
+            try:
+                command = parse_command(**command_body)
+                self.register_command(command_name, command)
+                success += 1
+            except Exception as err:
+                logger.error('CommandServer : load command {} failed with {}'.format(command_name, err.args))
+                fail += 1
+        logger.info('CommandServer : add command from file {} done, total {}, success {}, fail {}'.format(
+                command_file, success+fail, success, fail))
 
     # properties
     @property
@@ -134,19 +158,17 @@ class CommandServer(UDPServer):
 
     # functional
     def _init_commands(self):
-        self.__commands['quit']= Command(name='quit', execute=self.quit, args=dict())
-        self.__commands['list_commands']= Command(name='list_commands', execute=self._list_commands, args=dict())
+        self.register_command('quit', Command(name='quit', execute=self.quit))
+        self.register_command('list_commands', Command(name='list_commands', execute=self._list_commands))
+        self.load_commands_from_file('LRC/Server/commands.json')
 
-    def _execute_command(self, command, *args):
+    def _execute_command(self, command, **kwargs):
         if command not in self.commands.keys():
             logger.error('CommandServer : command {} not registered'.format(command))
             return
         try:
             logger.info('CommandServer : executing command {}'.format(command))
-            if len(args) == 0:
-                self.commands[command].execute()
-            else:
-                self.commands[command].execute_external(*args)
+            self.commands[command].execute(**kwargs)
         except Exception as err:
             logger.error('ComandServer : failed executing command {} with error {}'.format(command, err.args))
 
