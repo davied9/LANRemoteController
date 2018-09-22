@@ -15,9 +15,25 @@ from threading import Thread
 from random import randint
 from time import sleep
 from LRC.Common.logger import logger
-from LRC.Server.LRCServer import start_LRCServer, start_LRCWaiter
+from LRC.Server.LRCServer import LRCServer, LRCWaiter
 import re, os
 os.environ['KIVY_IMAGE'] = 'pil,sdl2'
+
+
+
+def start_LRCServer(server_address, waiter_address, verify_code, client_list, log_mailbox=None):
+    LRCServer(server_address=server_address,
+              waiter_address=waiter_address,
+              verify_code=verify_code,
+              client_list=client_list,
+              log_mailbox=log_mailbox).serve_forever()
+
+
+def start_LRCWaiter(waiter_address, server_address, client_list, log_mailbox=None):
+    LRCWaiter(waiter_address=waiter_address,
+              connect_server_address=server_address,
+              client_list=client_list,
+              log_mailbox=log_mailbox).serve_forever()
 
 
 class _log_buffer(object):
