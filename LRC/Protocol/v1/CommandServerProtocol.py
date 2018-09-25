@@ -25,7 +25,6 @@ class CommandServerProtocol(BaseProtocol):
         elif 'respond' in kwargs:
             raw_message = self._pack_respond(**kwargs)
         elif 'running_test' in kwargs:
-            del kwargs['running_test']
             raw_message = self._pack_running_test_message(**kwargs)
         else:
             logger.info('unknown operation "{}" for LRC command server'.format(kwargs))
@@ -96,6 +95,8 @@ class CommandServerProtocol(BaseProtocol):
         '''
         # raw message format : request=name,arg0,arg1,arg2,...
         raw_message = 'running_test='
+        raw_message += 'target=' + kwargs['running_test'] + ','
+        del kwargs['running_test']
         for k, v in kwargs.items():
             raw_message += k + '=' + v + ','
         return raw_message
