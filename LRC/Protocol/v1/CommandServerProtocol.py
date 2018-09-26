@@ -39,8 +39,8 @@ class CommandServerProtocol(BaseProtocol):
         '''
         raw_message = self.decode(message)
         tag = self._unpack_tag(raw_message)
-        args = self._unpack_args(raw_message[len(tag)+1:])
-        return tag, args
+        kwargs = self._unpack_args(raw_message[len(tag)+1:])
+        return tag, kwargs
         # logger.info('LRC command server cannot parse operation from message "{}"'.format(raw_message))
 
     # functional

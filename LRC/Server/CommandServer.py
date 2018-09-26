@@ -40,15 +40,17 @@ class CommandServer(UDPServer):
         self._verbose_info('CommandServer : got request {} from client {}'.format(request, client_address))
         try:
             # parse command from request
-            tag, args = self.protocol.unpack_message(request[0])
-            self._verbose_info('CommandServer : unpack result : {}, {}'.format(tag, args))
+            tag, kwargs = self.protocol.unpack_message(request[0])
+            self._verbose_info('CommandServer : unpack result : {}, {}'.format(tag, kwargs))
             # execute command
             if 'command' == tag:
-                self._execute_command(args['name'])
+                command = kwargs['name']
+                del kwargs['name']
+                self._execute_command(command, **kwargs)
             elif 'request' == tag:
-                self._respond_request(client_address, request=args['name'], **args)
+                self._respond_request(client_address, request=kwargs['name'], **kwargs)
             elif 'running_test' == tag:
-                if 'CommandServer' == args['target']:
+                if 'CommandServer' == kwargs['target']:
                     self._respond_running_test(client_address)
         except Exception as err:
             logger.error('CommandServer : failed to process request {} from {}'.format(request, client_address))
@@ -135,8 +137,8 @@ class CommandServer(UDPServer):
             soc.settimeout(0.5)
             soc.sendto(self.protocol.pack_message(running_test='CommandServer', state='request'), self.server_address)
             respond, _ = soc.recvfrom(1024)
-            tag, args = self.protocol.unpack_message(respond)
-            if 'running_test' == tag and 'CommandServer' == args['target'] and 'confirm' == args['state']:
+            tag, kwargs = self.protocol.unpack_message(respond)
+            if 'running_test' == tag and 'CommandServer' == kwargs['target'] and 'confirm' == kwargs['state']:
                 return True
         except Exception as err:
             self._verbose_info('CommandServer : running_test : {}'.format(err.args))
@@ -160,6 +162,7 @@ class CommandServer(UDPServer):
     # functional
     def _init_commands(self):
         self.register_command('quit', Command(name='quit', execute=self.quit))
+        self.register_command('register_command', Command(name='register_command', execute=self.register_command))
         self.register_command('list_commands', Command(name='list_commands', execute=self._list_commands))
         self.load_commands_from_file('LRC/Server/commands.json')
 
@@ -171,7 +174,7 @@ class CommandServer(UDPServer):
             logger.info('CommandServer : executing command {}'.format(command))
             self.commands[command].execute(**kwargs)
         except Exception as err:
-            logger.error('ComandServer : failed executing command {} with error {}'.format(command, err.args))
+            logger.error('CommandServer : failed executing command {} with error {}'.format(command, err.args))
 
     def _respond_request(self, client_address, request, **kwargs):
         self.socket.sendto(self.protocol.pack_message(respond=request+' confirm'), client_address)
