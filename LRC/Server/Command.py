@@ -19,8 +19,9 @@ class Command(BaseCommand):
         return  '<{} :: {} :: {}>'.format(self.name, self._execute_handler, self.kwargs)
 
     def execute(self, **kwargs):
-        kwargs.update(self.kwargs)
-        self._execute_handler(**kwargs)
+        param = self.kwargs.copy() # external parameters have greater priority
+        param.update(kwargs)
+        self._execute_handler(**param)
 
 
 def _get_full_interface(module, interface):
