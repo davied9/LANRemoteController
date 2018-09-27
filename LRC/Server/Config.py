@@ -15,7 +15,7 @@ class LRCServerConfig(object):
         self.verbose = False
 
     @property
-    def command_address(self):
+    def command_server_address(self):
         return (self.command_ip, self.command_port)
 
     @property
@@ -26,19 +26,39 @@ class LRCServerConfig(object):
     def waiter_address(self):
         return (self.waiter_ip, self.waiter_port)
 
+    @property
+    def command_server_config(self):
+        return {
+            'server_address' : self.command_server_address,
+        }
+
+    @property
+    def server_config(self):
+        return {
+            'server_address' : self.server_address,
+            'waiter_address' : self.waiter_address,
+        }
+
+    @property
+    def waiter_config(self):
+        return {
+            'connect_server_address'  : self.server_address,
+            'waiter_address'           : self.waiter_address,
+        }
+
     def __str__(self):
         return '''
-    config_file     : {},
-    UI enabled      : {},
-    command address : {},
-    server address  : {},
-    waiter address  : {},
-    verify code     : {},
-    verbose         : {},
+    config_file             : {},
+    UI enabled              : {},
+    command server address  : {},
+    server address          : {},
+    waiter address          : {},
+    verify code             : {},
+    verbose                 : {},
 '''.format(
             self.config_file,
             self.enable_ui,
-            self.command_address,
+            self.command_server_address,
             self.server_address,
             self.waiter_address,
             self.verify_code,
