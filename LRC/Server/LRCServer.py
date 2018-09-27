@@ -8,11 +8,19 @@ except ImportError:  # python 3
     from socketserver import UDPServer
 
 
+def _empty(*args, **kwargs): pass # a black hole
+
+
 class LRCServer ( UDPServer, object ):
 
     allow_reuse_address = True
 
     def __init__(self, **kwargs ):
+        if 'verbose' in kwargs and kwargs['verbose'] is True:
+            from functools import partial
+            self._verbose_info = partial(print, 'LRC server [verbose] :')
+        else:
+            self._verbose_info = _empty
         UDPServer.__init__( self, kwargs["server_address"], None )
         self.waiter_address     = kwargs["waiter_address"]
         self.message_encoding   = kwargs["message_encoding"] if "message_encoding" in kwargs else 'utf-8'
@@ -21,9 +29,11 @@ class LRCServer ( UDPServer, object ):
         self.log_mailbox        = kwargs["log_mailbox"] if "log_mailbox" in kwargs else None
         self.info       = self.log_mailbox.put_nowait if self.log_mailbox else logger.info
         self.warning    = self.log_mailbox.put_nowait if self.log_mailbox else logger.warning
+        self._verbose_info('server {}, waiter {}'.format( self.server_address, self.waiter_address))
 
     # interfaces
     def finish_request(self, request, client_address):
+        self._verbose_info('receive request {} from {}'.format(request, client_address))
         self.sendto( str(self.waiter_address) , client_address )
         if self.client_list is not None and client_address not in self.client_list:
             self.client_list.append(client_address)
@@ -48,6 +58,11 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
     allow_reuse_address = True
 
     def __init__(self, **kwargs ):
+        if 'verbose' in kwargs and kwargs['verbose'] is True:
+            from functools import partial
+            self._verbose_info = partial(print, 'LRC waiter [verbose] :')
+        else:
+            self._verbose_info = _empty
         UDPServer.__init__( self, kwargs["waiter_address"], None )
         self.message_encoding       = kwargs["message_encoding"] if "message_encoding" in kwargs else 'utf-8'
         self.connect_server_address = kwargs["connect_server_address"]
@@ -59,10 +74,11 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
         self.key_matcher = re.compile(r'[a-zA-Z ]+')
         self.key_settings = Controller.settings
         self.execute_delay = 0
+        self._verbose_info('server {}, waiter {}'.format( self.connect_server_address, self.server_address))
 
     # interfaces
     def finish_request(self, request, client_address):
-        """Finish one request by instantiating RequestHandlerClass."""
+        self._verbose_info('receive request {} from {}'.format(request, client_address))
         if self.client_list is not None and client_address not in self.client_list:
             self.warning('Waiter: unknown client request : {0}'.format(client_address))
             return
