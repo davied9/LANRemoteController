@@ -18,7 +18,7 @@ class CommandServer(UDPServer):
     # interfaces
     def __init__(self, **kwargs):
         # initial configuration
-        self.verbose = True if 'verbose' in kwargs else False
+        self.verbose = kwargs["verbose"] if 'verbose' in kwargs else False
         # initialize command server
         self.server_address = kwargs["server_address"] if 'server_address' in kwargs else ('127.0.0.1', 35589)
         if 'port' in kwargs:
@@ -30,7 +30,8 @@ class CommandServer(UDPServer):
         self.protocol = CommandServerProtocol()
         # initialize commands
         self.__commands = dict()
-        self._init_commands()
+        self._init_basic_commands()
+        self.__is_main_server = kwargs["main"] if 'main' in kwargs else False
         # initialize communication components
         self.comm_manager = None
         self.log_mailbox = None
@@ -55,11 +56,12 @@ class CommandServer(UDPServer):
         except Exception as err:
             logger.error('CommandServer : failed to process request {} from {}'.format(request, client_address))
 
-    def start(self):
+    def start(self, start_as_main=True):
         '''
         start lrc command server
         :return:
         '''
+        self.is_main_server = start_as_main
         try:
             # start command server
             self.server_bind()
@@ -159,12 +161,35 @@ class CommandServer(UDPServer):
     def commands(self):
         return self.__commands
 
+    @property
+    def is_main_server(self):
+        return self.__is_main_server
+
+    @is_main_server.setter
+    def is_main_server(self, val):
+        if self.__is_main_server == val:
+            return
+        if val:
+            self._init_commands()
+        else:
+            self._clear_commands()
+            self._init_basic_commands()
+        self.__is_main_server = val
+
     # functional
     def _init_commands(self):
+        self.load_commands_from_file('LRC/Server/commands.json')
+
+    def _init_basic_commands(self): # those should not be deleted
         self.register_command('quit', Command(name='quit', execute=self.quit))
         self.register_command('register_command', Command(name='register_command', execute=self.register_command))
         self.register_command('list_commands', Command(name='list_commands', execute=self._list_commands))
-        self.load_commands_from_file('LRC/Server/commands.json')
+
+    def _clear_commands(self):
+        for k in self.__commands.keys():
+            logger.warning('CommandServer : commands {} removed'.format(k))
+        self.__commands.clear()
+        logger.warning('CommandServer : commands cleared')
 
     def _execute_command(self, command, **kwargs):
         if command not in self.commands.keys():
