@@ -1,0 +1,17 @@
+{
+	"start_lrc_server":{
+		"import":"LRC.Server.Commands.LRCServer",
+		"execute":"manager().start_server",
+		"kwargs":"{'server_address':('0.0.0.0', 35530),'waiter_address':('0.0.0.0', 33171)}"
+	},
+	"start_lrc_waiter":{
+		"import":"LRC.Server.Commands.LRCServer",
+		"execute":"manager().start_waiter",
+		"kwargs":"{'connect_server_address':('0.0.0.0', 35530),'waiter_address':('0.0.0.0', 33171)}"
+	},
+	"start_lrc":{
+		"import":"LRC.Server.Commands.LRCServer",
+		"execute":"manager().start_server",
+		"kwargs":"{'server_address':('0.0.0.0', 35530),'waiter_address':('0.0.0.0', 33171)}"
+	}
+}
