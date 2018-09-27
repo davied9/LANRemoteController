@@ -37,10 +37,9 @@ class BaseProtocol(BaseCommunicationProtocol):
     def __init__(self, **kwargs):
         BaseCommunicationProtocol.__init__(self, **kwargs)
 
-    def pack_message(self, *args, **kwargs):
+    def pack_message(self, **kwargs):
         '''
         pack message from given information
-        :param args:        information from application
         :param kwargs:      information from application
         :return message:    message to send
         '''
