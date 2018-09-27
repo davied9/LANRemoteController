@@ -23,11 +23,11 @@ class Command(BaseCommand):
         self._execute_handler(**kwargs)
 
 
-def _get_simple_interface(interface, module):
+def _get_full_interface(module, interface):
     if interface.startswith(module):
-        return interface[len(module):]
-    else:
         return interface
+    else:
+        return module + '.' + interface
 
 
 def parse_command(**_kwargs):
@@ -55,31 +55,31 @@ def parse_command(**_kwargs):
         kwargs = dict()
 
     if 'interface' in _kwargs: # interface to get command instance
-        interface = _get_simple_interface(_kwargs['interface'], module)
+        interface = _get_full_interface(module, _kwargs['interface'])
         del _kwargs['interface']
-        return getattr(eval(module), interface)(kwargs=kwargs, **_kwargs)
+        return eval(interface)(kwargs=kwargs, **_kwargs)
 
     if 'command' in _kwargs: # command class
-        command_class = _get_simple_interface(_kwargs['command'], module)
+        command_class = _get_full_interface(module, _kwargs['command'])
         del _kwargs['command']
-        return getattr(eval(module), command_class)(kwargs=kwargs, **_kwargs)
+        return eval(command_class)(kwargs=kwargs, **_kwargs)
 
     if 'execute_interface' in _kwargs: # interface to get execute handler for a common command (LRC.Server.Command.Command)
-        execute_interface = _get_simple_interface(_kwargs['execute_interface'], module)
+        execute_interface = _get_full_interface(module, _kwargs['execute_interface'])
         del _kwargs['execute_interface']
-        return Command(name="parsed from string", execute=getattr(eval(module), execute_interface)(), kwargs=kwargs, **_kwargs)
+        return Command(name="parsed from string", execute=eval(execute_interface)(), kwargs=kwargs, **_kwargs)
 
     if 'execute' in _kwargs: # execute handler for a common command (LRC.Server.Command.Command)
-        execute = _get_simple_interface(_kwargs['execute'], module)
+        execute = _get_full_interface(module, _kwargs['execute'])
         del _kwargs['execute']
-        return Command(name="parsed from string", execute=getattr(eval(module), execute), kwargs=kwargs, **_kwargs)
+        return Command(name="parsed from string", execute=eval(execute), kwargs=kwargs, **_kwargs)
 
     raise ValueError('parse_command : one of the following should be specified : {}'.format(
             {'interface','command','execute_interface','execute'}))
 
 
 if '__main__' == __name__:
-    command_config={'import':'LRC.Server.Commands.Start'}
+    command_config={'import':'LRC.Server.Commands.CommandTest', 'interface':'get_command_instance'}
     command = parse_command(**command_config)
     print(command)
     command.execute()
