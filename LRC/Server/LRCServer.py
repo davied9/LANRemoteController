@@ -66,7 +66,7 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
             self._verbose_info = _empty
         UDPServer.__init__( self, kwargs["waiter_address"], None )
         self.message_encoding       = kwargs["message_encoding"] if "message_encoding" in kwargs else 'utf-8'
-        self.connect_server_address = kwargs["connect_server_address"]
+        self.connect_server_address = kwargs["server_address"]
         self.client_list            = kwargs["client_list"] if "client_list" in kwargs else None
         self.log_mailbox            = kwargs["log_mailbox"] if "log_mailbox" in kwargs else None
         self.info       = self.log_mailbox.put_nowait if self.log_mailbox else logger.info
