@@ -1,4 +1,5 @@
 from LRC.Server.LRCServer import LRCServerManager
+from LRC.Server.Config import LRCServerConfig
 from multiprocessing import Process, Manager, freeze_support
 
 
@@ -8,6 +9,35 @@ def manager():
     if not _manager:
         _manager = LRCServerManager()
     return _manager
+
+
+def start_lrc_server(**kwargs):
+    config = LRCServerConfig(**kwargs)
+    manager().start_server(**config.server_config)
+
+
+def start_lrc_waiter(**kwargs):
+    config = LRCServerConfig(**kwargs)
+    manager().start_waiter(**config.waiter_config)
+
+
+def start_lrc(**kwargs):
+    config = LRCServerConfig(**kwargs)
+    manager().start_server(**config.server_config)
+    manager().start_waiter(**config.waiter_config)
+
+
+def stop_lrc_server(**kwargs):
+    manager().stop_server()
+
+
+def stop_lrc_waiter(**kwargs):
+    manager().stop_waiter()
+
+
+def stop_lrc(**kwargs):
+    manager().stop_server()
+    manager().stop_waiter()
 
 
 if '__main__' == __name__:
