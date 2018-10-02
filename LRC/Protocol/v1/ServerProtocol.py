@@ -1,27 +1,28 @@
-from LRC.Protocol.BaseProtocol import BaseProtocol
+from LRC.Protocol.v1.BaseProtocol import V1BaseProtocol
 
 
-class ServerProtocol(BaseProtocol): # how do server unpack message, how to pack message sent to server
+class ServerProtocol(V1BaseProtocol): # how do server unpack message, how to pack message sent to server
+    '''
+    server protocol defines how do server unpack message, how to pack message sent to server
+    process several kinds of message :
+        connection request          -- ask for permission for connection to waiter
 
-    def __init__(self, **kwargs):
-        BaseProtocol.__init__(self, **kwargs)
+    '''
 
     # interfaces
     def pack_message(self, **kwargs):
         '''
-        pack message from given information
-        :param kwargs:      information from application
-        :return message:    message to send
+        pack request to raw_message
+        :param kwargs:  specifications for a request/command/respond
+        :return:        raw_message to send
         '''
-        return self.encode('')
-
-    def unpack_message(self, message):
-        '''
-        unpack message into application information
-        :param message:     message to parse from
-        :return *args:      information unpacked
-        '''
-        return ''
+        # raw message format : request=name,arg0,arg1,arg2,...
+        raw_message = 'request='
+        raw_message += 'name=' + kwargs['request'] + ','
+        del kwargs['request']
+        for k, v in kwargs.items():
+            raw_message += k + '=' + v + ','
+        return self.encode(raw_message)
 
     # functional
 
