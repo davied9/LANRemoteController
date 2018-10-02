@@ -11,7 +11,7 @@ class UnableToPackMessage(ValueError):
         return 'Unable to pack message from {}'.format(self.kwargs)
 
 
-class WaiterServerProtocol(V1BaseProtocol): # how do waiter unpack message, how to pack message sent to waiter
+class WaiterProtocol(V1BaseProtocol): # how do waiter unpack message, how to pack message sent to waiter
     '''
     waiter protocol defines how do waiter unpack message, how to pack message sent to waiter
     process several kinds of message:
