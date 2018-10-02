@@ -36,15 +36,33 @@ class Controller(object):
             else:
                 return 'un-supported key "{0}" for Controller.'.format(self.key)
 
-    def __init__(self, name, *args):
+    def __init__(self, name, *args, from_str=None, from_dump=None):
         self.name  = name
 
         self.ctrl  = AlternateKey(enable=False, is_left=True)
         self.shift = AlternateKey(enable=False, is_left=True)
         self.alt   = AlternateKey(enable=False, is_left=True)
 
+        keys = []
+        keys.extend(args)
+
+        if from_str:
+            formatted = json.loads(from_str)
+            if 1 != len(formatted):
+                raise ValueError('Controller : Only one value should exist for parse : {}'.format(from_str))
+            for v in formatted.values():
+                keys.extend(v)
+
+        if from_dump:
+            if from_str:
+                logger.warning('Controller : from_str will be overwritten by from_dump')
+            if 1 != len(from_dump):
+                raise ValueError('Controller : Only one value should exist for parse : {}'.format(from_dump))
+            for v in from_dump.values():
+                keys.extend(v)
+
         buffer = []
-        for val in args:
+        for val in keys:
             buffer.append(val)
 
         for ctrl_tag in Controller.settings.ctrl_keys:
@@ -73,7 +91,7 @@ class Controller(object):
         elif 0 == n_left: # 0 == n_left
             self.key = None
         else: # n_left > 1
-            raise ArgumentError('un-recognized key in given keys for a Controller, only one letter key needed, multiple provided : {0}'.format(args) )
+            raise ArgumentError('Controller : un-recognized key(s), only one letter key needed, multiple provided : {0}'.format(keys) )
 
     def __str__(self):
         return self.dump_to_str()
@@ -138,10 +156,26 @@ class ControllerSet(object):
 
     '''
 
-    def __init__(self, name, **kwargs):
+    def __init__(self, name, from_str=None, from_dump=None, **kwargs):
         self.name = name
         self.controllers = {}
         logger.info('Collection: New Controller Set : {0}'.format(self.name))
+
+        if from_str:
+            formatted = json.loads(from_str)
+            if 1 != len(formatted):
+                raise ValueError('ControllerSet : Only one value should exist for parse : {}'.format(from_str))
+            for v in formatted.values():
+                kwargs.update(v)
+
+        if from_dump:
+            if from_str:
+                logger.warning('ControllerSet : from_str will be overwritten by from_dump')
+            if 1 != len(from_dump):
+                raise ValueError('ControllerSet : Only one value should exist for parse : {}'.format(from_str))
+            for v in from_dump.values():
+                kwargs.update(v)
+
         for name, config in kwargs.items():
             logger.info('Collection:     {0} : {1}'.format(name, config))
             self.controllers[name] = (Controller(name, *config))
@@ -191,3 +225,36 @@ class ControllerPackage(object):
 
     def __int__(self):
         pass
+
+
+if '__main__' == __name__:
+    a = Controller('test a', 'j', 'shift')
+    b = Controller('test a', 'L', 'alt')
+    a_str = str(a); b_str = str(b)
+
+    c = Controller('aa', from_str=str(a))
+    d = Controller('bb', from_str=str(b))
+
+    e = Controller('aaa', from_dump=a.dump())
+    f = Controller('bbb', from_dump=b.dump())
+
+    print('controller a : {}'.format(a))
+    print('controller b : {}'.format(b))
+    print('controller c : {}'.format(c))
+    print('controller d : {}'.format(d))
+    print('controller e : {}'.format(e))
+    print('controller f : {}'.format(f))
+
+    s = ControllerSet('emmmm')
+    s.add_controller(a)
+    s.add_controller(b)
+
+    sc = ControllerSet('copy str', from_str=str(s))
+    sd = ControllerSet('copy dump', from_dump=s.dump())
+
+    print('controller set s : {}'.format(s))
+    print('controller set sc : {}'.format(sc))
+    print('controller set sd : {}'.format(sd))
+
+
+
