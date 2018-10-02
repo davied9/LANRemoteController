@@ -8,6 +8,7 @@ class LRCClient(object):
         self.server_address = None
         self.waiter_address = None
         self.socket = socket(AF_INET, SOCK_DGRAM)
+        self.socket.settimeout(5)
         self.message_encoding = message_encoding
 
     # interfaces
