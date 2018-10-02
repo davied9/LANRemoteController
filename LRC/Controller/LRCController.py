@@ -73,7 +73,7 @@ class Controller(object):
         elif 0 == n_left: # 0 == n_left
             self.key = None
         else: # n_left > 1
-            raise ArgumentError('un-recongnized key in given keys for a Control (one special key or letter key should be provided) : {0}'.format(args) )
+            raise ArgumentError('un-recognized key in given keys for a Controller, only one letter key needed, multiple provided : {0}'.format(args) )
 
     def __str__(self):
         return self.dump_to_str()
