@@ -79,9 +79,17 @@ class Controller(object):
         return self.dump_to_str()
 
     def dump_to_str(self):
+        '''
+        dump controller into string
+        :return str:    string from controller
+        '''
         return json.dumps(self.dump())
 
     def dump(self):
+        '''
+        dump controller into dictionary
+        :return v:      a dict contains controller's name as key, and controller's keys(keyboard) as value
+        '''
         buttons = []
         if self.ctrl.enable:
             if self.ctrl.is_left:
@@ -142,16 +150,29 @@ class ControllerSet(object):
         return self.dump_to_str()
 
     def dump(self):
+        '''
+        dump controller set(/collection) into a dictionary
+        :return v:      dict with controller set name as key, controllers dicts as value
+        '''
         controllers = {}
         for _, controller in self.controllers.items():
             controllers.update( controller.dump() )
         return { self.name : controllers }
 
     def dump_to_file(self, file_path):
+        '''
+        dump controller set into a file
+        :param file_path:   where to dump
+        :return:
+        '''
         with open(file_path, 'w') as fh:
             fh.write(self.dump_to_str())
 
     def dump_to_str(self):
+        '''
+        dump controller set into a string
+        :return str:
+        '''
         return json.dumps(self.dump())
 
     def add_controller(self, controller):
@@ -164,7 +185,7 @@ class ControllerSet(object):
 
 
 class ControllerPackage(object):
-    '''Controller Package : a collection of controller collection
+    '''Controller Package : a collection of controller collections
 
     '''
 
