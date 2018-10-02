@@ -25,7 +25,7 @@ class CommandServer(UDPServer):
             self.port = kwargs["port"]
         if 'ip' in kwargs:
             self.ip = kwargs["ip"]
-        UDPServer.__init__(self, server_address=self.server_address, RequestHandlerClass=None, bind_and_activate=False)
+        super(CommandServer, self).__init__(server_address=self.server_address, RequestHandlerClass=None, bind_and_activate=False)
         # initialize protocol
         self.protocol = CommandServerProtocol()
         # initialize commands

@@ -99,7 +99,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
 
     def __init__(self, **kwargs):
         self.controller_button_process = self._process_edit_interact
-        Screen.__init__(self, **kwargs)
+        super(ControllerCollectionBuildScreen, self).__init__(**kwargs)
 
     def on_pre_enter(self, *args):
         current_app = App.get_running_app()
@@ -425,7 +425,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         def __int__(self, controller_button, button_container, *args):
             self.controller_button = controller_button
             self.button_container  = button_container
-            NotFoundError.__init__(self, *args)
+            super(ControllerCollectionBuildScreen.ControllerButtonNotFoundError, self).__init__(*args)
 
         def __str__(self):
             return ('Controller button {0} is not in button container {1}'.format(self.controller_button, self.button_container))

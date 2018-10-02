@@ -90,4 +90,4 @@ class ControllerEditor(BoxLayout):
         self.controller = kwargs["controller"]
         self.controller_button = kwargs["controller_button"]
         del(kwargs['controller'], kwargs['controller_button'])
-        BoxLayout.__init__(self, **kwargs)
+        super(ControllerEditor, self).__init__(**kwargs)

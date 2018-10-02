@@ -42,7 +42,7 @@ class LRCClientConnector(BoxLayout):
 
     def __init__(self, **kwargs):
         self.client = App.get_running_app().client
-        BoxLayout.__init__(self, **kwargs)
+        super(LRCClientConnector, self).__init__(**kwargs)
         self.ip_matcher = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
         self.ext_err_logger = None
 

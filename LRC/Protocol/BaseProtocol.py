@@ -35,7 +35,7 @@ class BaseProtocol(BaseCommunicationProtocol):
     """
 
     def __init__(self, **kwargs):
-        BaseCommunicationProtocol.__init__(self, **kwargs)
+        super(BaseProtocol, self).__init__(**kwargs)
 
     def pack_message(self, **kwargs):
         '''

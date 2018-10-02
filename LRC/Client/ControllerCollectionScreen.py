@@ -67,7 +67,7 @@ Builder.load_string('''
 class ControllerCollectionScreen(Screen): # gallery of controller sets
 
     def __init__(self, **kwargs):
-        Screen.__init__(self, **kwargs)
+        super(ControllerCollectionScreen, self).__init__(**kwargs)
         self.ip_and_port_input = None
         Clock.schedule_once(self._delayed_init)
 

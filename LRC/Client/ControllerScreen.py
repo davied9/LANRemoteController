@@ -65,7 +65,7 @@ class ControllerScreen(Screen): # controller operation room
     button_spacing = NumericProperty(0)
 
     def __init__(self, **kwargs):
-        Screen.__init__(self, **kwargs)
+        super(ControllerScreen, self).__init__(**kwargs)
         self.ip_and_port_input = None
         Clock.schedule_once(self._delayed_init)
 

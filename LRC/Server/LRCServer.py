@@ -22,7 +22,7 @@ class LRCServer ( UDPServer, object ):
             self._verbose_info = partial(print, 'LRC server [verbose] :')
         else:
             self._verbose_info = _empty
-        UDPServer.__init__( self, kwargs["server_address"], None )
+        super(LRCServer, self).__init__(kwargs["server_address"], None )
         self.waiter_address     = kwargs["waiter_address"]
         self.message_encoding   = kwargs["message_encoding"] if "message_encoding" in kwargs else 'utf-8'
         self.verify_code        = kwargs["verify_code"] if "verify_code" in kwargs else None
@@ -64,7 +64,7 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
             self._verbose_info = partial(print, 'LRC waiter [verbose] :')
         else:
             self._verbose_info = _empty
-        UDPServer.__init__( self, kwargs["waiter_address"], None )
+        super(LRCWaiter, self).__init__(kwargs["waiter_address"], None )
         self.message_encoding       = kwargs["message_encoding"] if "message_encoding" in kwargs else 'utf-8'
         self.connect_server_address = kwargs["server_address"]
         self.client_list            = kwargs["client_list"] if "client_list" in kwargs else None
