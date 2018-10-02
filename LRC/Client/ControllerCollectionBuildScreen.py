@@ -4,6 +4,7 @@ kivy.require('1.10.1')
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty
+from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.clock import Clock
 from kivy.uix.screenmanager import Screen
