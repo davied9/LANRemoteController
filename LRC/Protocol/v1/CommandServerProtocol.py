@@ -1,15 +1,8 @@
 from LRC.Common.logger import logger
-from LRC.Protocol.BaseProtocol import BaseProtocol
-import re
+from LRC.Protocol.v1.BaseProtocol import V1BaseProtocol
 
 
-class CommandServerProtocol(BaseProtocol):
-
-    __tag_exp = re.compile(r'^(\w+)\=')
-    __arg_exp = re.compile(r'([\w\.\-]+)\=([\w\.\-]+)')
-
-    def __init__(self, **kwargs):
-        BaseProtocol.__init__(self, **kwargs)
+class CommandServerProtocol(V1BaseProtocol):
 
     # interfaces
     def pack_message(self, **kwargs):
@@ -31,32 +24,7 @@ class CommandServerProtocol(BaseProtocol):
             raw_message = ''
         return self.encode(raw_message)
 
-    def unpack_message(self, message):
-        '''
-        unpack message into command or controller
-        :param message:     message received
-        :return command:    command parsed from message
-        '''
-        raw_message = self.decode(message)
-        tag = self._unpack_tag(raw_message)
-        kwargs = self._unpack_args(raw_message[len(tag)+1:])
-        return tag, kwargs
-        # logger.info('LRC command server cannot parse operation from message "{}"'.format(raw_message))
-
     # functional
-    def _unpack_tag(self, message):
-        try:
-            tag = self.__tag_exp.findall(message)[0]
-            return tag
-        except:
-            return ''
-
-    def _unpack_args(self, message):
-        args=dict()
-        for pair in self.__arg_exp.findall(message):
-            args[pair[0]] = pair[1]
-        return args
-
     def _pack_message(self, tag, **kwargs):
         '''
         pack request to raw_message
@@ -80,7 +48,7 @@ class CommandServerProtocol(BaseProtocol):
         '''
         # raw message format : request=name,arg0,arg1,arg2,...
         raw_message = 'respond='
-        raw_message += 'content=' + kwargs['respond'] + ','
+        raw_message += 'request=' + kwargs['respond'] + ','
         del kwargs['respond']
         for k, v in kwargs.items():
             raw_message += k + '=' + v + ','
