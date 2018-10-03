@@ -1,8 +1,9 @@
-
+import json
 
 class LRCServerConfig(object):
 
     def __init__(self, **kwargs):
+        self._config_file = None
         self.config_file = None if 'config_file' not in kwargs else kwargs['config_file']
         self.enable_ui = False if 'enable_ui' not in kwargs else kwargs['enable_ui']
 
@@ -47,6 +48,17 @@ class LRCServerConfig(object):
             self.waiter_ip = kwargs['waiter_ip']
         if 'waiter_port' in kwargs:
             self.waiter_port = kwargs['waiter_port']
+
+    @property
+    def config_file(self):
+        return self._config_file
+
+    @config_file.setter
+    def config_file(self, config_file):
+        if config_file:
+            self._load_from_config_file(config_file)
+        else:
+            self._config_file = None
 
     @property
     def command_server_address(self):
@@ -102,4 +114,10 @@ class LRCServerConfig(object):
             self.verify_code,
             self.verbose,
         )
+
+    # functional
+    def _load_from_config_file(self, config_file):
+        with open(config_file) as fh:
+            struct = json.loads(fh.read())
+        self._config_file = config_file
 
