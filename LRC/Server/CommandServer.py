@@ -51,8 +51,7 @@ class CommandServer(UDPServer):
             elif 'request' == tag:
                 self._respond_request(client_address, request=kwargs['name'], **kwargs)
             elif 'running_test' == tag:
-                if 'CommandServer' == kwargs['target']:
-                    self._respond_running_test(client_address)
+                self._respond_running_test(client_address, **kwargs)
         except Exception as err:
             logger.error('CommandServer : failed to process request {} from {}'.format(request, client_address))
 
@@ -204,8 +203,10 @@ class CommandServer(UDPServer):
     def _respond_request(self, client_address, request, **kwargs):
         self.socket.sendto(self.protocol.pack_message(respond=request+' confirm'), client_address)
 
-    def _respond_running_test(self, client_address):
-        self.socket.sendto(self.protocol.pack_message(running_test='CommandServer', state='confirm'), client_address)
+    def _respond_running_test(self, client_address, **kwargs):
+        if 'CommandServer' == kwargs['target']:
+            self.socket.sendto(self.protocol.pack_message(running_test='CommandServer', state='confirm'), client_address)
+        self._verbose_info('receive unavailable running_test {} from {}'.format(kwargs, client_address))
 
     # command entry
     def _list_commands(self,  *args, **kwargs):

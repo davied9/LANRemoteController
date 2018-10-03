@@ -1,7 +1,11 @@
 from __future__ import print_function
 from LRC.Controller.LRCController import Controller
 from LRC.Common.logger import logger
+from LRC.Protocol.v1.ServerProtocol import ServerProtocol
+from LRC.Protocol.v1.WaiterProtocol import WaiterProtocol
+from LRC.Protocol.v1.ClientProtocol import ClientProtocol
 from multiprocessing import Process, Manager
+
 
 try: # python 2
     from SocketServer import UDPServer
@@ -30,22 +34,32 @@ class LRCServer ( UDPServer, object ):
         self.log_mailbox        = kwargs["log_mailbox"] if "log_mailbox" in kwargs else None
         self.info       = self.log_mailbox.put_nowait if self.log_mailbox else logger.info
         self.warning    = self.log_mailbox.put_nowait if self.log_mailbox else logger.warning
+        # protocol
+        self.server_protocol = ServerProtocol()
+        self.client_protocol = ClientProtocol()
+        # verbose info
         self._verbose_info('server {}, waiter {}'.format( self.server_address, self.waiter_address))
+
 
     # interfaces
     def finish_request(self, request, client_address):
         self._verbose_info('receive request {} from {}'.format(request, client_address))
-        self.sendto( str(self.waiter_address) , client_address )
-        if self.client_list is not None and client_address not in self.client_list:
-            self.client_list.append(client_address)
-            self.info('Server: add client {0} to client list.'.format(client_address))
+        tag, kwargs = self.server_protocol.unpack_message(request[0])
+        self._verbose_info('unpack result : {}, {}'.format(tag, kwargs))
+        if 'request' == tag:
+            if 'connect to waiter' == kwargs['name']:
+                if self._are_you_allowed_to_connect_waiter(client_address, kwargs):
+                    if self.client_list is not None and client_address not in self.client_list:
+                        self.client_list.append(client_address)
+                        self.info('Server: add client {0} to client list.'.format(client_address))
+                    respond_message = self.client_protocol.pack_message(
+                        respond=kwargs['name'], state='confirm', waiter_address=str(self.waiter_address))
+                    self.socket.sendto(respond_message, client_address)
 
     # functional
-    def encode_message(self, message):
-        return message.encode(self.message_encoding)
-
-    def sendto(self, message, client_address):
-        self.socket.sendto(self.encode_message(message), client_address)
+    def _are_you_allowed_to_connect_waiter(self, client_address, kwargs):
+        # return self.verify_code == kwargs['verify_code']
+        return True
 
 
 class KeyCombinationParseError(Exception):
@@ -73,75 +87,38 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
         self.warning    = self.log_mailbox.put_nowait if self.log_mailbox else logger.warning
         self.keyboard = PyKeyboard()
         self.key_matcher = re.compile(r'[a-zA-Z ]+')
-        self.key_settings = Controller.settings
+        # self.key_settings = Controller.settings
         self.execute_delay = 0
+        # protocol
+        self.waiter_protocol = WaiterProtocol()
+        self.server_protocol = ServerProtocol()
+        # verbose info
         self._verbose_info('server {}, waiter {}'.format( self.connect_server_address, self.server_address))
 
     # interfaces
     def finish_request(self, request, client_address):
         self._verbose_info('receive request {} from {}'.format(request, client_address))
         if self.client_list is not None and client_address not in self.client_list:
-            self.warning('Waiter: unknown client request : {0}'.format(client_address))
+            self.warning('Waiter: request from unknown client : {0}'.format(client_address))
             return
-        message = self.decode_message(request[0])
-        key_combination = self.parse_key_combination_message(message)
-        try:
-            if self.execute_delay > 0:
-                from threading import Timer
-                Timer( self.execute_delay, self.keyboard.press_keys, args=(key_combination,)).start()
-                self.info('Waiter: schedule pressing keys in {2} seconds from {0} : {1}'.format(client_address, key_combination, self.execute_delay))
-            else:
-                self.keyboard.press_keys(key_combination)
-                self.info('Waiter: pressing keys from {0} : {1}'.format(client_address, key_combination))
-        except Exception as err:
-            self.info('Waiter: can\'t press key from {0} {1} : {2}'.format(client_address, key_combination, err.args))
+        tag, kwargs = self.waiter_protocol.unpack_message(request[0])
+        if 'controller' == tag:
+            controller = kwargs['controller']
+            key_combination = controller.get_key_list()
+            try:
+                if self.execute_delay > 0:
+                    from threading import Timer
+                    Timer( self.execute_delay, self.keyboard.press_keys, args=(key_combination,)).start()
+                    self.info('Waiter: schedule pressing keys in {2} seconds from {0} : {1}'.format(client_address, key_combination, self.execute_delay))
+                else:
+                    self.keyboard.press_keys(key_combination)
+                    self.info('Waiter: pressing keys from {0} : {1}'.format(client_address, key_combination))
+            except Exception as err:
+                self.info('Waiter: can\'t press key from {0} {1} : {2}'.format(client_address, key_combination, err.args))
+        else:
+            self._verbose_info('unknown request {} with parameters : {}'.format(tag, kwargs))
 
     # functional
-    def decode_message(self, message):
-        return message.decode(self.message_encoding)
-
-    def parse_key_combination_str(self, key_str_list):
-        # to lower
-        str_list_to_check = []
-        for key_str in key_str_list:
-            str_list_to_check.append(key_str.lower())
-        # identify functional keys
-        checked_combination = []
-        for f_key in self.key_settings.ctrl_keys:
-            if f_key in str_list_to_check:
-                checked_combination.append( self.key_settings.key_map[ f_key ] )
-                str_list_to_check.remove(f_key)
-        for f_key in self.key_settings.shift_keys:
-            if f_key in str_list_to_check:
-                checked_combination.append( self.key_settings.key_map[ f_key ] )
-                str_list_to_check.remove(f_key)
-        for f_key in self.key_settings.alt_keys:
-            if f_key in str_list_to_check:
-                checked_combination.append( self.key_settings.key_map[ f_key ] )
-                str_list_to_check.remove(f_key)
-        # special keys
-        for s_key in self.key_settings.allowed_special_keys:
-            if s_key in str_list_to_check:
-                checked_combination.append( self.key_settings.key_map[ s_key ] )
-                str_list_to_check.remove(s_key)
-        # identify normal keys
-        for key in str_list_to_check:
-            if len(key) == 1:
-                checked_combination.append( key )
-            else:
-                raise KeyCombinationParseError()
-        return checked_combination
-
-    def parse_key_combination_message(self, key_combination_message):
-        key_combination = self.key_matcher.findall(key_combination_message)
-        try:
-            key_combination = self.parse_key_combination_str(key_combination)
-        except KeyCombinationParseError:
-            key_combination = None
-            self.info('Waiter: parse key combination failed from message : {0}'.format(key_combination_message) )
-        except Exception as err:
-            key_combination = None
-        return key_combination
 
 
 def start_server(**kwargs):
@@ -201,7 +178,7 @@ class LRCServerManager(object):
 
     # commands interfaces
     def start_server(self, **kwargs):
-        kwargs = self._update_server_config(kwargs)
+        self._update_server_config(kwargs)
         self._start_server(**kwargs)
 
     def stop_server(self):

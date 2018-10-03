@@ -45,7 +45,7 @@ class V1BaseProtocol(BaseProtocol):
             r = ranges[i]
             if N-1 == i: # last value
                 k = message[r[0]+1:r[1]-1]
-                v = message[r[1]:len(message)]
+                v = message[r[1]:len(message)-1]
             elif 0 == i: # first value
                 r_next = ranges[i+1]
                 k = message[r[0]+1:r[1]-1]
