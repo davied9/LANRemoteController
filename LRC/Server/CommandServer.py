@@ -32,10 +32,6 @@ class CommandServer(UDPServer):
         self.__commands = dict()
         self._init_basic_commands()
         self.__is_main_server = kwargs["main"] if 'main' in kwargs else False
-        # initialize communication components
-        self.comm_manager = None
-        self.log_mailbox = None
-        self.client_list = None
 
     def finish_request(self, request, client_address):
         self._verbose_info('CommandServer : got request {} from client {}'.format(request, client_address))
@@ -66,10 +62,6 @@ class CommandServer(UDPServer):
             self.server_bind()
             self.server_activate()
             Thread(target=self.serve_forever).start()
-            # start process communication server
-            self.comm_manager = Manager()
-            self.log_mailbox = self.comm_manager.Queue()
-            self.client_list = self.comm_manager.list()
             # log
             logger.info('CommandServer : start command server at {}'.format(self.server_address))
         except:
@@ -79,7 +71,6 @@ class CommandServer(UDPServer):
     def quit(self, *args, **kwargs):
         def shutdown_tunnel(server):
             server.shutdown()
-            server.comm_manager.shutdown()
         # shutdown must be called in another thread, or it will be blocked forever
         Thread(target=shutdown_tunnel, args=(self,)).start()
 
