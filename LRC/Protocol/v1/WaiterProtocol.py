@@ -2,15 +2,6 @@ from LRC.Protocol.v1.BaseProtocol import V1BaseProtocol
 from LRC.Controller.LRCController import Controller
 
 
-class UnableToPackMessage(ValueError):
-
-    def __init__(self, kwargs):
-        self.kwargs = kwargs
-
-    def __str__(self):
-        return 'Unable to pack message from {}'.format(self.kwargs)
-
-
 class WaiterProtocol(V1BaseProtocol): # how do waiter unpack message, how to pack message sent to waiter
     '''
     waiter protocol defines how do waiter unpack message, how to pack message sent to waiter
@@ -29,7 +20,7 @@ class WaiterProtocol(V1BaseProtocol): # how do waiter unpack message, how to pac
         if 'controller' in kwargs:
             raw_message = self._pack_controller_message(**kwargs)
         else:
-            raise UnableToPackMessage(kwargs)
+            raise ValueError('WaiterProtocol :  only controller message supported for now.')
         return self.encode(raw_message)
 
     def unpack_message(self, message):
