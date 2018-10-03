@@ -64,6 +64,7 @@ class LRCServerConfig(object):
     def command_server_config(self):
         return {
             'server_address' : self.command_server_address,
+            'verbose'         : self.verbose,
         }
 
     @property
@@ -71,6 +72,8 @@ class LRCServerConfig(object):
         return {
             'server_address' : self.server_address,
             'waiter_address' : self.waiter_address,
+            'verify_code'    : self.verify_code,
+            'verbose'         : self.verbose,
         }
 
     @property
@@ -78,6 +81,7 @@ class LRCServerConfig(object):
         return {
             'server_address'  : self.server_address,
             'waiter_address'  : self.waiter_address,
+            'verbose'         : self.verbose,
         }
 
     def __str__(self):
