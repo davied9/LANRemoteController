@@ -43,6 +43,8 @@ class Controller(object):
         self.shift = AlternateKey(enable=False, is_left=True)
         self.alt   = AlternateKey(enable=False, is_left=True)
 
+        self.key = None
+
         keys = []
         keys.extend(args)
 
@@ -124,8 +126,30 @@ class Controller(object):
                 buttons.append(Controller.settings.alt_keys[1])
             else:
                 buttons.append(Controller.settings.alt_keys[2])
-        buttons.append(self.key)
+        if self.key:
+            buttons.append(self.key)
         return { self.name : buttons }
+
+    def get_key_list(self):
+        key_list = []
+        if self.ctrl.enable:
+            if self.ctrl.is_left:
+                key_list.append(self.settings.key_map['left ctrl'])
+            else:
+                key_list.append(self.settings.key_map['right ctrl'])
+        if self.shift.enable:
+            if self.shift.is_left:
+                key_list.append(self.settings.key_map['left shift'])
+            else:
+                key_list.append(self.settings.key_map['right shift'])
+        if self.alt.enable:
+            if self.alt.is_left:
+                key_list.append(self.settings.key_map['left alt'])
+            else:
+                key_list.append(self.settings.key_map['right alt'])
+        if self.key:
+            key_list.append(self.key)
+        return key_list
 
     @staticmethod
     def validate_key(key):
