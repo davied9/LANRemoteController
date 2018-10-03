@@ -34,10 +34,10 @@ class CommandServerProtocol(V1BaseProtocol):
         '''
         # raw message format : request=name,arg0,arg1,arg2,...
         raw_message = tag + '='
-        raw_message += 'name=' + kwargs[tag] + ','
+        raw_message += 'name={},'.format(kwargs[tag])
         del kwargs[tag]
         for k, v in kwargs.items():
-            raw_message += k + '=' + v + ','
+            raw_message += '{}={},'.format(k, v)
         return raw_message
 
     def _pack_respond(self, **kwargs):
