@@ -7,7 +7,7 @@ class V1BaseProtocol(BaseProtocol):
     '''
 
     _tag_exp = re.compile(r'^(\w+)\=')
-    _arg_exp = re.compile(r'([\w\.\-]+)\=([\w\.\-]+)')
+    _arg_key_exp = re.compile(r'\,\w+=')
 
     def __init__(self, **kwargs):
         super(V1BaseProtocol, self).__init__(**kwargs)
@@ -21,7 +21,7 @@ class V1BaseProtocol(BaseProtocol):
         '''
         raw_message = self.decode(message)
         tag = self._unpack_tag(raw_message)
-        args_message = raw_message[len(tag)+1:]
+        args_message = ',' + raw_message[len(tag)+1:]
         kwargs = self._unpack_args(args_message)
         return tag, kwargs
 
@@ -35,6 +35,44 @@ class V1BaseProtocol(BaseProtocol):
 
     def _unpack_args(self, message):
         args=dict()
-        for pair in self._arg_exp.findall(message):
-            args[pair[0]] = pair[1]
+        ranges = []
+
+        for m in self._arg_key_exp.finditer(message):
+            ranges.append(m.span())
+
+        N = len(ranges)
+        for i in range(N):
+            r = ranges[i]
+            if N-1 == i: # last value
+                k = message[r[0]+1:r[1]-1]
+                v = message[r[1]:len(message)]
+            elif 0 == i: # first value
+                r_next = ranges[i+1]
+                k = message[r[0]+1:r[1]-1]
+                v = message[r[1]:r_next[0]]
+            else:
+                r_next = ranges[i+1]
+                k = message[r[0]+1:r[1]-1]
+                v = message[r[1]:r_next[0]]
+            args[k] = v
+
         return args
+
+
+if '__main__' == __name__:
+    test_str = 'controller=name="controller",controller={"copy dump": {"test a": ["left alt", "L"]}},joke="do i know you",yahoo={"copy dump": {"test b": ["right alt", "j]}}'
+    protocol = V1BaseProtocol()
+
+    print('str = {}'.format(test_str))
+
+    test_str = test_str.encode(protocol.encoding)
+    tag, kwargs = protocol.unpack_message(test_str)
+
+    print('tag = {}'.format(tag))
+    n = 0
+    print('kwargs = ')
+    for k, v in kwargs.items():
+        print('    volume {}'.format(n))
+        print('        k : {}'.format(k))
+        print('        v : {}(type) {}'.format(type(v), v))
+        n += 1

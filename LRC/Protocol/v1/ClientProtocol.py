@@ -30,7 +30,7 @@ class ClientProtocol(V1BaseProtocol): # how do client unpack message, how to pac
         '''
         raw_message = self.decode(message)
         tag = self._unpack_tag(raw_message)
-        args_message = raw_message[len(tag)+1:]
+        args_message = ',' + raw_message[len(tag)+1:]
         kwargs = self._unpack_args(args_message)
         return tag, kwargs
 
@@ -42,3 +42,4 @@ class ClientProtocol(V1BaseProtocol): # how do client unpack message, how to pac
         for k, v in kwargs.items():
             raw_message += '{}={},'.format(k, v)
         return raw_message
+

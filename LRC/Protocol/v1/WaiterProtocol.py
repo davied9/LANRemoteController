@@ -26,7 +26,7 @@ class WaiterProtocol(V1BaseProtocol): # how do waiter unpack message, how to pac
     def unpack_message(self, message):
         raw_message = self.decode(message)
         tag = self._unpack_tag(raw_message)
-        args_message = raw_message[len(tag)+1:]
+        args_message = ',' + raw_message[len(tag)+1:]
         if 'controller' == tag:
             kwargs=dict()
             kwargs['controller'] = Controller('waiter protocol', from_str=args_message)
