@@ -21,7 +21,7 @@ class V1BaseProtocol(BaseProtocol):
         '''
         raw_message = self.decode(message)
         tag = self._unpack_tag(raw_message)
-        args_message = ',' + raw_message[len(tag)+1:]
+        args_message = raw_message[len(tag)+1:]
         kwargs = self._unpack_args(args_message)
         return tag, kwargs
 
@@ -45,11 +45,7 @@ class V1BaseProtocol(BaseProtocol):
             r = ranges[i]
             if N-1 == i: # last value
                 k = message[r[0]+1:r[1]-1]
-                v = message[r[1]:len(message)-1]
-            elif 0 == i: # first value
-                r_next = ranges[i+1]
-                k = message[r[0]+1:r[1]-1]
-                v = message[r[1]:r_next[0]]
+                v = message[r[1]:len(message)]
             else:
                 r_next = ranges[i+1]
                 k = message[r[0]+1:r[1]-1]
@@ -60,7 +56,7 @@ class V1BaseProtocol(BaseProtocol):
 
 
 if '__main__' == __name__:
-    test_str = 'controller=name="controller",controller={"copy dump": {"test a": ["left alt", "L"]}},joke="do i know you",yahoo={"copy dump": {"test b": ["right alt", "j]}}'
+    test_str = 'controller=,name="controller",controller={"copy dump": {"test a": ["left alt", "L"]}},joke="do i know you",yahoo={"copy dump": {"test b": ["right alt", "j]}}'
     protocol = V1BaseProtocol()
 
     print('str = {}'.format(test_str))
