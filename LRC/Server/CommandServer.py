@@ -20,12 +20,12 @@ class CommandServer(UDPServer):
         # initial configuration
         self.verbose = kwargs["verbose"] if 'verbose' in kwargs else False
         # initialize command server
-        self.server_address = kwargs["server_address"] if 'server_address' in kwargs else ('127.0.0.1', 35589)
+        server_address = kwargs["server_address"] if 'server_address' in kwargs else ('127.0.0.1', 35589)
         if 'port' in kwargs:
-            self.port = kwargs["port"]
+            server_address = (server_address[0], kwargs["port"])
         if 'ip' in kwargs:
-            self.ip = kwargs["ip"]
-        super(CommandServer, self).__init__(server_address=self.server_address, RequestHandlerClass=None, bind_and_activate=False)
+            server_address = (kwargs["ip"], server_address[1])
+        super(CommandServer, self).__init__(server_address=server_address, RequestHandlerClass=None, bind_and_activate=False)
         # initialize protocol
         self.protocol = CommandServerProtocol()
         # initialize commands
@@ -79,8 +79,8 @@ class CommandServer(UDPServer):
         self.__commands[key] = command
 
     def send_command(self, command):
-        self._verbose_info('CommandServer : send command {} to {}'.format(command, self.server_address))
-        self.socket.sendto(self.protocol.pack_message(command=command), self.server_address)
+        self._verbose_info('CommandServer : send command {} to {}'.format(command, self.command_server_address))
+        self.socket.sendto(self.protocol.pack_message(command=command), self.command_server_address)
 
     def load_commands_from_file(self, command_file):
         logger.info('CommandServer : add command from file {}'.format(command_file))
@@ -106,6 +106,21 @@ class CommandServer(UDPServer):
 
     # properties
     @property
+    def server_address(self):
+        return self._server_address
+
+    @server_address.setter
+    def server_address(self, val):
+        self._server_address = val
+
+    @property
+    def command_server_address(self):
+        if '0.0.0.0' == self.ip:
+            return ('127.0.0.1', self.port)
+        else:
+            return self.server_address
+
+    @property
     def ip(self):
         return self.server_address[0]
 
@@ -127,7 +142,7 @@ class CommandServer(UDPServer):
             from socket import socket, AF_INET, SOCK_DGRAM
             soc = socket(family=AF_INET, type=SOCK_DGRAM)
             soc.settimeout(0.5)
-            soc.sendto(self.protocol.pack_message(running_test='CommandServer', state='request'), self.server_address)
+            soc.sendto(self.protocol.pack_message(running_test='CommandServer', state='request'), self.command_server_address)
             respond, _ = soc.recvfrom(1024)
             tag, kwargs = self.protocol.unpack_message(respond)
             if 'running_test' == tag and 'CommandServer' == kwargs['target'] and 'confirm' == kwargs['state']:

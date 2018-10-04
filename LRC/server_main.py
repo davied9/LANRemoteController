@@ -22,7 +22,7 @@ def start_lrc_server_console(config, commands):
         from LRC.Server.CommandServer import CommandServer
         import sys
         # start a new command server if necessary
-        command_server = CommandServer(verbose=config.verbose)
+        command_server = CommandServer(**config.command_server_config)
         if not command_server.is_running:
             command_server.start()
         # send the command
