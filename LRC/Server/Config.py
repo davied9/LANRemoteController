@@ -4,40 +4,37 @@ class LRCServerConfig(object):
 
     # basics
     def __init__(self, **kwargs):
-        self._config_file = None
-        self.config_file = None if 'config_file' not in kwargs else kwargs['config_file']
-        self.enable_ui = False if 'enable_ui' not in kwargs else kwargs['enable_ui']
-
-        self.command_ip = '127.0.0.1'
-        self.command_port = 32781
+        # initialize default values
+        self._init_default_values()
+        # load config files
+        if 'config_file' in kwargs:
+            self.config_file = kwargs['config_file']
+        # apply configurations from arguments
         self._update_command_server_config(**kwargs)
-
-        self.server_ip = '0.0.0.0'
-        self.server_port = 35530
         self._update_server_config(**kwargs)
-
-        self.waiter_ip = '0.0.0.0'
-        self.waiter_port = 35527
         self._update_waiter_config(**kwargs)
-        
-        self.verify_code = None # for new client verification
-        self.verbose = False
+        if 'enable_ui' in kwargs:
+            self.enable_ui = kwargs['enable_ui']
+        if 'verify_code' in kwargs: # for new client verification
+            self.verify_code = kwargs['verify_code']
+        if 'verbose' in kwargs:
+            self.verbose = kwargs['verbose']
 
     def __str__(self):
         return '''
-    config_file             : {},
-    UI enabled              : {},
+    config file             : {},
     command server address  : {},
     server address          : {},
     waiter address          : {},
+    UI enabled              : {},
     verify code             : {},
     verbose                 : {},
 '''.format(
             self.config_file,
-            self.enable_ui,
             self.command_server_address,
             self.server_address,
             self.waiter_address,
+            self.enable_ui,
             self.verify_code,
             self.verbose,
         )
@@ -93,27 +90,24 @@ class LRCServerConfig(object):
 
     # interfaces
     def apply_config(self, **kwargs): # apply all config except config_file, this is maintained by load_from_config_file
-        if 'enable_ui' in kwargs:
-            self.enable_ui = kwargs['enable_ui']
-
-        if 'verify_code' in kwargs:
-            self.verify_code = kwargs['verify_code']
-
         self._update_command_server_config(**kwargs)
         self._update_waiter_config(**kwargs)
         self._update_server_config(**kwargs)
-
+        if 'enable_ui' in kwargs:
+            self.enable_ui = kwargs['enable_ui']
+        if 'verify_code' in kwargs:
+            self.verify_code = kwargs['verify_code']
         if 'verbose' in kwargs:
             self.verbose = kwargs['verbose']
 
     def dump_to_dict(self):
         d = dict()
-        d['enable_ui'] = self.enable_ui
-        d['verify_code'] = self.verify_code
-        d['verbose'] = self.verbose
         d['command_server_address'] = self.command_server_address
         d['server_address'] = self.server_address
         d['waiter_address'] = self.waiter_address
+        d['enable_ui'] = self.enable_ui
+        d['verify_code'] = self.verify_code
+        d['verbose'] = self.verbose
         return d
 
     def load_from_config_file(self, config_file):
@@ -130,7 +124,21 @@ class LRCServerConfig(object):
             fp.write(str)
 
     # functional
+    def _init_default_values(self):
+        self._config_file = None
+        self.enable_ui = False
 
+        self.command_ip = '127.0.0.1'
+        self.command_port = 32781
+
+        self.server_ip = '0.0.0.0'
+        self.server_port = 35530
+
+        self.waiter_ip = '0.0.0.0'
+        self.waiter_port = 35527
+
+        self.verify_code = None # for new client verification
+        self.verbose = False
 
     # details
     def _update_command_server_config(self, **kwargs):
@@ -185,4 +193,11 @@ if '__main__' == __name__:
     load_config_file = os.path.abspath(load_config_file)
     config.load_from_config_file(load_config_file)
     print('config loaded from config file {} : {}'.format(load_config_file, config))
-
+    # following is loaded content :
+    # config_file             : <working directory>\LRC\config.json,
+    # command server address  : ('0.0.0.0', 35589),
+    # server address          : ('0.0.0.0', 35530),
+    # waiter address          : ('0.0.0.0', 33171),
+    # UI enabled              : False,
+    # verify code             : None,
+    # verbose                 : True,
