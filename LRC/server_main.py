@@ -31,20 +31,21 @@ def start_lrc_server_console(config, commands):
 
 
 def parse_config_from_console_line(*args):
-
+    # init
     reserved = []
     commands = []
     config = LRCServerConfig()
-
+    config_command_lines = dict()
+    # parse command lines
     ix = 0
     while ix < len(args):
         arg = args[ix]
         if '--no-ui' == arg:
-            config.enable_ui = False
+            config_command_lines['enable_ui'] = False
         elif '--enable-ui' == arg:
-            config.enable_ui = True
+            config_command_lines['enable_ui'] = True
         elif '--verbose' == arg:
-            config.verbose = True
+            config_command_lines['verbose'] = True
         elif arg.startswith('--config-file='):
             config.config_file = arg[len('--config-file='):]
         else:
@@ -53,7 +54,9 @@ def parse_config_from_console_line(*args):
             else:
                 commands.append(arg)
         ix += 1
-
+    # sync config with command line configurations
+    config.apply_config(**config_command_lines)
+    # clean up
     if 0 == len(commands):
         logger.info('LRC : no command given, start_lrc will be executed.')
         commands.append('start_lrc')
