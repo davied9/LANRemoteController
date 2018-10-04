@@ -2,6 +2,7 @@ import json
 
 class LRCServerConfig(object):
 
+    # basics
     def __init__(self, **kwargs):
         self._config_file = None
         self.config_file = None if 'config_file' not in kwargs else kwargs['config_file']
@@ -22,33 +23,26 @@ class LRCServerConfig(object):
         self.verify_code = None # for new client verification
         self.verbose = False
 
-    def _update_command_server_config(self, **kwargs):
-        if 'command_server_address' in kwargs:
-            self.command_ip = kwargs['command_server_address'][0]
-            self.command_port = kwargs['command_server_address'][1]
-        if 'command_server_ip' in kwargs:
-            self.command_ip = kwargs['command_server_ip']
-        if 'command_server_port' in kwargs:
-            self.command_port = kwargs['command_server_port']
+    def __str__(self):
+        return '''
+    config_file             : {},
+    UI enabled              : {},
+    command server address  : {},
+    server address          : {},
+    waiter address          : {},
+    verify code             : {},
+    verbose                 : {},
+'''.format(
+            self.config_file,
+            self.enable_ui,
+            self.command_server_address,
+            self.server_address,
+            self.waiter_address,
+            self.verify_code,
+            self.verbose,
+        )
 
-    def _update_server_config(self, **kwargs):
-        if 'server_address' in kwargs:
-            self.server_ip = kwargs['server_address'][0]
-            self.server_port = kwargs['server_address'][1]
-        if 'server_ip' in kwargs:
-            self.server_ip = kwargs['server_ip']
-        if 'server_port' in kwargs:
-            self.server_port = kwargs['server_port']
-
-    def _update_waiter_config(self, **kwargs):
-        if 'waiter_address' in kwargs:
-            self.waiter_ip = kwargs['waiter_address'][0]
-            self.waiter_port = kwargs['waiter_address'][1]
-        if 'waiter_ip' in kwargs:
-            self.waiter_ip = kwargs['waiter_ip']
-        if 'waiter_port' in kwargs:
-            self.waiter_port = kwargs['waiter_port']
-
+    # properties
     @property
     def config_file(self):
         return self._config_file
@@ -56,7 +50,7 @@ class LRCServerConfig(object):
     @config_file.setter
     def config_file(self, config_file):
         if config_file:
-            self._load_from_config_file(config_file)
+            self.load_from_config_file(config_file)
         else:
             self._config_file = None
 
@@ -96,28 +90,99 @@ class LRCServerConfig(object):
             'verbose'         : self.verbose,
         }
 
-    def __str__(self):
-        return '''
-    config_file             : {},
-    UI enabled              : {},
-    command server address  : {},
-    server address          : {},
-    waiter address          : {},
-    verify code             : {},
-    verbose                 : {},
-'''.format(
-            self.config_file,
-            self.enable_ui,
-            self.command_server_address,
-            self.server_address,
-            self.waiter_address,
-            self.verify_code,
-            self.verbose,
-        )
+
+    # interfaces
+    def apply_config(self, **kwargs): # apply all config except config_file, this is maintained by load_from_config_file
+        if 'enable_ui' in kwargs:
+            self.enable_ui = kwargs['enable_ui']
+
+        if 'verify_code' in kwargs:
+            self.verify_code = kwargs['verify_code']
+
+        self._update_command_server_config(**kwargs)
+        self._update_waiter_config(**kwargs)
+        self._update_server_config(**kwargs)
+
+        if 'verbose' in kwargs:
+            self.verbose = kwargs['verbose']
+
+    def dump_to_dict(self):
+        d = dict()
+        d['enable_ui'] = self.enable_ui
+        d['verify_code'] = self.verify_code
+        d['verbose'] = self.verbose
+        d['command_server_address'] = self.command_server_address
+        d['server_address'] = self.server_address
+        d['waiter_address'] = self.waiter_address
+        return d
+
+    def load_from_config_file(self, config_file):
+        with open(config_file, 'r') as fp:
+            config_string = fp.read()
+        config_dict = json.loads(config_string)
+        self.apply_config(**config_dict)
+        self._config_file = config_file
+
+    def save_to_config_file(self, config_file):
+        d = self.dump_to_dict()
+        str = json.dumps(d)
+        with open(config_file, 'w') as fp:
+            fp.write(str)
 
     # functional
-    def _load_from_config_file(self, config_file):
-        with open(config_file) as fh:
-            struct = json.loads(fh.read())
-        self._config_file = config_file
+
+
+    # details
+    def _update_command_server_config(self, **kwargs):
+        if 'command_server_address' in kwargs:
+            self.command_ip = kwargs['command_server_address'][0]
+            self.command_port = kwargs['command_server_address'][1]
+        if 'command_server_ip' in kwargs:
+            self.command_ip = kwargs['command_server_ip']
+        if 'command_server_port' in kwargs:
+            self.command_port = kwargs['command_server_port']
+
+    def _update_server_config(self, **kwargs):
+        if 'server_address' in kwargs:
+            self.server_ip = kwargs['server_address'][0]
+            self.server_port = kwargs['server_address'][1]
+        if 'server_ip' in kwargs:
+            self.server_ip = kwargs['server_ip']
+        if 'server_port' in kwargs:
+            self.server_port = kwargs['server_port']
+
+    def _update_waiter_config(self, **kwargs):
+        if 'waiter_address' in kwargs:
+            self.waiter_ip = kwargs['waiter_address'][0]
+            self.waiter_port = kwargs['waiter_address'][1]
+        if 'waiter_ip' in kwargs:
+            self.waiter_ip = kwargs['waiter_ip']
+        if 'waiter_port' in kwargs:
+            self.waiter_port = kwargs['waiter_port']
+
+
+if '__main__' == __name__:
+    import os
+    config = LRCServerConfig()
+    print('config : {}'.format(config))
+    print('config dump dict : {}'.format(config.dump_to_dict()))
+
+    save_config_file = os.path.join('LRC', 'test_config.ini')
+    save_config_file = os.path.abspath(save_config_file)
+    print('save config to file : {}'.format(save_config_file))
+    config.save_to_config_file(save_config_file)
+    # following is saved content :
+    # {
+    #     "verbose": false,
+    #     "server_address": ["0.0.0.0", 35530],
+    #     "enable_ui": false,
+    #     "command_server_address": ["127.0.0.1", 32781],
+    #     "waiter_address": ["0.0.0.0", 35527],
+    #     "verify_code": null
+    # }
+
+    load_config_file = os.path.join('LRC', 'config.json')
+    load_config_file = os.path.abspath(load_config_file)
+    config.load_from_config_file(load_config_file)
+    print('config loaded from config file {} : {}'.format(load_config_file, config))
 
