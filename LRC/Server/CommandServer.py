@@ -5,7 +5,7 @@ from LRC.Common.logger import logger
 from LRC.Protocol.v1.CommandServerProtocol import CommandServerProtocol
 from multiprocessing import Manager
 from threading import Thread
-import json
+import os, json
 
 try: # python 2
     from SocketServer import UDPServer
@@ -184,7 +184,11 @@ class CommandServer(UDPServer):
 
     # functional
     def _init_commands(self):
-        self.load_commands_from_file('LRC/Server/commands.json')
+        default_commands_file = os.path.abspath(os.path.join('LRC','Server','commands.json'))
+        try:
+            self.load_commands_from_file(default_commands_file)
+        except Exception as err:
+            logger.error('CommandServer : load from default command file {} failed : {}'.format(default_commands_file, err.args))
 
     def _init_basic_commands(self): # those should not be deleted
         self.register_command('quit', Command(name='quit', execute=self.quit))
