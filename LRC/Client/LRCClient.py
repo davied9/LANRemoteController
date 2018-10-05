@@ -30,7 +30,7 @@ class LRCClient(object):
         if 'respond' == tag:
             if 'confirm' == kwargs['state']:
                 try:
-                    self.waiter_address = eval(kwargs['waiter_address'])
+                    self.waiter_address = kwargs['waiter_address']
                 except Exception as err:
                     logger.error('Client : parse waiter_address error : {}'.format(err.args))
                     self.waiter_address = None

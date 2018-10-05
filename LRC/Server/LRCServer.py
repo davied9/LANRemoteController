@@ -51,7 +51,7 @@ class LRCServer ( UDPServer, object ):
                         self.client_list.append(client_address)
                         self.info('Server: add client {0} to client list.'.format(client_address))
                     respond_message = self.client_protocol.pack_message(
-                        respond=kwargs['name'], state='confirm', waiter_address=str(self.waiter_address))
+                        respond=kwargs['name'], state='confirm', waiter_address=self.waiter_address)
                     self.socket.sendto(respond_message, client_address)
 
     # functional
