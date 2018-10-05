@@ -78,9 +78,9 @@ class CommandServer(UDPServer):
         logger.info('CommandServer : add command {} {}'.format(key, command))
         self.__commands[key] = command
 
-    def send_command(self, command):
-        self._verbose_info('CommandServer : send command {} to {}'.format(command, self.command_server_address))
-        self.socket.sendto(self.protocol.pack_message(command=command), self.command_server_address)
+    def send_command(self, command, **kwargs):
+        self._verbose_info('CommandServer : send command {}({}) to {}'.format(command, kwargs, self.command_server_address))
+        self.socket.sendto(self.protocol.pack_message(command=command, **kwargs), self.command_server_address)
 
     def load_commands_from_file(self, command_file):
         logger.info('CommandServer : add command from file {}'.format(command_file))
@@ -201,7 +201,7 @@ class CommandServer(UDPServer):
             logger.error('CommandServer : command {} not registered'.format(command))
             return
         try:
-            logger.info('CommandServer : executing command {}'.format(command))
+            logger.info('CommandServer : executing command {}({})'.format(command, kwargs))
             self.commands[command].execute(**kwargs)
         except Exception as err:
             logger.error('CommandServer : failed executing command {} with error {}'.format(command, err.args))
