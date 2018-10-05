@@ -1,4 +1,5 @@
 from LRC.Protocol.BaseProtocol import BaseProtocol
+from LRC.Common.logger import logger
 import re
 
 class V1BaseProtocol(BaseProtocol):
@@ -50,10 +51,19 @@ class V1BaseProtocol(BaseProtocol):
                 r_next = ranges[i+1]
                 k = message[r[0]+1:r[1]-1]
                 v = message[r[1]:r_next[0]]
+            try:
+                v = eval(v)
+            except Exception as err:
+                logger.error('V1BaseProtocol : can not evaluate value from "{}" : {}'.format(v, err.args))
             args[k] = v
 
         return args
 
+    def _pack_pair(self, k, v):
+        if str is type(v):
+            return ",{}='{}'".format(k, v)
+        else:
+            return ",{}={}".format(k, v)
 
 if '__main__' == __name__:
     test_str = 'controller=,name="controller",controller={"copy dump": {"test a": ["left alt", "L"]}},joke="do i know you",yahoo={"copy dump": {"test b": ["right alt", "j]}}'

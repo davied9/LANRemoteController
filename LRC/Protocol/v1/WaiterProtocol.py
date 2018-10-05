@@ -36,7 +36,7 @@ class WaiterProtocol(V1BaseProtocol): # how do waiter unpack message, how to pac
 
     # functional
     def _pack_controller_message(self, **kwargs):
-        raw_message = 'controller='
-        raw_message += '{}'.format(kwargs['controller'])
+        raw_message = "controller="
+        raw_message += "{}".format(kwargs['controller'])
         return raw_message
 

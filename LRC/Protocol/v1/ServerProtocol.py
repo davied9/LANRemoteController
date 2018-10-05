@@ -24,11 +24,11 @@ class ServerProtocol(V1BaseProtocol): # how do server unpack message, how to pac
 
     # functional
     def _pack_request_message(self, **kwargs):
-        raw_message = 'request='
-        raw_message += ',name={}'.format(kwargs['request'])
+        raw_message = "request="
+        raw_message += ",name='{}'".format(kwargs['request'])
         del kwargs['request']
         for k, v in kwargs.items():
-            raw_message += ',{}={}'.format(k, v)
+            raw_message += self._pack_pair(k, v)
         return raw_message
 
 

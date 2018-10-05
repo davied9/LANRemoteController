@@ -36,10 +36,10 @@ class ClientProtocol(V1BaseProtocol): # how do client unpack message, how to pac
 
     # functional
     def _pack_respond_message(self, **kwargs):
-        raw_message = 'respond='
-        raw_message += ',request={}'.format(kwargs['respond'])
+        raw_message = "respond="
+        raw_message += ",request='{}'".format(kwargs['respond'])
         del kwargs['respond']
         for k, v in kwargs.items():
-            raw_message += ',{}={}'.format(k, v)
+            raw_message += self._pack_pair(k, v)
         return raw_message
 

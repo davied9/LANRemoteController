@@ -33,11 +33,11 @@ class CommandServerProtocol(V1BaseProtocol):
         :return:        raw_message to send
         '''
         # raw message format : request=name,arg0,arg1,arg2,...
-        raw_message = tag + '='
-        raw_message += ',name={}'.format(kwargs[tag])
+        raw_message = tag + "="
+        raw_message += ",name='{}'".format(kwargs[tag])
         del kwargs[tag]
         for k, v in kwargs.items():
-            raw_message += ',{}={}'.format(k, v)
+            raw_message += self._pack_pair(k, v)
         return raw_message
 
     def _pack_respond(self, **kwargs):
@@ -47,11 +47,11 @@ class CommandServerProtocol(V1BaseProtocol):
         :return:        raw_message to send
         '''
         # raw message format : request=name,arg0,arg1,arg2,...
-        raw_message = 'respond='
-        raw_message += ',request={}'.format(kwargs['respond'])
+        raw_message = "respond="
+        raw_message += ",request='{}'".format(kwargs['respond'])
         del kwargs['respond']
         for k, v in kwargs.items():
-            raw_message += ',{}={}'.format(k, v)
+            raw_message += self._pack_pair(k, v)
         return raw_message
 
 
@@ -62,9 +62,9 @@ class CommandServerProtocol(V1BaseProtocol):
         :return:        raw_message to send
         '''
         # raw message format : request=name,arg0,arg1,arg2,...
-        raw_message = 'running_test='
-        raw_message += ',target={}'.format(kwargs['running_test'])
+        raw_message = "running_test="
+        raw_message += ",target='{}'".format(kwargs['running_test'])
         del kwargs['running_test']
         for k, v in kwargs.items():
-            raw_message += ',{}={}'.format(k, v)
+            raw_message += self._pack_pair(k, v)
         return raw_message
