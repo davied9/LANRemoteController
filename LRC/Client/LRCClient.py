@@ -3,12 +3,20 @@ from LRC.Protocol.v1.WaiterProtocol import WaiterProtocol
 from LRC.Protocol.v1.ClientProtocol import ClientProtocol
 from LRC.Controller.LRCController import Controller
 from LRC.Common.logger import logger
+from LRC.Common.empty import empty
 from socket import *
-import re
+
+
+def _verbose_info(info):
+    logger.info('LRCClient : verbose : {}'.format(info))
+
 
 class LRCClient(object):
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        self._verbose = False
+        self.verbose_info = empty
+        self.verbose = True if 'verbose' in kwargs and kwargs['verbose'] else False
         self.server_address = None
         self.waiter_address = None
         self.socket = socket(AF_INET, SOCK_DGRAM)
@@ -16,6 +24,19 @@ class LRCClient(object):
         self.client_protocol = ClientProtocol()
         self.waiter_protocol = WaiterProtocol()
         self.server_protocol = ServerProtocol()
+
+    # property
+    @property
+    def verbose(self):
+        return self._verbose
+
+    @verbose.setter
+    def verbose(self, val):
+        if val == self._verbose: return
+        if val:
+            self.verbose_info = _verbose_info
+        else:
+            self.verbose_info = empty
 
     # interfaces
     def connect(self, server_address):
@@ -26,7 +47,9 @@ class LRCClient(object):
         self.socket.sendto(request_message, server_address)
         # receive respond
         msg, server_address = self.socket.recvfrom(1024)
+        self.verbose_info('got : {}'.format(msg))
         tag, kwargs = self.client_protocol.unpack_message(msg)
+        self.verbose_info('unpack : {} -- {}'.format(tag, kwargs))
         if 'respond' == tag:
             if 'confirm' == kwargs['state']:
                 try:
