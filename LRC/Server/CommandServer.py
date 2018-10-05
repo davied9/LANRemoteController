@@ -160,7 +160,8 @@ class CommandServer(UDPServer):
         if val:
             self._verbose_info_handler = logger.info
         else:
-            self._verbose_info_handler = self.__empty
+            from LRC.Common.empty import empty
+            self._verbose_info_handler = empty
 
     @property
     def commands(self):
@@ -223,9 +224,6 @@ class CommandServer(UDPServer):
 
     def _verbose_info(self, message):
         self._verbose_info_handler('CommandServer : verbose : {}'.format(message))
-
-    @classmethod
-    def __empty(*args): pass
 
 
 if '__main__' == __name__:

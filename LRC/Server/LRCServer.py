@@ -13,9 +13,6 @@ except ImportError:  # python 3
     from socketserver import UDPServer
 
 
-def _empty(*args, **kwargs): pass # a black hole
-
-
 class LRCServer ( UDPServer, object ):
 
     allow_reuse_address = True
@@ -25,7 +22,8 @@ class LRCServer ( UDPServer, object ):
             from functools import partial
             self._verbose_info = partial(print, 'LRC server [verbose] :')
         else:
-            self._verbose_info = _empty
+            from LRC.Common.empty import empty
+            self._verbose_info = empty
         super(LRCServer, self).__init__(kwargs["server_address"], None )
         self.waiter_address     = kwargs["waiter_address"]
         self.message_encoding   = kwargs["message_encoding"] if "message_encoding" in kwargs else 'utf-8'
@@ -77,7 +75,8 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
             from functools import partial
             self._verbose_info = partial(print, 'LRC waiter [verbose] :')
         else:
-            self._verbose_info = _empty
+            from LRC.Common.empty import empty
+            self._verbose_info = empty
         super(LRCWaiter, self).__init__(kwargs["waiter_address"], None )
         self.message_encoding       = kwargs["message_encoding"] if "message_encoding" in kwargs else 'utf-8'
         self.connect_server_address = kwargs["server_address"]
