@@ -1,29 +1,3 @@
 {
-	"start_lrc_server":{
-		"import":"LRC.Server.Commands.LRCServer",
-		"execute":"start_lrc_server",
-		"kwargs":"{'server_address':('0.0.0.0', 35530),'waiter_address':('0.0.0.0', 33171)}"
-	},
-	"start_lrc_waiter":{
-		"import":"LRC.Server.Commands.LRCServer",
-		"execute":"start_lrc_waiter",
-		"kwargs":"{'server_address':('0.0.0.0', 35530),'waiter_address':('0.0.0.0', 33171)}"
-	},
-	"start_lrc":{
-		"import":"LRC.Server.Commands.LRCServer",
-		"execute":"start_lrc",
-		"kwargs":"{'server_address':('0.0.0.0', 35530),'waiter_address':('0.0.0.0', 33171)}"
-	},
-	"stop_lrc_server":{
-		"import":"LRC.Server.Commands.LRCServer",
-		"execute":"stop_lrc_server"
-	},
-	"stop_lrc_waiter":{
-		"import":"LRC.Server.Commands.LRCServer",
-		"execute":"stop_lrc_waiter"
-	},
-	"stop_lrc":{
-		"import":"LRC.Server.Commands.LRCServer",
-		"execute":"stop_lrc"
-	}
+
 }

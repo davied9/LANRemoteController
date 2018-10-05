@@ -23,6 +23,7 @@ def start_lrc_server_console(config, commands, commands_kwargs):
         command_server = CommandServer(**config.command_server_config)
         if not command_server.is_running:
             command_server.start()
+            _register_lrc_commands(command_server, config, commands_kwargs) # register after default command file loaded
         # send the command
         for cmd in commands:
             command_server.send_command(cmd, **commands_kwargs[cmd])
@@ -97,6 +98,34 @@ def parse_config_from_console_line(*args):
         logger.warning('LRC : unknown options : {}.'.format(reserved))
 
     return config, commands, commands_kwargs
+
+
+def _register_lrc_commands(command_server, config, commands_kwargs):
+    from LRC.Server.Commands.LRCServer import start_lrc, start_lrc_server, start_lrc_waiter
+    from LRC.Server.Commands.LRCServer import stop_lrc, stop_lrc_server, stop_lrc_waiter
+    from LRC.Server.Command import Command
+
+    start_lrc_kwargs = dict()
+    start_lrc_kwargs.update(**config.server_config)
+    start_lrc_kwargs.update(**config.waiter_config)
+    if 'start_lrc' in commands_kwargs:
+        start_lrc_kwargs.update(**commands_kwargs['start_lrc'])
+    command_server.register_command('start_lrc', Command(name='start_lrc', execute=start_lrc, kwargs=start_lrc_kwargs))
+    command_server.register_command('stop_lrc', Command(name='stop_lrc', execute=stop_lrc))
+
+    start_lrc_server_kwargs = dict()
+    start_lrc_server_kwargs.update(**config.server_config)
+    if 'start_lrc_server' in commands_kwargs:
+        start_lrc_server_kwargs.update(**commands_kwargs['start_lrc_server'])
+    command_server.register_command('start_lrc_server', Command(name='start_lrc_server', execute=start_lrc_server, kwargs=start_lrc_server_kwargs))
+    command_server.register_command('stop_lrc_server', Command(name='stop_lrc_server', execute=stop_lrc_server))
+
+    start_lrc_waiter_kwargs = dict()
+    start_lrc_waiter_kwargs.update(**config.waiter_config)
+    if 'start_lrc_waiter' in commands_kwargs:
+        start_lrc_waiter_kwargs.update(**commands_kwargs['start_lrc_waiter'])
+    command_server.register_command('start_lrc_waiter', Command(name='start_lrc_waiter', execute=start_lrc_waiter, kwargs=start_lrc_waiter_kwargs))
+    command_server.register_command('stop_lrc_waiter', Command(name='stop_lrc_waiter', execute=stop_lrc_waiter))
 
 
 if __name__ == '__main__':
