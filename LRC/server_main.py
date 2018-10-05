@@ -90,6 +90,8 @@ def parse_config_from_console_line(*args):
         logger.info('LRC : no command given, start_lrc will be executed.')
         commands.append('start_lrc')
         commands_kwargs['start_lrc'] = dict()
+        commands_kwargs['start_lrc'].update(**config.server_config)
+        commands_kwargs['start_lrc'].update(**config.waiter_config)
 
     if 0 != len(reserved):
         logger.warning('LRC : unknown options : {}.'.format(reserved))
