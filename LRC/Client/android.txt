@@ -1,0 +1,3 @@
+title=LANRemoteController
+author=DAV
+orientation=portrait

@@ -1,0 +1,6 @@
+{
+	"PotPlayer": {
+		"Pause": ["left ctrl", "left shift", "left alt", "p"],
+		"Next": ["left ctrl", "left shift", "n"]
+	}
+}
