@@ -19,7 +19,7 @@ Can install directly by pip :
 
 Or install from git:
 
-`python -m pip install git+https://github.com/davied9/LANRemoteController@workspace_dav`
+`python -m pip install git+https://github.com/davied9/LANRemoteController@master`
 
 # Distribution
 
@@ -27,12 +27,16 @@ build/scripts contains all distribution scripts
 
 ## Server
 
+`python -m setup sdist bdist_wheel`
 
 ## Client
+
+`python -m setup sdist bdist_wheel`
 
 ### Android
 
 `cd build/scripts`
+
 `python -m build_android_client`
 
 the distribution package will be in build\client\android
