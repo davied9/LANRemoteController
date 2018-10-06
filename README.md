@@ -37,8 +37,6 @@ build/scripts contains all distribution scripts
 
 ## Client
 
-`python -m setup sdist bdist_wheel`
-
 ### Android
 
 `cd build/scripts`
