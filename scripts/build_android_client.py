@@ -12,10 +12,11 @@ if '__main__' == __name__ :
 
     # -------------------------------------------------------------------------------------------------------------
     # configurations
-    dirs_to_copy = ['Controller', 'Common', 'collections', 'Client']
+    dirs_to_copy = ['Controller', 'Common', 'Client', 'Protocol']
     ext_to_copy = ['.py']
     skip_dirs = ['logs', '__pycache__']
     skip_files = ['android.txt']
+    example_collections_directory = os.path.join('..', 'collections')
 
     # initialize
     script_file = sys.argv[0]
@@ -27,7 +28,7 @@ if '__main__' == __name__ :
     sys.path.append(package_dir)
     sys.path.append(os.path.dirname(sys.argv[0]))
 
-    from Common.logger import logger
+    from Common.logger import logger # directly import from working directory to avoid not installed problem
 
     # start the dirty work
     build_root = os.path.join(project_root,'dist','client','android')
@@ -61,6 +62,24 @@ if '__main__' == __name__ :
                 logger.info('     to {}'.format(this_target))
                 copy(this_src, this_target)
     logger.info('done basic copy.')
+
+    # copy example collections
+    logger.info('start copy example collections ...')
+    example_collections_directory = os.path.join(package_dir, example_collections_directory) # source dir
+    example_collections_build_dir = os.path.join(build_root, 'collections') # target dir
+    if not os.path.exists(example_collections_build_dir):
+        os.makedirs(example_collections_build_dir)
+    print('build collections from {} to {}'.format(example_collections_directory, example_collections_build_dir))
+    for r, ds, fs in os.walk(example_collections_directory):
+        for src in fs:
+            if src.endswith('.json'):
+                this_src = os.path.join(example_collections_directory, src)
+                this_target = os.path.join(example_collections_build_dir, src)
+                logger.info('copying {}'.format(this_src))
+                logger.info('     to {}'.format(this_target))
+                copy(this_src, this_target)
+        break
+    logger.info('done copy example collections  ...')
 
     # rename server_main.py into main.py
     logger.info('start copy main.py ...')
