@@ -36,6 +36,10 @@ if '__main__' == __name__ :
     if os.path.exists(build_root):
         shutil.rmtree(build_root)
 
+    # make LRC directory
+    os.makedirs(os.path.join(build_root, 'LRC'))
+    copy(os.path.join(package_dir, '__init__.py'), os.path.join(build_root, 'LRC', '__init__.py'))
+
     # copy files into dist/client/android
     logger.info('start basic copy ...')
     for dir in dirs_to_copy:
@@ -45,7 +49,7 @@ if '__main__' == __name__ :
                 logger.info('skipping directory : {}'.format(r))
                 continue
             dir_to_root = os.path.relpath(r, package_dir)
-            target_dir = os.path.join(build_root, dir_to_root)
+            target_dir = os.path.join(build_root, 'LRC', dir_to_root)
             source_dir = os.path.join(package_dir, dir_to_root)
             if not os.path.exists(target_dir):
                 os.makedirs(target_dir)
