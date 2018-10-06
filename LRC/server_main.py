@@ -48,7 +48,10 @@ def parse_config_from_console_line(*args):
     ix = 0 # console argument index
     while ix < len(args):
         arg = args[ix]
-        if '--no-ui' == arg:
+        if '--help' == arg or '-h' == arg:
+            logger.info(_help_commands())
+            exit()
+        elif '--no-ui' == arg:
             config_command_lines['enable_ui'] = False
             verbose_info('--no-ui given, disable UI')
         elif '--enable-ui' == arg:
@@ -127,6 +130,47 @@ def _register_lrc_commands(command_server, config, commands_kwargs):
     command_server.register_command('start_lrc_waiter', Command(name='start_lrc_waiter', execute=start_lrc_waiter, kwargs=start_lrc_waiter_kwargs))
     command_server.register_command('stop_lrc_waiter', Command(name='stop_lrc_waiter', execute=stop_lrc_waiter))
 
+def _help_commands():
+    return '''
+LRC server
+[Usage]
+    lrcserver [options] command1 command1-params command2 command2-params ...
+
+[options]
+    --help, -h              show this help info
+    --no-ui                 disable server UI, UI is disable by default for server
+    --enable-ui             enable server UI
+    --verbose               show more information in log
+    --config-file=FILEPATH  load LRC configurations from FILEPATH(json file format)
+
+[commands]
+    start_lrc               start LRC server and waiter
+        server_address      LRC server address
+        waiter_address      LRC waiter address
+        verify_code         LRC connection verify code
+        verbose             verbose info switch
+    start_lrc_server        start LRC server
+        server_address      LRC server address
+        waiter_address      LRC waiter address
+        verify_code         LRC connection verify code
+        verbose             verbose info switch
+    start_lrc_waiter        start LRC waiter
+        server_address      LRC server address
+        waiter_address      LRC waiter address
+        verbose             verbose info switch
+    stop_lrc                stop LRC server and waiter
+    stop_lrc_server         stop LRC server
+    stop_lrc_waiter         stop LRC waiter
+    quit                    quit all process
+
+
+[example]
+    lrcserver --no-ui start_lrc server_address=('0.0.0.0',35589)
+    lrcserver stop_lrc      # you may need to run this in another command window
+
+[more]
+    for more infomation, see https://github.com/davied9/LANRemoteController
+    '''
 
 if __name__ == '__main__':
     main()
