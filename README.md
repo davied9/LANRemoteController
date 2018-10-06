@@ -17,11 +17,13 @@ Dependency :
 
 `python -m pip install git+https://github.com/SavinaRoja/PyUserInput.git@master`
 
-You can install directly by pip :
+`python -m pip install pypiwin32` # this is used for windows server
+
+You can install LRC directly by pip :
 
 `python -m pip install LRC`
 
-Or install from git:
+Or install LRC from git:
 
 `python -m pip install git+https://github.com/davied9/LANRemoteController.git@master`
 
