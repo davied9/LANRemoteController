@@ -19,7 +19,7 @@ class Command(BaseCommand):
     def execute(self, *args, **kwargs):
         if self.args is not None and self.kwargs is not None:
             if args:
-                _args = self.args.copy()
+                _args = list(self.args)
                 _args.extend(args)
             else:
                 _args = self.args
@@ -31,7 +31,7 @@ class Command(BaseCommand):
             self._execute_handler(*_args, **_kwargs)
         elif self.args is not None and self.kwargs is None:
             if args:
-                _args = self.args.copy()
+                _args = list(self.args)
                 _args.extend(args)
             else:
                 _args = self.args
