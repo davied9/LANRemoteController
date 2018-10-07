@@ -140,12 +140,12 @@ if '__main__' == __name__:
         command_config={
             'import':'Test.T009_pack_and_unpack',
             'interface':'target',
-            'name':'top level name',
-            'value':'top level value',
+            'name':'top level name', # <top level name> you'll need me later
+            'value':'top level value', # <top level value> you'll need me later
             'args':['may be portal', 'another trial', 'Lannister always pay'],
             'kwargs':{ # kwargs is reserved for command parse process
                 'name':'test', # the value of kwargs will pass to **kwargs as keyword "kwargs"
-                'value':'joke', # if just k-v pair need to pass to interface, just do as top level name/value
+                'value':'joke', # if just k-v pair need to pass to interface, just do as <top level name/value> above
             'what\'s left':'all here for rot',
             },
         }
