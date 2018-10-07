@@ -29,7 +29,7 @@ Or install LRC from git:
 
 # Distribution
 
-build/scripts contains all distribution scripts
+scripts contains all distribution scripts
 
 ## Server
 
@@ -39,11 +39,11 @@ build/scripts contains all distribution scripts
 
 ### Android
 
-`cd build/scripts`
+`cd scripts`
 
 `python -m build_android_client`
 
-the distribution package will be in build\client\android
+the distribution package will be in dist\client\android
 
 copy directory to sdcard/kivy, then run with kivy Laucher or pydroid (require kivy 1.10.1)
 
