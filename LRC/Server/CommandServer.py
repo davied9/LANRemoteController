@@ -2,6 +2,7 @@ from __future__ import print_function
 from LRC.Server.Config import LRCServerConfig
 from LRC.Server.Command import Command, parse_command
 from LRC.Common.logger import logger
+from LRC.Common.empty import empty
 from LRC.Protocol.v1.CommandServerProtocol import CommandServerProtocol
 from multiprocessing import Manager
 from threading import Thread
@@ -153,14 +154,13 @@ class CommandServer(UDPServer):
 
     @property
     def verbose(self):
-        return self.__empty == self._verbose_info_handler
+        return empty != self._verbose_info_handler
 
     @verbose.setter
     def verbose(self, val):
         if val:
             self._verbose_info_handler = logger.info
         else:
-            from LRC.Common.empty import empty
             self._verbose_info_handler = empty
 
     @property
