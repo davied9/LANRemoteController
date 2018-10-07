@@ -9,7 +9,7 @@ def entry(*args, portal=None, **kwargs):
     print('    args : ', args)
     print('    kwargs : ', kwargs)
 
-def funny(portal, *args,  **kwargs):
+def funny(portal, *args, **kwargs):
     print('    portal : ', portal)
     print('    args : ', args)
     print('    kwargs : ', kwargs)

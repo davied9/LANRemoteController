@@ -78,31 +78,37 @@ def parse_command(**_kwargs):
     else:
         module = ''
 
-    if 'kwargs' in _kwargs:
-        kwargs = _kwargs['kwargs']
-        del _kwargs['kwargs']
-    else:
-        kwargs = dict()
+    args = list()
+    if 'interface' in _kwargs or 'command' in _kwargs:
+        if 'args' in _kwargs:
+            args = _kwargs['args']
+            del _kwargs['args']
 
     if 'interface' in _kwargs: # interface to get command instance
         interface = _get_full_interface(module, _kwargs['interface'])
         del _kwargs['interface']
-        return eval(interface)(kwargs=kwargs, **_kwargs)
+        if args:
+            return eval(interface)(*args, **_kwargs)
+        else:
+            return eval(interface)(**_kwargs)
 
     if 'command' in _kwargs: # command class
         command_class = _get_full_interface(module, _kwargs['command'])
         del _kwargs['command']
-        return eval(command_class)(kwargs=kwargs, **_kwargs)
+        if args:
+            return eval(command_class)(*args, **_kwargs)
+        else:
+            return eval(command_class)(**_kwargs)
 
     if 'execute_interface' in _kwargs: # interface to get execute handler for a common command (LRC.Server.Command.Command)
         execute_interface = _get_full_interface(module, _kwargs['execute_interface'])
         del _kwargs['execute_interface']
-        return Command(name="parsed from string", execute=eval(execute_interface)(), kwargs=kwargs, **_kwargs)
+        return Command(name="parsed from string", execute=eval(execute_interface)(), **_kwargs)
 
     if 'execute' in _kwargs: # execute handler for a common command (LRC.Server.Command.Command)
         execute = _get_full_interface(module, _kwargs['execute'])
         del _kwargs['execute']
-        return Command(name="parsed from string", execute=eval(execute), kwargs=kwargs, **_kwargs)
+        return Command(name="parsed from string", execute=eval(execute), **_kwargs)
 
     raise ValueError('parse_command : one of the following should be specified : {}'.format(
             {'interface','command','execute_interface','execute'}))
@@ -130,4 +136,20 @@ if '__main__' == __name__:
             print('executing command {}'.format(name))
             command.execute()
 
-    __test_case_001()
+    def __test_case_002(): # test directly parse from config with args (just parse, the command do not work)
+        command_config={
+            'import':'Test.T009_pack_and_unpack',
+            'interface':'target',
+            'name':'top level name',
+            'value':'top level value',
+            'args':['may be portal', 'another trial', 'Lannister always pay'],
+            'kwargs':{ # kwargs is reserved for command parse process
+                'name':'test', # the value of kwargs will pass to **kwargs as keyword "kwargs"
+                'value':'joke', # if just k-v pair need to pass to interface, just do as top level name/value
+            'what\'s left':'all here for rot',
+            },
+        }
+        parse_command(**command_config)
+
+
+    __test_case_002()
