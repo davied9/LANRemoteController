@@ -32,7 +32,9 @@ class CommandServer(UDPServer):
         # initialize commands
         self.__commands = dict()
         self._init_basic_commands()
-        self.__is_main_server = kwargs["main"] if 'main' in kwargs else False
+        self.__is_main_server = False
+        # initialize role
+        self.role = 'not started' # 'not started' 'main' 'secondary'
 
     def finish_request(self, request, client_address):
         self._verbose_info('CommandServer : got request {} from client {}'.format(request, client_address))
@@ -57,6 +59,8 @@ class CommandServer(UDPServer):
         start lrc command server
         :return:
         '''
+        if not start_as_main:
+            raise NotImplemented('start command server as secondary is not implemented yet')
         self.is_main_server = start_as_main
         try:
             # start command server
@@ -64,7 +68,9 @@ class CommandServer(UDPServer):
             self.server_activate()
             Thread(target=self.serve_forever).start()
             # log
-            logger.info('CommandServer : start command server at {}'.format(self.server_address))
+            role = 'main' if self.is_main_server else 'secondary'
+            logger.info('CommandServer : start command server at {} as {}'.format(self.server_address, role))
+            self.role = role
         except:
             self.server_close()
             raise
@@ -74,10 +80,24 @@ class CommandServer(UDPServer):
             server.shutdown()
         # shutdown must be called in another thread, or it will be blocked forever
         Thread(target=shutdown_tunnel, args=(self,)).start()
+        self.role = 'not started'
+
+    def dump_config(self):
+        d = dict()
+        d.update(self._dump_local_config())
+        d.update(self._dump_remote_config())
+        return d
+
+    def apply_config(self, **kwargs):
+        self._apply_local_config(**kwargs)
+        self._apply_remote_config(**kwargs)
+
+    def sync_config(self): # sync this instance's config to the running command server with same address(ip,port)
+        self.send_command('sync_config', **self._dump_remote_config())
 
     def register_command(self, key, command):
         logger.info('CommandServer : add command {} {}'.format(key, command))
-        self.__commands[key] = command
+        self.commands[key] = command
 
     def send_command(self, command, **kwargs):
         self._verbose_info('CommandServer : send command {}({}) to {}'.format(command, kwargs, self.command_server_address))
@@ -194,11 +214,12 @@ class CommandServer(UDPServer):
         self.register_command('quit', Command(name='quit', execute=self.quit))
         self.register_command('register_command', Command(name='register_command', execute=self.register_command))
         self.register_command('list_commands', Command(name='list_commands', execute=self._list_commands))
+        self.register_command('sync_config', Command(name='sync_config', execute=self._apply_remote_config))
 
     def _clear_commands(self):
-        for k in self.__commands.keys():
+        for k in self.commands.keys():
             logger.warning('CommandServer : commands {} removed'.format(k))
-        self.__commands.clear()
+        self.commands.clear()
         logger.warning('CommandServer : commands cleared')
 
     def _execute_command(self, command, **kwargs):
@@ -219,20 +240,49 @@ class CommandServer(UDPServer):
             self.socket.sendto(self.protocol.pack_message(running_test='CommandServer', state='confirm'), client_address)
         self._verbose_info('receive unavailable running_test {} from {}'.format(kwargs, client_address))
 
-    # command entry
+
+    def _dump_local_config(self): # dump config can work all right only in local
+        d = dict()
+        d['commands']  = self.commands
+        # todo:
+        # d['protocol']  = self.server_address
+        return d
+
+    def _dump_remote_config(self): # dump config can work all right only in local
+        d = dict()
+        d['server_address']  = self.server_address
+        d['verbose']  = self.verbose
+        return d
+
+    def _apply_local_config(self, **kwargs): # apply config can work all right only in local
+        if 'commands' in kwargs:
+            self.commands.update(kwargs['commands'])
+
+    def _apply_remote_config(self, **kwargs): # apply config can work all right remotely
+        if 'verbose' in kwargs:
+            self.verbose = kwargs['verbose']
+        if 'server_address' in kwargs:
+            if 'not started' == self.role:
+                self.server_address = kwargs['server_address']
+        if 'port' in kwargs:
+            self.server_address = (self.server_address[0], kwargs["port"])
+        if 'ip' in kwargs:
+            self.server_address = (kwargs["ip"], self.server_address[1])
+
+    def _verbose_info(self, message):
+        self._verbose_info_handler('CommandServer : verbose : {}'.format(message))
+
+    # local command entry
     def _list_commands(self,  *args, **kwargs):
         message = 'CommandServer : list commands : \n'
         for v in self.commands.values():
             message += '\t{}\n'.format(v)
         logger.info(message)
 
-    def _verbose_info(self, message):
-        self._verbose_info_handler('CommandServer : verbose : {}'.format(message))
-
 
 if '__main__' == __name__:
 
-    def __test_case_001():
+    def __test_case_001(): # send and execute command
         # start a Command Server
         s = CommandServer(port=35777, verbose=True)
         s.register_command('test_comm', Command(name='test_comm', execute=logger.info, args=('test_comm called',)))
@@ -240,6 +290,22 @@ if '__main__' == __name__:
         # try commands
         s.send_command(command='test_comm')
         s.send_command(command='quit')
-        return
 
-    __test_case_001()
+    def __test_case_002(): # test sync_config
+        # start a Command Server
+        s_main = CommandServer(port=35777, verbose=False)
+        s_main.register_command('test_comm', Command(name='test_comm', execute=logger.info, args=('test_comm called',)))
+        s_main.start()
+        # try commands
+        s_sync = CommandServer(port=35777, verbose=True)
+        s_sync.register_command('test_juice', Command(name='test_juice', execute=logger.info, args=('test_juice called',)))
+        s_sync.sync_config()
+        s_sync.send_command('list_commands')
+        logger.info('s_sync role before start : {}'.format(s_sync.role))
+        try:
+            s_sync.start()
+        except Exception as err:
+            logger.error('start s_sync failed with : {}'.format(err.args))
+        logger.info('s_sync role after start : {}'.format(s_sync.role))
+
+    __test_case_002()
