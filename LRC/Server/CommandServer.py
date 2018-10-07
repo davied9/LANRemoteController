@@ -103,27 +103,23 @@ class CommandServer(UDPServer):
         self._verbose_info('CommandServer : send command {}({}) to {}'.format(command, kwargs, self.command_server_address))
         self.socket.sendto(self.protocol.pack_message(command=command, **kwargs), self.command_server_address)
 
+    def load_commands(self, **command_config):
+        logger.info('CommandServer : load commands from config :\n    {}'.format(command_config))
+        success, fail = self._load_commands_from_file(**command_config)
+        logger.info('CommandServer : load commands from config done, total {}, success {}, fail {}'.format(
+                success+fail, success, fail))
+
+    def load_commands_from_string(self, command_config_string):
+        logger.info('CommandServer : load commands from config string :\n    {}'.format(command_config_string))
+        success, fail = self._load_commands_from_string(command_config_string)
+        logger.info('CommandServer : load commands from config string done, total {}, success {}, fail {}'.format(
+                success+fail, success, fail))
+
     def load_commands_from_file(self, command_file):
-        logger.info('CommandServer : add command from file {}'.format(command_file))
-        try:
-            with open(command_file, 'r') as fp:
-                config_string = fp.read()
-            config_dict = json.loads(config_string)
-        except Exception as err:
-            logger.error('CommandServer : add command from file {} failed with {}'.format(command_file, err.args))
-            return
-        success=0
-        fail=0
-        for command_name, command_body in config_dict.items():
-            try:
-                command = parse_command(**command_body)
-                self.register_command(command_name, command)
-                success += 1
-            except Exception as err:
-                logger.error('CommandServer : load command {} failed with {}'.format(command_name, err.args))
-                fail += 1
-        logger.info('CommandServer : add command from file {} done, total {}, success {}, fail {}'.format(
-                command_file, success+fail, success, fail))
+        logger.info('CommandServer : load commands from config file :\n    {}'.format(command_file))
+        success, fail = self._load_commands_from_file(command_file)
+        logger.info('CommandServer : load commands from config file done, total {}, success {}, fail {}'.format(
+                success+fail, success, fail))
 
     # properties
     @property
@@ -208,7 +204,7 @@ class CommandServer(UDPServer):
         try:
             self.load_commands_from_file(default_commands_file)
         except Exception as err:
-            logger.error('CommandServer : load from default command file {} failed : {}'.format(default_commands_file, err.args))
+            logger.error('CommandServer : load commands from default command file {} failed : {}'.format(default_commands_file, err.args))
 
     def _init_basic_commands(self): # those should not be deleted
         self.register_command('quit', Command(name='quit', execute=self.quit))
@@ -240,7 +236,6 @@ class CommandServer(UDPServer):
             self.socket.sendto(self.protocol.pack_message(running_test='CommandServer', state='confirm'), client_address)
         self._verbose_info('receive unavailable running_test {} from {}'.format(kwargs, client_address))
 
-
     def _dump_local_config(self): # dump config can work all right only in local
         d = dict()
         d['commands']  = self.commands
@@ -268,6 +263,34 @@ class CommandServer(UDPServer):
             self.server_address = (self.server_address[0], kwargs["port"])
         if 'ip' in kwargs:
             self.server_address = (kwargs["ip"], self.server_address[1])
+
+    def _load_commands(self, **command_config):
+        success=0
+        fail=0
+        for command_name, command_body in command_config.items():
+            try:
+                command = parse_command(**command_body)
+                self.register_command(command_name, command)
+                success += 1
+            except Exception as err:
+                logger.error('CommandServer : load command {} failed with {} from command body {}'.format(command_name, err.args, command_body))
+                fail += 1
+        return success, fail
+
+    def _load_commands_from_string(self, command_config_string):
+        try:
+            command_config = json.loads(command_config_string)
+            return self._load_commands(**command_config)
+        except Exception as err:
+            logger.error('CommandServer : load commands failed with {} from string {}'.format(err.args, command_config_string))
+
+    def _load_commands_from_file(self, command_file):
+        try:
+            with open(command_file, 'r') as fp:
+                command_config_string = fp.read()
+            return self._load_commands_from_string(command_config_string)
+        except Exception as err:
+            logger.error('CommandServer : load commands failed with {} from file {}'.format(err.args, command_file))
 
     def _verbose_info(self, message):
         self._verbose_info_handler('CommandServer : verbose : {}'.format(message))
