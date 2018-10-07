@@ -46,7 +46,7 @@ class CommandServer(UDPServer):
             if 'command' == tag:
                 command = kwargs['name']
                 del kwargs['name']
-                self._execute_command(command, **kwargs)
+                self._execute_command(client_address, command, **kwargs)
             elif 'request' == tag:
                 self._respond_request(client_address, request=kwargs['name'], **kwargs)
             elif 'running_test' == tag:
@@ -218,12 +218,12 @@ class CommandServer(UDPServer):
         self.commands.clear()
         logger.warning('CommandServer : commands cleared')
 
-    def _execute_command(self, command, **kwargs):
+    def _execute_command(self, client_address, command, **kwargs):
         if command not in self.commands.keys():
-            logger.error('CommandServer : command {} not registered'.format(command))
+            logger.error('CommandServer : command {} from {} not registered'.format(command, client_address))
             return
         try:
-            logger.info('CommandServer : executing command {}({})'.format(command, kwargs))
+            logger.info('CommandServer : executing command {}({}) from {}'.format(command, kwargs, client_address))
             self.commands[command].execute(**kwargs)
         except Exception as err:
             logger.error('CommandServer : failed executing command {} with error {}'.format(command, err.args))
