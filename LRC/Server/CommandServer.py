@@ -364,8 +364,15 @@ if '__main__' == __name__:
             "test_juice":{
                 "import":"LRC.Common.logger",
                 "execute":"logger.warning",
-                "args":["test_juice"]
+                "args":("test_juice",)
             },
+            "test_kwargs":{
+                "import":"LRC.Server.Commands.LRCServer",
+                "execute":"start_lrc",
+                "kwargs":{
+                    "server_address":("127.0.0.1", 35789)
+                 }
+            }
         }
         # start a Command Server
         s_main = CommandServer(verbose=True)
@@ -375,5 +382,6 @@ if '__main__' == __name__:
         s_sync.register_command_remotely(command_config)
         s_sync.send_command('list_commands')
         s_sync.send_command('test_juice')
+        s_sync.send_command('test_kwargs')
 
     __test_case_004()
