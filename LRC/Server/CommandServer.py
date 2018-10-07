@@ -233,8 +233,10 @@ class CommandServer(UDPServer):
 
     def _respond_running_test(self, client_address, **kwargs):
         if 'CommandServer' == kwargs['target']:
-            self.socket.sendto(self.protocol.pack_message(running_test='CommandServer', state='confirm'), client_address)
-        self._verbose_info('receive unavailable running_test {} from {}'.format(kwargs, client_address))
+            if 'request' == kwargs['state']:
+                self.socket.sendto(self.protocol.pack_message(running_test='CommandServer', state='confirm'), client_address)
+                return
+        logger.warning('receive unavailable running_test {} from {}'.format(kwargs, client_address))
 
     def _dump_local_config(self): # dump config can work all right only in local
         d = dict()
