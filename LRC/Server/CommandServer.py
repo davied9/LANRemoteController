@@ -45,8 +45,13 @@ class CommandServer(UDPServer):
             # execute command
             if 'command' == tag:
                 command = kwargs['name']
+                if 'args' in kwargs:
+                    args = kwargs['args']
+                    del kwargs['args']
+                else:
+                    args = list()
                 del kwargs['name']
-                self._execute_command(client_address, command, **kwargs)
+                self._execute_command(client_address, command, *args, **kwargs)
             elif 'request' == tag:
                 self._respond_request(client_address, request=kwargs['name'], **kwargs)
             elif 'running_test' == tag:
@@ -218,13 +223,13 @@ class CommandServer(UDPServer):
         self.commands.clear()
         logger.warning('CommandServer : commands cleared')
 
-    def _execute_command(self, client_address, command, **kwargs):
+    def _execute_command(self, client_address, command, *args, **kwargs):
         if command not in self.commands.keys():
             logger.error('CommandServer : command {} from {} not registered'.format(command, client_address))
             return
         try:
-            logger.info('CommandServer : executing command {}({}) from {}'.format(command, kwargs, client_address))
-            self.commands[command].execute(**kwargs)
+            logger.info('CommandServer : executing command {}({},{}) from {}'.format(command, args, kwargs, client_address))
+            self.commands[command].execute(*args, **kwargs)
         except Exception as err:
             logger.error('CommandServer : failed executing command {} with error {}'.format(command, err.args))
 
@@ -318,10 +323,10 @@ if '__main__' == __name__:
 
     def __test_case_002(): # test sync_config
         # start a Command Server
-        s_main = CommandServer(verbose=False)
+        s_main = CommandServer(verbose=True)
         s_main.start()
         # try commands
-        s_sync = CommandServer(verbose=True)
+        s_sync = CommandServer(verbose=False)
         s_sync.sync_config()
         # test s_main config
         logger.info('before sync -- s_main.verbose = {}'.format(s_main.verbose))
