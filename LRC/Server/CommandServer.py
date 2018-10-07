@@ -80,7 +80,7 @@ class CommandServer(UDPServer):
             self.server_close()
             raise
 
-    def quit(self, *args, **kwargs):
+    def quit(self):
         def shutdown_tunnel(server):
             server.shutdown()
         # shutdown must be called in another thread, or it will be blocked forever
@@ -303,10 +303,10 @@ class CommandServer(UDPServer):
         self._verbose_info_handler('CommandServer : verbose : {}'.format(message))
 
     # local command entry
-    def _list_commands(self,  *args, **kwargs):
+    def _list_commands(self): # entry for command "list_commands"
         message = 'CommandServer : list commands : \n'
-        for v in self.commands.values():
-            message += '\t{}\n'.format(v)
+        for k, v in self.commands.items():
+            message += '{:22} -- {}\n'.format(k, v)
         logger.info(message)
 
 
