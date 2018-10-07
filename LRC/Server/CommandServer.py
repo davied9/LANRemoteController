@@ -104,6 +104,9 @@ class CommandServer(UDPServer):
         logger.info('CommandServer : add command {} {}'.format(key, command))
         self.commands[key] = command
 
+    def register_command_remotely(self, command_config):
+        self.send_command('register_command', command_config=command_config)
+
     def send_command(self, command, **kwargs):
         self._verbose_info('CommandServer : send command {}({}) to {}'.format(command, kwargs, self.command_server_address))
         self.socket.sendto(self.protocol.pack_message(command=command, **kwargs), self.command_server_address)
@@ -213,7 +216,7 @@ class CommandServer(UDPServer):
 
     def _init_basic_commands(self): # those should not be deleted
         self.register_command('quit', Command(name='quit', execute=self.quit))
-        self.register_command('register_command', Command(name='register_command', execute=self.register_command))
+        self.register_command('register_command', Command(name='register_command', execute=self._register_command_remotely, kwargs=dict()))
         self.register_command('list_commands', Command(name='list_commands', execute=self._list_commands))
         self.register_command('sync_config', Command(name='sync_config', execute=self._apply_remote_config, kwargs=dict()))
 
@@ -309,6 +312,9 @@ class CommandServer(UDPServer):
             message += '{:22} -- {}\n'.format(k, v)
         logger.info(message)
 
+    def _register_command_remotely(self, command_config): # entry for command "register_command"
+        self.load_commands(**command_config) # one more unpack needed for remotely register command
+
 
 if '__main__' == __name__:
 
@@ -353,4 +359,21 @@ if '__main__' == __name__:
             logger.error('start s_sync failed with : {}'.format(err.args))
         logger.info('s_sync role after start : {}'.format(s_sync.role))
 
-    __test_case_002()
+    def __test_case_004(): # test
+        command_config = {
+            "test_juice":{
+                "import":"LRC.Common.logger",
+                "execute":"logger.warning",
+                "args":["test_juice"]
+            },
+        }
+        # start a Command Server
+        s_main = CommandServer(verbose=True)
+        s_main.start()
+        # start a client command server
+        s_sync = CommandServer(verbose=True)
+        s_sync.register_command_remotely(command_config)
+        s_sync.send_command('list_commands')
+        s_sync.send_command('test_juice')
+
+    __test_case_004()
