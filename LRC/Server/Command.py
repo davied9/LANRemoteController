@@ -7,21 +7,50 @@ class BaseCommand(object):
 
 class Command(BaseCommand):
 
-    def __init__(self, name, execute, kwargs=None, **_kwargs):
+    def __init__(self, name, execute, *, args=None, kwargs=None, **_kwargs):
         self.name = name
         self._execute_handler = execute
-        if not kwargs:
-            self.kwargs = dict()
-        else:
-            self.kwargs = kwargs
+        self.args = args
+        self.kwargs = kwargs
 
     def __str__(self):
-        return  '<{} :: {} :: {}>'.format(self.name, self._execute_handler, self.kwargs)
+        return  '<{} :: {} :: {} :: {}>'.format(self.name, self._execute_handler, self.args, self.kwargs)
 
-    def execute(self, **kwargs):
-        param = self.kwargs.copy() # external parameters have greater priority
-        param.update(kwargs)
-        self._execute_handler(**param)
+    def execute(self, *args, **kwargs):
+        if self.args is not None and self.kwargs is not None:
+            if args:
+                _args = self.args.copy()
+                _args.extend(args)
+            else:
+                _args = self.args
+            if kwargs:
+                _kwargs = self.kwargs.copy()
+                _kwargs.update(kwargs)
+            else:
+                _kwargs = self.kwargs
+            self._execute_handler(*_args, **_kwargs)
+        elif self.args is not None and self.kwargs is None:
+            if args:
+                _args = self.args.copy()
+                _args.extend(args)
+            else:
+                _args = self.args
+            if kwargs:
+                raise ValueError('execute handler do not support kwargs')
+            self._execute_handler(*_args)
+        elif self.args is None and self.kwargs is not None:
+            if args:
+                raise ValueError('execute handler do not support args')
+            if kwargs:
+                _kwargs = self.kwargs.copy()
+                _kwargs.update(kwargs)
+            else:
+                _kwargs = self.kwargs
+            self._execute_handler(**_kwargs)
+        else: # self.args is None and self.kwargs is None
+            if args or kwargs:
+                raise ValueError('execute handler do not support args and kwargs')
+            self._execute_handler()
 
 
 def _get_full_interface(module, interface):
