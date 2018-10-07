@@ -316,14 +316,29 @@ if '__main__' == __name__:
 
     def __test_case_002(): # test sync_config
         # start a Command Server
-        s_main = CommandServer(port=35777, verbose=False)
-        s_main.register_command('test_comm', Command(name='test_comm', execute=logger.info, args=('test_comm called',)))
+        s_main = CommandServer(verbose=False)
         s_main.start()
         # try commands
-        s_sync = CommandServer(port=35777, verbose=True)
-        s_sync.register_command('test_juice', Command(name='test_juice', execute=logger.info, args=('test_juice called',)))
+        s_sync = CommandServer(verbose=True)
         s_sync.sync_config()
-        s_sync.send_command('list_commands')
+        # test s_main config
+        logger.info('before sync -- s_main.verbose = {}'.format(s_main.verbose))
+        from time import sleep
+        sleep(0.5)
+        logger.info('after sync -- s_main.verbose = {}'.format(s_main.verbose))
+
+    def __test_case_003(): # test start a duplicate command server, see the role changing
+        # start a Command Server
+        s_main = CommandServer()
+        s_main.start()
+        # try commands
+        s_sync = CommandServer()
+        # try start another time
+        from time import sleep
+        sleep(0.5)
+        logger.info('')
+        logger.info('')
+        logger.info('')
         logger.info('s_sync role before start : {}'.format(s_sync.role))
         try:
             s_sync.start()
