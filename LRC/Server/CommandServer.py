@@ -109,19 +109,19 @@ class CommandServer(UDPServer):
         self.socket.sendto(self.protocol.pack_message(command=command, **kwargs), self.command_server_address)
 
     def load_commands(self, **command_config):
-        logger.info('CommandServer : load commands from config :\n    {}'.format(command_config))
-        success, fail = self._load_commands_from_file(**command_config)
+        logger.info('CommandServer : load commands from config :\n{}'.format(command_config))
+        success, fail = self._load_commands(**command_config)
         logger.info('CommandServer : load commands from config done, total {}, success {}, fail {}'.format(
                 success+fail, success, fail))
 
     def load_commands_from_string(self, command_config_string):
-        logger.info('CommandServer : load commands from config string :\n    {}'.format(command_config_string))
+        logger.info('CommandServer : load commands from config string :\n{}'.format(command_config_string))
         success, fail = self._load_commands_from_string(command_config_string)
         logger.info('CommandServer : load commands from config string done, total {}, success {}, fail {}'.format(
                 success+fail, success, fail))
 
     def load_commands_from_file(self, command_file):
-        logger.info('CommandServer : load commands from config file :\n    {}'.format(command_file))
+        logger.info('CommandServer : load commands from config file :\n{}'.format(command_file))
         success, fail = self._load_commands_from_file(command_file)
         logger.info('CommandServer : load commands from config file done, total {}, success {}, fail {}'.format(
                 success+fail, success, fail))
@@ -215,7 +215,7 @@ class CommandServer(UDPServer):
         self.register_command('quit', Command(name='quit', execute=self.quit))
         self.register_command('register_command', Command(name='register_command', execute=self.register_command))
         self.register_command('list_commands', Command(name='list_commands', execute=self._list_commands))
-        self.register_command('sync_config', Command(name='sync_config', execute=self._apply_remote_config))
+        self.register_command('sync_config', Command(name='sync_config', execute=self._apply_remote_config, kwargs=dict()))
 
     def _clear_commands(self):
         for k in self.commands.keys():
