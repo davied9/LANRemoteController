@@ -79,7 +79,7 @@ def parse_command(**_kwargs):
         module = ''
 
     if 'kwargs' in _kwargs:
-        kwargs = eval(_kwargs['kwargs'])
+        kwargs = _kwargs['kwargs']
         del _kwargs['kwargs']
     else:
         kwargs = dict()
@@ -109,7 +109,25 @@ def parse_command(**_kwargs):
 
 
 if '__main__' == __name__:
-    command_config={'import':'LRC.Server.Commands.CommandTest', 'interface':'get_command_instance'}
-    command = parse_command(**command_config)
-    print(command)
-    command.execute()
+
+    def __test_case_000(): # test directly parse from config
+        command_config={'import':'LRC.Server.Commands.CommandTest', 'interface':'get_command_instance'}
+        command = parse_command(**command_config)
+        print(command)
+        command.execute()
+
+    def __test_case_001(): # test parse from json file
+        import os, json
+        config_file = os.path.join('LRC','Server','commands_test.json')
+        with open(config_file, 'r') as fh:
+            config_content = fh.read()
+        commands_config = json.loads(config_content)
+        commands = dict()
+        for name, body in commands_config.items():
+            print('registering command {} with {}'.format(name, body))
+            commands[name] = parse_command(**body)
+        for name, command in commands.items():
+            print('executing command {}'.format(name))
+            command.execute()
+
+    __test_case_001()

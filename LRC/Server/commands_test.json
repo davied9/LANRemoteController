@@ -10,12 +10,16 @@
 	"TestCommandKwargs":{
 		"import":"LRC.Server.Commands.CommandTest",
 		"command":"TestCommandKwargs",
-		"kwargs":"{'info':'you r funny'}"
+		"kwargs":{
+			"info":"you r funny"
+		}
 	},
-	"TestCommandKwargs":{
+	"TestCommandKwargsWithSomethingElse":{
 		"import":"LRC.Server.Commands.CommandTest",
 		"command":"TestCommandKwargs",
-		"kwargs":"{'info':'I m sick'}",
+		"kwargs":{
+			"info":"I m sick"
+		},
 		"hello":"how you doing"
 	}
 }
