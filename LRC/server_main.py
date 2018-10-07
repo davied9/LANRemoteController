@@ -21,9 +21,11 @@ def start_lrc_server_console(config, commands, commands_kwargs):
         import sys
         # start a new command server if necessary
         command_server = CommandServer(**config.command_server_config)
-        if not command_server.is_running:
+        if command_server.is_running:
+            _register_lrc_commands(command_server, config, commands_kwargs, register_remotely=True)
+        else:
             command_server.start()
-            _register_lrc_commands(command_server, config, commands_kwargs) # register after default command file loaded
+            _register_lrc_commands(command_server, config, commands_kwargs, register_remotely=False) # register after default command file loaded
         # send the command
         for cmd in commands:
             command_server.send_command(cmd, **commands_kwargs[cmd])
@@ -48,7 +50,10 @@ def parse_config_from_console_line(*args):
     ix = 0 # console argument index
     while ix < len(args):
         arg = args[ix]
-        if '--no-ui' == arg:
+        if '--help' == arg or '-h' == arg:
+            logger.info(_help_commands())
+            exit()
+        elif '--no-ui' == arg:
             config_command_lines['enable_ui'] = False
             verbose_info('--no-ui given, disable UI')
         elif '--enable-ui' == arg:
@@ -100,33 +105,113 @@ def parse_config_from_console_line(*args):
     return config, commands, commands_kwargs
 
 
-def _register_lrc_commands(command_server, config, commands_kwargs):
+def _register_lrc_commands(command_server, config, commands_kwargs, register_remotely=False):
     from LRC.Server.Commands.LRCServer import start_lrc, start_lrc_server, start_lrc_waiter
     from LRC.Server.Commands.LRCServer import stop_lrc, stop_lrc_server, stop_lrc_waiter
     from LRC.Server.Command import Command
+
+    remote_command_config = dict()
 
     start_lrc_kwargs = dict()
     start_lrc_kwargs.update(**config.server_config)
     start_lrc_kwargs.update(**config.waiter_config)
     if 'start_lrc' in commands_kwargs:
         start_lrc_kwargs.update(**commands_kwargs['start_lrc'])
-    command_server.register_command('start_lrc', Command(name='start_lrc', execute=start_lrc, kwargs=start_lrc_kwargs))
-    command_server.register_command('stop_lrc', Command(name='stop_lrc', execute=stop_lrc))
+    if register_remotely:
+        remote_command_config['start_lrc'] = {
+            "import":"LRC.Server.Commands.LRCServer",
+            "execute":"start_lrc",
+            "kwargs": start_lrc_kwargs
+        }
+        remote_command_config['stop_lrc'] = {
+            "import":"LRC.Server.Commands.LRCServer",
+            "execute":"stop_lrc"
+        }
+    else:
+        command_server.register_command('start_lrc', Command(name='start_lrc', execute=start_lrc, kwargs=start_lrc_kwargs))
+        command_server.register_command('stop_lrc', Command(name='stop_lrc', execute=stop_lrc))
 
     start_lrc_server_kwargs = dict()
     start_lrc_server_kwargs.update(**config.server_config)
     if 'start_lrc_server' in commands_kwargs:
         start_lrc_server_kwargs.update(**commands_kwargs['start_lrc_server'])
-    command_server.register_command('start_lrc_server', Command(name='start_lrc_server', execute=start_lrc_server, kwargs=start_lrc_server_kwargs))
-    command_server.register_command('stop_lrc_server', Command(name='stop_lrc_server', execute=stop_lrc_server))
+    if register_remotely:
+        remote_command_config['start_lrc_server'] = {
+            "import":"LRC.Server.Commands.LRCServer",
+            "execute":"start_lrc_server",
+            "kwargs": start_lrc_server_kwargs
+        }
+        remote_command_config['stop_lrc_server'] = {
+            "import":"LRC.Server.Commands.LRCServer",
+            "execute":"stop_lrc_server"
+        }
+    else:
+        command_server.register_command('start_lrc_server', Command(name='start_lrc_server', execute=start_lrc_server, kwargs=start_lrc_server_kwargs))
+        command_server.register_command('stop_lrc_server', Command(name='stop_lrc_server', execute=stop_lrc_server))
 
     start_lrc_waiter_kwargs = dict()
     start_lrc_waiter_kwargs.update(**config.waiter_config)
     if 'start_lrc_waiter' in commands_kwargs:
         start_lrc_waiter_kwargs.update(**commands_kwargs['start_lrc_waiter'])
-    command_server.register_command('start_lrc_waiter', Command(name='start_lrc_waiter', execute=start_lrc_waiter, kwargs=start_lrc_waiter_kwargs))
-    command_server.register_command('stop_lrc_waiter', Command(name='stop_lrc_waiter', execute=stop_lrc_waiter))
+    if register_remotely:
+        remote_command_config['start_lrc_waiter'] = {
+            "import":"LRC.Server.Commands.LRCServer",
+            "execute":"start_lrc_waiter",
+            "kwargs": start_lrc_waiter_kwargs
+        }
+        remote_command_config['stop_lrc_waiter'] = {
+            "import":"LRC.Server.Commands.LRCServer",
+            "execute":"stop_lrc_waiter"
+        }
+    else:
+        command_server.register_command('start_lrc_waiter', Command(name='start_lrc_waiter', execute=start_lrc_waiter, kwargs=start_lrc_waiter_kwargs))
+        command_server.register_command('stop_lrc_waiter', Command(name='stop_lrc_waiter', execute=stop_lrc_waiter))
 
+    if register_remotely:
+        command_server.register_command_remotely(remote_command_config)
+
+
+def _help_commands():
+    return '''
+LRC server
+[Usage]
+    lrcserver [options] command1 command1-params command2 command2-params ...
+
+[options]
+    --help, -h              show this help info
+    --no-ui                 disable server UI, UI is disable by default for server
+    --enable-ui             enable server UI
+    --verbose               show more information in log
+    --config-file=FILEPATH  load LRC configurations from FILEPATH(json file format)
+
+[commands]
+    start_lrc               start LRC server and waiter
+        server_address      LRC server address
+        waiter_address      LRC waiter address
+        verify_code         LRC connection verify code
+        verbose             verbose info switch
+    start_lrc_server        start LRC server
+        server_address      LRC server address
+        waiter_address      LRC waiter address
+        verify_code         LRC connection verify code
+        verbose             verbose info switch
+    start_lrc_waiter        start LRC waiter
+        server_address      LRC server address
+        waiter_address      LRC waiter address
+        verbose             verbose info switch
+    stop_lrc                stop LRC server and waiter
+    stop_lrc_server         stop LRC server
+    stop_lrc_waiter         stop LRC waiter
+    quit                    quit all process
+
+
+[example]
+    lrcserver --no-ui start_lrc server_address=('0.0.0.0',35589)
+    lrcserver stop_lrc      # you may need to run this in another command window
+
+[more]
+    for more infomation, see https://github.com/davied9/LANRemoteController
+    '''
 
 if __name__ == '__main__':
     main()
