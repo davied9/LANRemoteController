@@ -1,0 +1,9 @@
+{
+	"config_file" : "config.json",
+	"enable_ui" : false,
+	"command_server_address" : ["0.0.0.0", 35239],
+	"server_address" : ["0.0.0.0", 35530],
+	"waiter_address" : ["0.0.0.0", 33171],
+	"verify_code" : null,
+	"verbose" : true
+}
