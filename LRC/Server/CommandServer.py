@@ -249,7 +249,7 @@ class CommandServer(UDPServer):
     def _dump_local_config(self): # dump config can work all right only in local
         d = dict()
         d['commands']  = self.commands
-        # todo:
+        # todo: try to sync protocol
         # d['protocol']  = self.server_address
         return d
 
