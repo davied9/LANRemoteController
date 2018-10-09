@@ -1,11 +1,16 @@
 import setuptools
 
+# get readme description
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+with open("version", "r") as fh:
+    version = fh.read()
+    print('version = {}'.format(version) )
+
 setuptools.setup(
     name="LRC",
-    version="0.1.1",
+    version=version,
     author="Davied Paul",
     author_email="wuwei_543333827@126.com",
     description="A lan remote controller to keyboard associated devices.",

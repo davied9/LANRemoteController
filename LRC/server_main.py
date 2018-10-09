@@ -15,6 +15,7 @@ def start_lrc_server_console(config, commands, commands_kwargs):
 
         logger.set_logger('kivy')
         freeze_support()
+        # todo : sync config to server UI
         LRCServerUI().run()
     else:
         from LRC.Server.CommandServer import CommandServer
