@@ -39,7 +39,6 @@ class LRCServer ( UDPServer, object ):
         # verbose info
         self._verbose_info('server {}, waiter {}'.format( self.server_address, self.waiter_address))
 
-
     # interfaces
     def finish_request(self, request, client_address):
         self._verbose_info('receive request {} from {}'.format(request, client_address))
@@ -47,19 +46,18 @@ class LRCServer ( UDPServer, object ):
         self._verbose_info('unpack result : {}, {}'.format(tag, kwargs))
         if 'request' == tag:
             if 'connect to waiter' == kwargs['name']:
-                if self._are_you_allowed_to_connect_waiter(client_address, kwargs):
-                    if self.client_list is not None and client_address not in self.client_list:
-                        self.client_list.append(client_address)
-                        self.info('Server: add client {0} to client list.'.format(client_address))
-                    respond_message = self.client_protocol.pack_message(
-                        respond=kwargs['name'], state='confirm', waiter_address=self.waiter_address)
-                    self.socket.sendto(respond_message, client_address)
+                if self.client_list is not None and client_address not in self.client_list:
+                    self.client_list.append(client_address)
+                    self.info('Server: add client {0} to client list.'.format(client_address))
+                respond_message = self.client_protocol.pack_message(
+                    respond=kwargs['name'], state='confirm', waiter_address=self.waiter_address)
+                self.socket.sendto(respond_message, client_address)
+
+    def verify_request(self, request, client_address):
+        # todo: check verify_code, check client blacklist, and so on ...
+        return True
 
     # functional
-    def _are_you_allowed_to_connect_waiter(self, client_address, kwargs):
-        # todo: this logic should be written to verify_request
-        # return self.verify_code == kwargs['verify_code']
-        return True
 
 
 class KeyCombinationParseError(Exception):
@@ -99,9 +97,6 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
     # interfaces
     def finish_request(self, request, client_address):
         self._verbose_info('receive request {} from {}'.format(request, client_address))
-        if self.client_list is not None and client_address not in self.client_list:
-            self.warning('Waiter: request from unknown client : {0}'.format(client_address))
-            return
         tag, kwargs = self.waiter_protocol.unpack_message(request[0])
         if 'controller' == tag:
             controller = kwargs['controller']
@@ -118,6 +113,12 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
                 self.info('Waiter: can\'t press key from {0} {1} : {2}'.format(client_address, key_combination, err.args))
         else:
             self._verbose_info('unknown request {} with parameters : {}'.format(tag, kwargs))
+
+    def verify_request(self, request, client_address):
+        if self.client_list is None or client_address not in self.client_list:
+            self.warning('Waiter: shutdown request from unknown client : {0}'.format(client_address))
+            return False
+        return True
 
     # functional
 
