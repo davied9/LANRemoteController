@@ -27,17 +27,24 @@ def start_lrc(**kwargs):
     manager().start_waiter(**config.waiter_config)
 
 
-def stop_lrc_server(**kwargs):
+def stop_lrc_server():
     manager().stop_server()
 
 
-def stop_lrc_waiter(**kwargs):
+def stop_lrc_waiter():
     manager().stop_waiter()
 
 
-def stop_lrc(**kwargs):
+def stop_lrc():
     manager().stop_server()
     manager().stop_waiter()
+
+
+def quit():
+    global _manager
+    if _manager:
+        _manager.quit()
+        _manager = None
 
 
 if '__main__' == __name__:

@@ -88,9 +88,10 @@ class CommandServer(UDPServer):
         Thread(target=shutdown_tunnel, args=(self,)).start()
         for key in self.cleanup_commands:
             try:
+                self._verbose_info('execute cleanup command {}'.format(key))
                 self.commands[key].execute()
             except Exception as err:
-                logger.error('LRC : execute clear up command {} failed {}({})'.format(key, err, err.args))
+                logger.error('LRC : execute cleanup command {} failed {}({})'.format(key, err, err.args))
         self.role = 'not started'
 
     def dump_config(self):
@@ -108,10 +109,16 @@ class CommandServer(UDPServer):
 
     def register_cleanup_command(self, *keys):
         for key in keys:
-            logger.info('CommandServer : add quit command {}'.format(key))
+            if key in self.cleanup_commands:
+                self._verbose_info('duplicate cleanup command {}'.format(key))
+                continue
+            logger.info('CommandServer : add cleanup command {}'.format(key))
             self.cleanup_commands.append(key)
 
     def register_command(self, key, command):
+        if key in self.commands.keys() and command == self.commands[key]:
+            self._verbose_info('duplicate command {} {}'.format(key, command))
+            return
         logger.info('CommandServer : add command {} {}'.format(key, command))
         self.commands[key] = command
 
