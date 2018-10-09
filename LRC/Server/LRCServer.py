@@ -60,9 +60,6 @@ class LRCServer ( UDPServer, object ):
     # functional
 
 
-class KeyCombinationParseError(Exception):
-    pass
-
 from pykeyboard import PyKeyboard
 import re
 
