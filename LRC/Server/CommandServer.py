@@ -283,7 +283,7 @@ class CommandServer(UDPServer):
                 self.register_command(command_name, command)
                 success += 1
             except Exception as err:
-                logger.error('CommandServer : load command {} failed with {} from command body {}'.format(command_name, err.args, command_body))
+                logger.error('CommandServer : load command {} failed with {}({}) from command body {}'.format(command_name, err, err.args, command_body))
                 fail += 1
         return success, fail
 
@@ -292,7 +292,7 @@ class CommandServer(UDPServer):
             command_config = json.loads(command_config_string)
             return self._load_commands(**command_config)
         except Exception as err:
-            logger.error('CommandServer : load commands failed with {} from string {}'.format(err.args, command_config_string))
+            logger.error('CommandServer : load commands failed with {}({}) from string {}'.format(err, err.args, command_config_string))
 
     def _load_commands_from_file(self, command_file):
         try:
@@ -300,7 +300,7 @@ class CommandServer(UDPServer):
                 command_config_string = fp.read()
             return self._load_commands_from_string(command_config_string)
         except Exception as err:
-            logger.error('CommandServer : load commands failed with {} from file {}'.format(err.args, command_file))
+            logger.error('CommandServer : load commands failed with {}({}) from file {}'.format(err, err.args, command_file))
 
     def _verbose_info(self, message):
         self._verbose_info_handler('CommandServer : verbose : {}'.format(message))
