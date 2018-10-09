@@ -57,6 +57,7 @@ class LRCServer ( UDPServer, object ):
 
     # functional
     def _are_you_allowed_to_connect_waiter(self, client_address, kwargs):
+        # todo: this logic should be written to verify_request
         # return self.verify_code == kwargs['verify_code']
         return True
 
@@ -202,9 +203,16 @@ class LRCServerManager(object):
                 self._waiter_process.terminate()
             self._waiter_process = None
 
+    def stop_communication_manager(self):
+        if self.communication_manager:
+            manager = self.communication_manager
+            self.communication_manager = None
+            manager.shutdown()
+
     def quit(self):
         self.stop_server()
         self.stop_waiter()
+        self.stop_communication_manager()
 
     # functional
     def _update_server_config(self, config):
@@ -260,22 +268,17 @@ class LRCServerManager(object):
             self._mailbox_watcher_thread = Thread(target=self._mailbox_watcher)
             self._mailbox_watcher_thread.start()
 
-    def _stop_mailbox_watcher(self):
-        if self._mailbox_watcher_thread:
-            self._mailbox_watcher_thread
-
     # detailed
     def _mailbox_watcher(self):
         while True:
             try:
-                self.log(self.log_mailbox.get()) # get will block until there is data
+                logger.info(self.log_mailbox.get()) # get will block until there is data
             except Exception as err:
-                if not self.running:
-                    self.log('Server : closing servers.')
-                    break
+                if self.communication_manager:
+                    logger.error('LRC : mailbox error : {}({})'.format(err, err.args))
                 else:
-                    self.log('Error : {}'.format(err))
-
+                    logger.info('LRC : closing servers.')
+                    break
 
 
 if '__main__' == __name__:
