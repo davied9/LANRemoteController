@@ -5,6 +5,7 @@ from LRC.Protocol.v1.ServerProtocol import ServerProtocol
 from LRC.Protocol.v1.WaiterProtocol import WaiterProtocol
 from LRC.Protocol.v1.ClientProtocol import ClientProtocol
 from multiprocessing import Process, Manager
+from threading import Thread
 
 
 try: # python 2
@@ -175,6 +176,9 @@ class LRCServerManager(object):
         self._waiter_process = None
         self.waiter_config = dict()
 
+        self._mailbox_watcher_thread = None
+        self._start_mailbox_watcher()
+
     # commands interfaces
     def start_server(self, **kwargs):
         self._update_server_config(kwargs)
@@ -188,7 +192,7 @@ class LRCServerManager(object):
             self._server_process = None
 
     def start_waiter(self, **kwargs):
-        kwargs = self._update_waiter_config(kwargs)
+        self._update_waiter_config(kwargs)
         self._start_waiter(**kwargs)
 
     def stop_waiter(self):
@@ -208,7 +212,6 @@ class LRCServerManager(object):
             config['client_list'] = self.client_list
         if 'log_mailbox' not in config or config['log_mailbox'] is None and self.log_mailbox:
             config['log_mailbox'] = self.log_mailbox
-        return config
 
     def _start_server(self, **kwargs):
         if self._server_process:
@@ -233,7 +236,6 @@ class LRCServerManager(object):
             config['client_list'] = self.client_list
         if 'log_mailbox' not in config or config['log_mailbox'] is None and self.log_mailbox:
             config['log_mailbox'] = self.log_mailbox
-        return config
 
     def _start_waiter(self, **kwargs):
         if self._waiter_process:
@@ -252,6 +254,27 @@ class LRCServerManager(object):
             logger.info('LRC : start waiter process at {}'.format(kwargs['waiter_address']))
         except Exception as err:
             logger.error('LRC : start waiter process failed : {}'.format(err.args))
+
+    def _start_mailbox_watcher(self):
+        if not self._mailbox_watcher_thread:
+            self._mailbox_watcher_thread = Thread(target=self._mailbox_watcher)
+            self._mailbox_watcher_thread.start()
+
+    def _stop_mailbox_watcher(self):
+        if self._mailbox_watcher_thread:
+            self._mailbox_watcher_thread
+
+    # detailed
+    def _mailbox_watcher(self):
+        while True:
+            try:
+                self.log(self.log_mailbox.get()) # get will block until there is data
+            except Exception as err:
+                if not self.running:
+                    self.log('Server : closing servers.')
+                    break
+                else:
+                    self.log('Error : {}'.format(err))
 
 
 
