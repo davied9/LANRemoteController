@@ -44,6 +44,7 @@ class Logger(object):
             self._stream.flush()
             self._stream.close()
             self._stream = None
+
     def debug(self, *args):
         self._debug_handler(*args)
 
@@ -64,11 +65,11 @@ class Logger(object):
         except:
             self._formatter = self._default_formatter
 
-    def set_logger(self, name='default', **kwargs):
+    def set_logger(self, *, name='default', log_file=None, **kwargs):
         self.close()
         self._set_raw_logger()
-        self.name = kwargs['name'] if 'name' in kwargs else name
-        self.stream_id = kwargs['log_file'] if 'log_file' in kwargs else None
+        self.name = name
+        self.stream_id = log_file
 
     def _first_run(self, op, *args): # first time info/warning/error is called, is when handlers are set
         # initialize all handlers at first-time running
@@ -225,5 +226,5 @@ if '__main__' == __name__: # test logger
         logger.set_formatter(formatter)
         logger.info('test default formatter', 'cannot be true')
 
-    _test_case_001()
+    _test_case_003()
     pass
