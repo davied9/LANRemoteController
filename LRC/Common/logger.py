@@ -32,6 +32,7 @@ class Logger(object):
 
     def __del__(self):
         try: # to make this more robust, somehow directly will generate error
+            self.flush_buffers()
             self.close()
         except:
             pass
@@ -40,10 +41,10 @@ class Logger(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.flush_buffers()
         self.close()
 
     def close(self):
-        self.flush_buffers()
         if self._stream:
             self._set_raw_logger()
             self._stream.flush()
