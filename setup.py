@@ -1,5 +1,6 @@
 import setuptools
-from LRC.info import version
+
+from LRC.Common.info import version
 
 # get readme description
 with open("README.md", "r") as fh:
