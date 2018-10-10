@@ -19,12 +19,6 @@ class LRCServer ( UDPServer, object ):
     allow_reuse_address = True
 
     def __init__(self, **kwargs ):
-        if 'verbose' in kwargs and kwargs['verbose'] is True:
-            from functools import partial
-            self._verbose_info = partial(print, 'LRC server [verbose] :')
-        else:
-            from LRC.Common.empty import empty
-            self._verbose_info = empty
         super(LRCServer, self).__init__(kwargs["server_address"], None )
         self.waiter_address     = kwargs["waiter_address"]
         self.message_encoding   = kwargs["message_encoding"] if "message_encoding" in kwargs else 'utf-8'
@@ -37,6 +31,13 @@ class LRCServer ( UDPServer, object ):
         self.server_protocol = ServerProtocol()
         self.client_protocol = ClientProtocol()
         # verbose info
+        if 'verbose' in kwargs and kwargs['verbose'] is True:
+            from functools import partial
+            self._verbose_info = self._verbose_info_imp
+            self._verbose_info('verbose enabled.')
+        else:
+            from LRC.Common.empty import empty
+            self._verbose_info = empty
         self._verbose_info('server {}, waiter {}'.format( self.server_address, self.waiter_address))
 
     # interfaces
@@ -58,6 +59,9 @@ class LRCServer ( UDPServer, object ):
         return True
 
     # functional
+    def _verbose_info_imp(self, info):
+        self.info('LRC server : [verbose] {}'.format(info))
+
 
 
 from pykeyboard import PyKeyboard
@@ -68,12 +72,6 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
     allow_reuse_address = True
 
     def __init__(self, **kwargs ):
-        if 'verbose' in kwargs and kwargs['verbose'] is True:
-            from functools import partial
-            self._verbose_info = partial(print, 'LRC waiter [verbose] :')
-        else:
-            from LRC.Common.empty import empty
-            self._verbose_info = empty
         super(LRCWaiter, self).__init__(kwargs["waiter_address"], None )
         self.message_encoding       = kwargs["message_encoding"] if "message_encoding" in kwargs else 'utf-8'
         self.connect_server_address = kwargs["server_address"]
@@ -89,6 +87,13 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
         self.waiter_protocol = WaiterProtocol()
         self.server_protocol = ServerProtocol()
         # verbose info
+        if 'verbose' in kwargs and kwargs['verbose'] is True:
+            from functools import partial
+            self._verbose_info = self._verbose_info_imp
+            self._verbose_info('verbose enabled.')
+        else:
+            from LRC.Common.empty import empty
+            self._verbose_info = empty
         self._verbose_info('server {}, waiter {}'.format( self.connect_server_address, self.server_address))
 
     # interfaces
@@ -118,6 +123,9 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
         return True
 
     # functional
+    def _verbose_info_imp(self, info):
+        self.info('LRC waiter : [verbose] {}'.format(info))
+
 
 
 def start_server(**kwargs):

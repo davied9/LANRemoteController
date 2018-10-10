@@ -68,13 +68,30 @@ class _log_buffer(object):
 
 class LRCServerUI(App):
 
-    def build(self):
+    def __init__(self, **kwargs):
+        super(LRCServerUI, self).__init__(**kwargs)
         # servers
         self.server_address = ('0.0.0.0', 35530)
         self.server_process = None
         self.waiter_address = ('0.0.0.0', 35527)
         self.waiter_process = None
         self.watch_interval = 0.5
+        # regexp
+        self.ip_matcher = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
+        self.comm_manager = Manager()
+        # client list
+        self.client_list = self.comm_manager.list()
+        # log buffer
+        self.log_mailbox = self.comm_manager.Queue()
+        self.log_buffer = _log_buffer(max_size=100, pop_size=1)
+        # state
+        self.running = False
+        # other configurations
+        self.verbose = False
+        self._verbose_info = empty
+
+
+    def build(self):
         # UI
         self.root = BoxLayout(orientation='vertical')
         #   up : start/stop buttons
@@ -114,19 +131,6 @@ class LRCServerUI(App):
         scroll_view = ScrollView()
         scroll_view.add_widget(self.log_window)
         self.root.add_widget(scroll_view)
-        # regexp
-        self.ip_matcher = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
-        self.comm_manager = Manager()
-        # client list
-        self.client_list = self.comm_manager.list()
-        # log buffer
-        self.log_mailbox = self.comm_manager.Queue()
-        self.log_buffer = _log_buffer(max_size=100, pop_size=1)
-        # state
-        self.running = False
-        # other configurations
-        self.verbose = False
-        self._verbose_info = empty
         return self.root
 
     def update_config(self, *,
@@ -138,12 +142,10 @@ class LRCServerUI(App):
         self.verbose = verbose
         if verbose:
             self._verbose_info = self.log
-
         if server_address:
             self.server_address = server_address
             self.server_ip_input.text = str(server_address[0])
             self.server_port_input.text = str(server_address[1])
-            
         if waiter_address:
             self.waiter_address = waiter_address
             self.waiter_ip_input.text = str(waiter_address[0])

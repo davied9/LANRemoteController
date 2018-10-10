@@ -18,15 +18,19 @@ def start_lrc_server_main(config, commands, commands_kwargs):
         from multiprocessing import freeze_support
         from LRC.Server.ServerUI import LRCServerUI
 
+        freeze_support()
+
         logger.set_logger(name='kivy')
         logger.flush_buffers()
 
-        freeze_support()
-        # todo : sync config to server UI
+        if commands:
+            logger.warning('LRC : UI is enabled, commands {} will not be executed.'.format(commands))
+
         ui = LRCServerUI()
+        ui.update_config(verbose=config.verbose)
+        ui.server_address = config.server_address
+        ui.waiter_address = config.waiter_address
         ui.run()
-        ui.update_config(**config.server_config)
-        ui.update_config(**config.waiter_config)
     else:
         from LRC.Server.CommandServer import CommandServer
         import sys
@@ -122,7 +126,7 @@ def parse_config_from_console_line(args):
     # sync config with command line configurations
     config.apply_config(**config_command_lines)
     # clean up
-    if 0 == len(commands):
+    if 0 == len(commands) and not config.enable_ui:
         logger.buffer_info('LRC : no command given, start_lrc will be executed.')
         commands.append('start_lrc')
         commands_kwargs['start_lrc'] = dict()
