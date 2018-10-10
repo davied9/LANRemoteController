@@ -7,6 +7,9 @@ def main():
         from LRC.Common.info import version
         print('LRC version {}'.format(version))
         exit()
+    verbose = False
+    if '--verbose' in sys.argv:
+        verbose = True
 
     import os
     from kivy.config import Config
@@ -18,7 +21,7 @@ def main():
     logger.set_logger(name='kivy')
 
     # start application
-    ClientUI().run()
+    ClientUI(verbose=verbose).run()
 
 
 def _help_str():
@@ -30,6 +33,7 @@ LRC server
 [options]
     --help, -h              show this help info
     --version               show LRC version
+    --verbose               show more information in log
 
 [more]
     for more infomation, see https://github.com/davied9/LANRemoteController

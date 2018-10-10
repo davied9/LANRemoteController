@@ -30,6 +30,9 @@ class ClientUI(App):
         client:                         client ( LRCClient ), provide access for LRCClient
 
     '''
+    def __init__(self, *, verbose=False, **kwargs):
+        super(ClientUI, self).__init__(**kwargs)
+        self.verbose = verbose
 
     def build(self):
         logger.info('Start: working directory : {0}'.format( os.getcwd() ))
