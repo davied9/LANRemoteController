@@ -15,25 +15,28 @@ from threading import Thread
 from random import randint
 from time import sleep
 from LRC.Common.logger import logger
+from LRC.Common.empty import empty
 from LRC.Server.LRCServer import LRCServer, LRCWaiter
 import re, os
 os.environ['KIVY_IMAGE'] = 'pil,sdl2'
 
 
 
-def start_LRCServer(server_address, waiter_address, verify_code, client_list, log_mailbox=None):
+def start_LRCServer(server_address, waiter_address, verify_code, client_list, log_mailbox=None, verbose=False):
     LRCServer(server_address=server_address,
               waiter_address=waiter_address,
               verify_code=verify_code,
               client_list=client_list,
-              log_mailbox=log_mailbox).serve_forever()
+              log_mailbox=log_mailbox,
+              verbose=verbose).serve_forever()
 
 
-def start_LRCWaiter(waiter_address, server_address, client_list, log_mailbox=None):
+def start_LRCWaiter(waiter_address, server_address, client_list, log_mailbox=None, verbose=False):
     LRCWaiter(waiter_address=waiter_address,
               server_address=server_address,
               client_list=client_list,
-              log_mailbox=log_mailbox).serve_forever()
+              log_mailbox=log_mailbox,
+              verbose=verbose).serve_forever()
 
 
 class _log_buffer(object):
@@ -121,7 +124,30 @@ class LRCServerUI(App):
         self.log_buffer = _log_buffer(max_size=100, pop_size=1)
         # state
         self.running = False
+        # other configurations
+        self.verbose = False
+        self._verbose_info = empty
         return self.root
+
+    def update_config(self, *,
+            server_address=None,
+            waiter_address=None,
+            verbose=False,
+            **kwargs # for all the junks
+        ):
+        self.verbose = verbose
+        if verbose:
+            self._verbose_info = self.log
+
+        if server_address:
+            self.server_address = server_address
+            self.server_ip_input.text = str(server_address[0])
+            self.server_port_input.text = str(server_address[1])
+            
+        if waiter_address:
+            self.waiter_address = waiter_address
+            self.waiter_ip_input.text = str(waiter_address[0])
+            self.waiter_port_input.text = str(waiter_address[1])
 
     def on_start(self):
         self.running = True
@@ -189,7 +215,7 @@ class LRCServerUI(App):
             self.server_info_label.text = 'code : ' + self.server_code + ', running ...'
             self.server_ip_input.disabled = True
             self.server_port_input.disabled = True
-            self.server_process = Process(target=start_LRCServer, args=(self.server_address, self.waiter_address, self.server_code, self.client_list, self.log_mailbox))
+            self.server_process = Process(target=start_LRCServer, args=(self.server_address, self.waiter_address, self.server_code, self.client_list, self.log_mailbox, self.verbose))
             self.server_process.start()
             Thread(target=self._server_watcher).start()
 
@@ -222,7 +248,7 @@ class LRCServerUI(App):
             self.waiter_info_label.text = 'running ...'
             self.waiter_ip_input.disabled = True
             self.waiter_port_input.disabled = True
-            self.waiter_process = Process(target=start_LRCWaiter, args=(self.waiter_address, self.server_address, self.client_list, self.log_mailbox ))
+            self.waiter_process = Process(target=start_LRCWaiter, args=(self.waiter_address, self.server_address, self.client_list, self.log_mailbox, self.verbose))
             self.waiter_process.start()
             Thread(target=self._waiter_watcher).start()
 
