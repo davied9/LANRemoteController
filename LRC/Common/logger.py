@@ -23,6 +23,10 @@ class Logger(object):
         self._warning_handler   = print
         self._error_handler     = print
         self._formatter         = self._default_formatter
+        self._debug_buffer      = list()
+        self._info_buffer       = list()
+        self._warning_buffer    = list()
+        self._error_buffer      = list()
         # initialize raw logger - take care of first time running --------------------------------------------------
         self.set_logger(**kwargs)
 
@@ -39,11 +43,38 @@ class Logger(object):
         self.close()
 
     def close(self):
+        self.flush_buffers()
         if self._stream:
             self._set_raw_logger()
             self._stream.flush()
             self._stream.close()
             self._stream = None
+
+    def buffer_debug(self, *args):
+        self._debug_buffer.append(args)
+
+    def buffer_info(self, *args):
+        self._info_buffer.append(args)
+
+    def buffer_warning(self, *args):
+        self._warning_buffer.append(args)
+
+    def buffer_error(self, *args):
+        self._error_buffer.append(args)
+
+    def flush_buffers(self):
+        for args in self._debug_buffer:
+            self.debug(*args)
+        self._debug_buffer.clear()
+        for args in self._info_buffer:
+            self.info(*args)
+        self._info_buffer.clear()
+        for args in self._warning_buffer:
+            self.warning(*args)
+        self._warning_buffer.clear()
+        for args in self._error_buffer:
+            self.error(*args)
+        self._error_buffer.clear()
 
     def debug(self, *args):
         self._debug_handler(*args)
@@ -59,7 +90,7 @@ class Logger(object):
 
     def set_formatter(self, formatter=None):
         try:
-            test_info = formatter('info', 'test')
+            test_info = formatter('info', 'test') # a test to show error when set this formatter
             self._formatter = formatter
             return
         except:
