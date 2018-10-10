@@ -1,12 +1,9 @@
 import setuptools
+from LRC.info import version
 
 # get readme description
 with open("README.md", "r") as fh:
     long_description = fh.read()
-
-with open("version", "r") as fh:
-    version = fh.read()
-    print('version = {}'.format(version) )
 
 setuptools.setup(
     name="LRC",
