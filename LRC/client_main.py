@@ -6,7 +6,7 @@ def main():
     from LRC.Common.logger import logger
     from LRC.Client.ClientUI import ClientUI
 
-    logger.set_logger('kivy')
+    logger.set_logger(name='kivy')
 
     # start application
     ClientUI().run()

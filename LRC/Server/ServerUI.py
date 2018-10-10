@@ -280,7 +280,7 @@ class LRCServerUI(App):
 
 if __name__ == '__main__':
     freeze_support()
-    logger.set_logger('kivy')
+    logger.set_logger(name='kivy')
     LRCServerUI().run()
     pass
 

@@ -13,7 +13,7 @@ def start_lrc_server_console(config, commands, commands_kwargs):
         from multiprocessing import freeze_support
         from LRC.Server.ServerUI import LRCServerUI
 
-        logger.set_logger('kivy')
+        logger.set_logger(name='kivy')
         freeze_support()
         # todo : sync config to server UI
         LRCServerUI().run()
