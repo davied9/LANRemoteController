@@ -235,7 +235,8 @@ LRC server
 
 [options]
     --help, -h              show this help info
-    --no-ui                 disable server UI, UI is disable by default for server
+    --version               show LRC version
+    --no-ui                 disable server UI, UI is disable by default
     --enable-ui             enable server UI
     --verbose               show more information in log
     --config-file=FILEPATH  load LRC configurations from FILEPATH(json file format)

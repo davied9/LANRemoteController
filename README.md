@@ -67,5 +67,5 @@ call `lrcserver` to start server
 
 call `lrcclient` to start client
 
-type `lrcserver -h` or `lrcclient -h`[TODO] for help
+type `lrcserver -h` or `lrcclient -h` for help
 

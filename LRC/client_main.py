@@ -1,4 +1,13 @@
 def main():
+    import sys
+    if '-h' in sys.argv or '--help' in sys.argv:
+        print(_help_str())
+        exit()
+    if '--version' in sys.argv:
+        from LRC.Common.info import version
+        print('LRC version {}'.format(version))
+        exit()
+
     import os
     from kivy.config import Config
     Config.read(os.path.join('Client', 'android.ini'))
@@ -10,6 +19,21 @@ def main():
 
     # start application
     ClientUI().run()
+
+
+def _help_str():
+    return '''
+LRC server
+[Usage]
+    lrcwaiter
+
+[options]
+    --help, -h              show this help info
+    --version               show LRC version
+
+[more]
+    for more infomation, see https://github.com/davied9/LANRemoteController
+'''
 
 
 if '__main__' == __name__:
