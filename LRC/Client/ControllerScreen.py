@@ -54,7 +54,7 @@ Builder.load_string('''
         Label:
             id: info_label
             size_hint: 1, 0.05
-            font_size: 12
+            font_size: 25
             color: 1, 0, 0, 1
 ''')
 
