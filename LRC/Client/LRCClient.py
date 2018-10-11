@@ -13,11 +13,11 @@ def _verbose_info(info):
 
 class LRCClient(object):
 
-    def __init__(self, **kwargs):
+    def __init__(self, *, verbose=False, server_address=('127.0.0.1',35530), **kwargs):
         self._verbose = False
         self.verbose_info = empty
-        self.verbose = True if 'verbose' in kwargs and kwargs['verbose'] else False
-        self.server_address = None
+        self.verbose = verbose
+        self.server_address = server_address
         self.waiter_address = None
         self.socket = socket(AF_INET, SOCK_DGRAM)
         self.socket.settimeout(0.5)

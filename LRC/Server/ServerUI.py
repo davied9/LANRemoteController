@@ -68,14 +68,27 @@ class _log_buffer(object):
 
 class LRCServerUI(App):
 
-    def __init__(self, **kwargs):
+    @property
+    def verbose(self):
+        return self._verbose
+
+    @verbose.setter
+    def verbose(self, val):
+        self._verbose = val
+        if val: self.verbose_info = self._verbose_info_imp
+        else:   self.verbose_info = empty
+
+    # interfaces
+    def __init__(self, *, verbose=False,
+                 server_address=('0.0.0.0', 35530), waiter_address=('0.0.0.0', 35527),
+                 watch_interval=0.5, **kwargs):
         super(LRCServerUI, self).__init__(**kwargs)
         # servers
-        self.server_address = ('0.0.0.0', 35530)
+        self.server_address = server_address
         self.server_process = None
-        self.waiter_address = ('0.0.0.0', 35527)
+        self.waiter_address = waiter_address
         self.waiter_process = None
-        self.watch_interval = 0.5
+        self.watch_interval = watch_interval
         # regexp
         self.ip_matcher = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
         self.comm_manager = Manager()
@@ -87,9 +100,7 @@ class LRCServerUI(App):
         # state
         self.running = False
         # other configurations
-        self.verbose = False
-        self._verbose_info = empty
-
+        self.verbose = verbose
 
     def build(self):
         # UI
@@ -166,9 +177,6 @@ class LRCServerUI(App):
         self.log_buffer.log(message)
         self.log_window.height = (self.log_buffer.size + 1) * (self.log_window.font_size * 1.25)
         self.log_window.text = self.log_buffer.pack_messages()
-
-    def _sync_size_to_text_size(self, component, new_size):
-        component.text_size = new_size
 
     def parse_ip(self, str):
         if '' == str or 'localhost' == str:
@@ -264,6 +272,10 @@ class LRCServerUI(App):
             self.waiter_ip_input.disabled = False
             self.waiter_port_input.disabled = False
 
+    # functional
+    def _sync_size_to_text_size(self, component, new_size):
+        component.text_size = new_size
+
     def _server_watcher(self):
         while True:
             if not self.server_process:
@@ -304,6 +316,9 @@ class LRCServerUI(App):
             self.stop_waiter()
         else: # start new waiter
             self.start_waiter()
+
+    def _verbose_info_imp(self, info):
+        self.log('Server : [verbose] {}'.format(info))
 
 
 if __name__ == '__main__':

@@ -26,10 +26,7 @@ def start_lrc_server_main(config, commands, commands_kwargs):
         if commands:
             logger.warning('LRC : UI is enabled, commands {} will not be executed.'.format(commands))
 
-        ui = LRCServerUI()
-        ui.update_config(verbose=config.verbose)
-        ui.server_address = config.server_address
-        ui.waiter_address = config.waiter_address
+        ui = LRCServerUI(**config.server_config)
         ui.run()
     else:
         from LRC.Server.CommandServer import CommandServer
