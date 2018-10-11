@@ -20,8 +20,8 @@ if '__main__' == __name__ :
 
     # initialize
     script_file = sys.argv[0]
-    project_root, _ = os.path.split(script_file)
-    project_root, _ = os.path.split(project_root)
+    project_root = os.path.dirname(script_file)
+    project_root = os.path.dirname(project_root)
     package_dir = os.path.join(project_root, 'LRC')
     os.chdir(project_root)
 
@@ -29,6 +29,9 @@ if '__main__' == __name__ :
     sys.path.append(os.path.dirname(sys.argv[0]))
 
     from Common.logger import logger # directly import from working directory to avoid not installed problem
+    for arg in sys.argv[1:]:
+        if arg.startswith('--log-file='):
+            logger.stream_id = arg[len('--log-file='):]
 
     # start the dirty work
     build_root = os.path.join(project_root,'dist','client','android')
