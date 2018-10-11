@@ -24,7 +24,7 @@ def build_main():
 
 
 def build_all(src_root, *, copy_to_history=False):
-    logger.info('start build LRC ...')
+    logger.info('start build LRC {} ...'.format(version))
     total = 0
     success = 0
 
@@ -55,7 +55,7 @@ def build_all(src_root, *, copy_to_history=False):
             logger.info('    build {} success, package : {}.'.format(k, v[1]))
             success += 1
     logger.info('')
-    logger.info('build LRC done : total {}, success {}'.format(total, success))
+    logger.info('done build LRC {} : total {}, success {}'.format(version, total, success))
 
 
 def build_server3(src_root, *, copy_to_history=False):
