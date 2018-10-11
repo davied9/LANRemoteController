@@ -59,7 +59,7 @@ Builder.load_string('''
             Label:
                 id: info_label
                 size_hint: 1, 0.05
-                font_size: 12
+                font_size: 25
                 color: 1, 0, 0, 1
 ''')
 
@@ -79,10 +79,12 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
 
     def on_pre_enter(self, *args):
         current_app = App.get_running_app()
+
         if not current_app.controller_sets:
             self._reload_controller_set_from_local()
         else:
             self._reload_controller_set_from_app()
+
         if current_app.client.server_address:
             self.connector.ip_button.text   = current_app.client.server_address[0]
             self.connector.port_button.text = str(current_app.client.server_address[1])

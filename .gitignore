@@ -274,3 +274,5 @@ build/
 *.egg-info/
 .eggs/
 
+# local backup files
+*.bac

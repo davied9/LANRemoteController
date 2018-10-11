@@ -35,6 +35,7 @@ class CommandServer(UDPServer):
         self.__is_main_server = False
         # initialize role
         self.role = 'not started' # 'not started' 'main' 'secondary'
+        self.__cleanup_commands = list()
 
     def finish_request(self, request, client_address):
         self._verbose_info('CommandServer : got request {} from client {}'.format(request, client_address))
@@ -85,6 +86,12 @@ class CommandServer(UDPServer):
             server.shutdown()
         # shutdown must be called in another thread, or it will be blocked forever
         Thread(target=shutdown_tunnel, args=(self,)).start()
+        for key in self.cleanup_commands:
+            try:
+                self._verbose_info('execute cleanup command {}'.format(key))
+                self.commands[key].execute()
+            except Exception as err:
+                logger.error('LRC : execute cleanup command {} failed {}({})'.format(key, err, err.args))
         self.role = 'not started'
 
     def dump_config(self):
@@ -100,7 +107,18 @@ class CommandServer(UDPServer):
     def sync_config(self): # sync this instance's config to the running command server with same address(ip,port)
         self.send_command('sync_config', **self._dump_remote_config())
 
+    def register_cleanup_command(self, *keys):
+        for key in keys:
+            if key in self.cleanup_commands:
+                self._verbose_info('duplicate cleanup command {}'.format(key))
+                continue
+            logger.info('CommandServer : add cleanup command {}'.format(key))
+            self.cleanup_commands.append(key)
+
     def register_command(self, key, command):
+        if key in self.commands.keys() and command == self.commands[key]:
+            self._verbose_info('duplicate command {} {}'.format(key, command))
+            return
         logger.info('CommandServer : add command {} {}'.format(key, command))
         self.commands[key] = command
 
@@ -192,6 +210,10 @@ class CommandServer(UDPServer):
         return self.__commands
 
     @property
+    def cleanup_commands(self):
+        return self.__cleanup_commands
+
+    @property
     def is_main_server(self):
         return self.__is_main_server
 
@@ -217,6 +239,7 @@ class CommandServer(UDPServer):
     def _init_basic_commands(self): # those should not be deleted
         self.register_command('quit', Command(name='quit', execute=self.quit))
         self.register_command('register_command', Command(name='register_command', execute=self._register_command_remotely, kwargs=dict()))
+        self.register_command('register_cleanup_command', Command(name='register_cleanup_command', execute=self.register_cleanup_command, args=tuple()))
         self.register_command('list_commands', Command(name='list_commands', execute=self._list_commands))
         self.register_command('sync_config', Command(name='sync_config', execute=self._apply_remote_config, kwargs=dict()))
 
@@ -249,7 +272,7 @@ class CommandServer(UDPServer):
     def _dump_local_config(self): # dump config can work all right only in local
         d = dict()
         d['commands']  = self.commands
-        # todo:
+        # todo: try to sync protocol
         # d['protocol']  = self.server_address
         return d
 
@@ -283,7 +306,7 @@ class CommandServer(UDPServer):
                 self.register_command(command_name, command)
                 success += 1
             except Exception as err:
-                logger.error('CommandServer : load command {} failed with {} from command body {}'.format(command_name, err.args, command_body))
+                logger.error('CommandServer : load command {} failed with {}({}) from command body {}'.format(command_name, err, err.args, command_body))
                 fail += 1
         return success, fail
 
@@ -292,7 +315,7 @@ class CommandServer(UDPServer):
             command_config = json.loads(command_config_string)
             return self._load_commands(**command_config)
         except Exception as err:
-            logger.error('CommandServer : load commands failed with {} from string {}'.format(err.args, command_config_string))
+            logger.error('CommandServer : load commands failed with {}({}) from string {}'.format(err, err.args, command_config_string))
 
     def _load_commands_from_file(self, command_file):
         try:
@@ -300,7 +323,7 @@ class CommandServer(UDPServer):
                 command_config_string = fp.read()
             return self._load_commands_from_string(command_config_string)
         except Exception as err:
-            logger.error('CommandServer : load commands failed with {} from file {}'.format(err.args, command_file))
+            logger.error('CommandServer : load commands failed with {}({}) from file {}'.format(err, err.args, command_file))
 
     def _verbose_info(self, message):
         self._verbose_info_handler('CommandServer : verbose : {}'.format(message))

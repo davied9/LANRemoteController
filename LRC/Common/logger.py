@@ -23,11 +23,16 @@ class Logger(object):
         self._warning_handler   = print
         self._error_handler     = print
         self._formatter         = self._default_formatter
+        self._debug_buffer      = list()
+        self._info_buffer       = list()
+        self._warning_buffer    = list()
+        self._error_buffer      = list()
         # initialize raw logger - take care of first time running --------------------------------------------------
         self.set_logger(**kwargs)
 
     def __del__(self):
         try: # to make this more robust, somehow directly will generate error
+            self.flush_buffers()
             self.close()
         except:
             pass
@@ -36,6 +41,7 @@ class Logger(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.flush_buffers()
         self.close()
 
     def close(self):
@@ -44,6 +50,33 @@ class Logger(object):
             self._stream.flush()
             self._stream.close()
             self._stream = None
+
+    def buffer_debug(self, *args):
+        self._debug_buffer.append(args)
+
+    def buffer_info(self, *args):
+        self._info_buffer.append(args)
+
+    def buffer_warning(self, *args):
+        self._warning_buffer.append(args)
+
+    def buffer_error(self, *args):
+        self._error_buffer.append(args)
+
+    def flush_buffers(self):
+        for args in self._debug_buffer:
+            self.debug(*args)
+        self._debug_buffer.clear()
+        for args in self._info_buffer:
+            self.info(*args)
+        self._info_buffer.clear()
+        for args in self._warning_buffer:
+            self.warning(*args)
+        self._warning_buffer.clear()
+        for args in self._error_buffer:
+            self.error(*args)
+        self._error_buffer.clear()
+
     def debug(self, *args):
         self._debug_handler(*args)
 
@@ -58,17 +91,17 @@ class Logger(object):
 
     def set_formatter(self, formatter=None):
         try:
-            test_info = formatter('info', 'test')
+            test_info = formatter('info', 'test') # a test to show error when set this formatter
             self._formatter = formatter
             return
         except:
             self._formatter = self._default_formatter
 
-    def set_logger(self, name='default', **kwargs):
+    def set_logger(self, *, name='default', log_file=None, **kwargs):
         self.close()
         self._set_raw_logger()
-        self.name = kwargs['name'] if 'name' in kwargs else name
-        self.stream_id = kwargs['log_file'] if 'log_file' in kwargs else None
+        self.name = name
+        self.stream_id = log_file
 
     def _first_run(self, op, *args): # first time info/warning/error is called, is when handlers are set
         # initialize all handlers at first-time running
@@ -225,5 +258,5 @@ if '__main__' == __name__: # test logger
         logger.set_formatter(formatter)
         logger.info('test default formatter', 'cannot be true')
 
-    _test_case_001()
+    _test_case_003()
     pass

@@ -3,22 +3,37 @@ from LRC.Common.logger import logger
 
 def main():
     import sys
-    config, commands, commands_kwargs = parse_config_from_console_line(*sys.argv[1:])
-    start_lrc_server_console(config, commands, commands_kwargs)
+    # parse config
+    config, commands, commands_kwargs, reserved = parse_config_from_console_line(sys.argv[1:])
+    # update system arguments to avoid kivy error
+    sys.argv = sys.argv[0:1]
+    sys.argv.extend(reserved)
+    # start server
+    start_lrc_server_main(config, commands, commands_kwargs)
 
 
-def start_lrc_server_console(config, commands, commands_kwargs):
+def start_lrc_server_main(config, commands, commands_kwargs):
 
     if config.enable_ui:
         from multiprocessing import freeze_support
         from LRC.Server.ServerUI import LRCServerUI
 
-        logger.set_logger('kivy')
         freeze_support()
-        LRCServerUI().run()
+
+        logger.set_logger(name='kivy')
+        logger.flush_buffers()
+
+        if commands:
+            logger.warning('LRC : UI is enabled, commands {} will not be executed.'.format(commands))
+
+        ui = LRCServerUI(**config.server_config)
+        ui.run()
     else:
         from LRC.Server.CommandServer import CommandServer
         import sys
+
+        logger.flush_buffers()
+
         # start a new command server if necessary
         command_server = CommandServer(**config.command_server_config)
         if command_server.is_running:
@@ -31,7 +46,7 @@ def start_lrc_server_console(config, commands, commands_kwargs):
             command_server.send_command(cmd, **commands_kwargs[cmd])
 
 
-def parse_config_from_console_line(*args):
+def parse_config_from_console_line(args):
     from LRC.Server.Config import LRCServerConfig
     from LRC.Common.empty import empty
     import re
@@ -44,34 +59,50 @@ def parse_config_from_console_line(*args):
     config_command_lines = dict()
     command_param_exp = re.compile(r'^(\w+)\=')
     verbose_info = empty
-    # parse command lines
+
+    # check some special flags
+    if '--help' in args or '-h' in args:
+        print(_help_commands())
+        exit()
+    if '--version' in args:
+        from LRC.Common.info import version
+        print('LRC version {}'.format(version))
+        exit()
+
+    # processed_flags contains all flags that have been processed before walk through all arguments
+    processed_flags = []
+    if '--verbose' in args:
+        config_command_lines['verbose'] = True
+        def _verbose_info(info):
+            logger.buffer_info('LRC : verbose : {}'.format(info))
+        verbose_info = _verbose_info
+        verbose_info('--verbose given, enable verbose info')
+        processed_flags.append('--verbose')
+    if '--enable-ui' in args:
+        config_command_lines['enable_ui'] = True
+        verbose_info('--enable-ui given, enable server UI')
+        processed_flags.append('--enable-ui')
+    if '--no-ui' in args:
+        config_command_lines['enable_ui'] = False
+        verbose_info('--no-ui given, disable server UI')
+        processed_flags.append('--no-ui')
+    # check the rest of them
     commands_kwargs['default'] = dict()
     current_command = 'default'
     ix = 0 # console argument index
     while ix < len(args):
         arg = args[ix]
-        if '--help' == arg or '-h' == arg:
-            logger.info(_help_commands())
-            exit()
-        elif '--no-ui' == arg:
-            config_command_lines['enable_ui'] = False
-            verbose_info('--no-ui given, disable UI')
-        elif '--enable-ui' == arg:
-            config_command_lines['enable_ui'] = True
-            verbose_info('--enable-ui given, enable UI')
-        elif '--verbose' == arg:
-            config_command_lines['verbose'] = True
-            def _verbose_info(info):
-                logger.info('LRC : verbose : {}'.format(info))
-            verbose_info = _verbose_info
-            verbose_info('--verbose given, enable verbose info')
-        elif arg.startswith('--config-file='):
+        if arg.startswith('--config-file='):
             config.config_file = arg[len('--config-file='):]
             verbose_info('--config-file given, loading config from file {}'.format(config.config_file))
+            verbose_info('config loaded : {}'.format(config))
+            processed_flags.append(arg)
         else:
             if arg.startswith('--'): # --xxx config flag
+                if arg not in processed_flags:
+                    reserved.append(arg)
+            elif arg.startswith('-'):
                 reserved.append(arg)
-                verbose_info('unknown flag {} given'.format(arg))
             else:
                 tmp = command_param_exp.findall(arg) # kkk=vvv
                 if len(tmp) > 0:
@@ -81,7 +112,7 @@ def parse_config_from_console_line(*args):
                         commands_kwargs[current_command][param_name] = eval(param_value_str)
                         verbose_info('add param "{}"({}) for command "{}"'.format(param_name, commands_kwargs[current_command][param_name], current_command))
                     except Exception as err:
-                        logger.error('LRC : parse command parameter failed from {} : {}'.format(param_value_str, err.args))
+                        logger.buffer_error('LRC : parse command parameter failed from {} : {}'.format(param_value_str, err.args))
                 else:
                     commands.append(arg)
                     current_command = commands[n_commands]
@@ -92,26 +123,34 @@ def parse_config_from_console_line(*args):
     # sync config with command line configurations
     config.apply_config(**config_command_lines)
     # clean up
-    if 0 == len(commands):
-        logger.info('LRC : no command given, start_lrc will be executed.')
+    if 0 == len(commands) and not config.enable_ui:
+        logger.buffer_info('LRC : no command given, start_lrc will be executed.')
         commands.append('start_lrc')
         commands_kwargs['start_lrc'] = dict()
         commands_kwargs['start_lrc'].update(**config.server_config)
         commands_kwargs['start_lrc'].update(**config.waiter_config)
 
     if 0 != len(reserved):
-        logger.warning('LRC : unknown options : {}.'.format(reserved))
+        msg = '\n'
+        for flag in reserved:
+            msg += '    {}\n'.format(flag)
+        logger.buffer_warning('LRC : options will be passed to kivy framework : {}.'.format(msg))
 
-    return config, commands, commands_kwargs
+    # for now, default command arguments are passed to command server
+    config._update_command_server_config(**commands_kwargs['default'])
+
+    return config, commands, commands_kwargs, reserved
 
 
 def _register_lrc_commands(command_server, config, commands_kwargs, register_remotely=False):
     from LRC.Server.Commands.LRCServer import start_lrc, start_lrc_server, start_lrc_waiter
     from LRC.Server.Commands.LRCServer import stop_lrc, stop_lrc_server, stop_lrc_waiter
+    from LRC.Server.Commands.LRCServer import quit as quit_lrc
     from LRC.Server.Command import Command
 
     remote_command_config = dict()
 
+    # start/stop LRC
     start_lrc_kwargs = dict()
     start_lrc_kwargs.update(**config.server_config)
     start_lrc_kwargs.update(**config.waiter_config)
@@ -131,6 +170,7 @@ def _register_lrc_commands(command_server, config, commands_kwargs, register_rem
         command_server.register_command('start_lrc', Command(name='start_lrc', execute=start_lrc, kwargs=start_lrc_kwargs))
         command_server.register_command('stop_lrc', Command(name='stop_lrc', execute=stop_lrc))
 
+    # start/stop LRC server
     start_lrc_server_kwargs = dict()
     start_lrc_server_kwargs.update(**config.server_config)
     if 'start_lrc_server' in commands_kwargs:
@@ -149,6 +189,7 @@ def _register_lrc_commands(command_server, config, commands_kwargs, register_rem
         command_server.register_command('start_lrc_server', Command(name='start_lrc_server', execute=start_lrc_server, kwargs=start_lrc_server_kwargs))
         command_server.register_command('stop_lrc_server', Command(name='stop_lrc_server', execute=stop_lrc_server))
 
+    # start/stop LRC waiter
     start_lrc_waiter_kwargs = dict()
     start_lrc_waiter_kwargs.update(**config.waiter_config)
     if 'start_lrc_waiter' in commands_kwargs:
@@ -167,6 +208,18 @@ def _register_lrc_commands(command_server, config, commands_kwargs, register_rem
         command_server.register_command('start_lrc_waiter', Command(name='start_lrc_waiter', execute=start_lrc_waiter, kwargs=start_lrc_waiter_kwargs))
         command_server.register_command('stop_lrc_waiter', Command(name='stop_lrc_waiter', execute=stop_lrc_waiter))
 
+    # quit LRC
+    if register_remotely:
+        remote_command_config['quit_lrc'] = {
+            "import":"LRC.Server.Commands.LRCServer",
+            "execute":"quit",
+        }
+        command_server.send_command('register_cleanup_command', args=('quit_lrc',))
+    else:
+        command_server.register_command('quit_lrc', Command(name='quit_lrc', execute=quit_lrc))
+        command_server.register_cleanup_command('quit_lrc')
+
+    # execute register command remotely
     if register_remotely:
         command_server.register_command_remotely(remote_command_config)
 
@@ -179,7 +232,8 @@ LRC server
 
 [options]
     --help, -h              show this help info
-    --no-ui                 disable server UI, UI is disable by default for server
+    --version               show LRC version
+    --no-ui                 disable server UI, UI is disable by default
     --enable-ui             enable server UI
     --verbose               show more information in log
     --config-file=FILEPATH  load LRC configurations from FILEPATH(json file format)
