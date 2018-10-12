@@ -115,9 +115,9 @@ class CommandServer(UDPServer):
             logger.info('CommandServer : add cleanup command {}'.format(key))
             self.cleanup_commands.append(key)
 
-    def register_command(self, key, command):
-        if key in self.commands.keys() and command == self.commands[key]:
-            self._verbose_info('duplicate command {} {}'.format(key, command))
+    def register_command(self, key, command, *, overwrite=False):
+        if not overwrite and key in self.commands.keys():
+            self._verbose_info('duplicate command {}, abort'.format(key))
             return
         logger.info('CommandServer : add command {} {}'.format(key, command))
         self.commands[key] = command
