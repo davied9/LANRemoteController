@@ -100,6 +100,7 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
     def finish_request(self, request, client_address):
         self._verbose_info('receive request {} from {}'.format(request, client_address))
         tag, kwargs = self.waiter_protocol.unpack_message(request[0])
+        self._verbose_info('unpack result : {}'.format(tag, kwargs))
         if 'controller' == tag:
             controller = kwargs['controller']
             key_combination = controller.get_key_list()

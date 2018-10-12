@@ -154,7 +154,7 @@ class Controller(object):
     @staticmethod
     def validate_key(key):
         N = len(key)
-        if key in Controller.settings.allowed_special_keys:
+        if 0 == N or key in Controller.settings.allowed_special_keys:
             return
         elif 1 == N: # letter or number
             if key.isalnum():
