@@ -122,28 +122,28 @@ class CommandServer(UDPServer):
         logger.info('CommandServer : add command {} {}'.format(key, command))
         self.commands[key] = command
 
-    def register_command_remotely(self, command_config):
-        self.send_command('register_command', command_config=command_config)
+    def register_command_remotely(self, command_config, *, overwrite=False):
+        self.send_command('register_command', command_config=command_config, overwrite=overwrite)
 
     def send_command(self, command, **kwargs):
         self._verbose_info('CommandServer : send command {}({}) to {}'.format(command, kwargs, self.command_server_address))
         self.socket.sendto(self.protocol.pack_message(command=command, **kwargs), self.command_server_address)
 
-    def load_commands(self, **command_config):
+    def load_commands(self, command_config, *, overwrite=False):
         logger.info('CommandServer : load commands from config :\n{}'.format(command_config))
-        success, fail = self._load_commands(**command_config)
+        success, fail = self._load_commands(command_config, overwrite=overwrite)
         logger.info('CommandServer : load commands from config done, total {}, success {}, fail {}'.format(
                 success+fail, success, fail))
 
-    def load_commands_from_string(self, command_config_string):
+    def load_commands_from_string(self, command_config_string, *, overwrite=False):
         logger.info('CommandServer : load commands from config string :\n{}'.format(command_config_string))
-        success, fail = self._load_commands_from_string(command_config_string)
+        success, fail = self._load_commands_from_string(command_config_string, overwrite=overwrite)
         logger.info('CommandServer : load commands from config string done, total {}, success {}, fail {}'.format(
                 success+fail, success, fail))
 
-    def load_commands_from_file(self, command_file):
+    def load_commands_from_file(self, command_file, *, overwrite=False):
         logger.info('CommandServer : load commands from config file :\n{}'.format(command_file))
-        success, fail = self._load_commands_from_file(command_file)
+        success, fail = self._load_commands_from_file(command_file, overwrite=overwrite)
         logger.info('CommandServer : load commands from config file done, total {}, success {}, fail {}'.format(
                 success+fail, success, fail))
 
@@ -238,7 +238,7 @@ class CommandServer(UDPServer):
 
     def _init_basic_commands(self): # those should not be deleted
         self.register_command('quit', Command(name='quit', execute=self.quit))
-        self.register_command('register_command', Command(name='register_command', execute=self._register_command_remotely, kwargs=dict()))
+        self.register_command('register_command', Command(name='register_command', execute=self.load_commands, kwargs=dict()))
         self.register_command('register_cleanup_command', Command(name='register_cleanup_command', execute=self.register_cleanup_command, args=tuple()))
         self.register_command('list_commands', Command(name='list_commands', execute=self._list_commands))
         self.register_command('sync_config', Command(name='sync_config', execute=self._apply_remote_config, kwargs=dict()))
@@ -297,31 +297,31 @@ class CommandServer(UDPServer):
         if 'ip' in kwargs:
             self.server_address = (kwargs["ip"], self.server_address[1])
 
-    def _load_commands(self, **command_config):
+    def _load_commands(self, command_config, *, overwrite=False):
         success=0
         fail=0
         for command_name, command_body in command_config.items():
             try:
                 command = parse_command(**command_body)
-                self.register_command(command_name, command)
+                self.register_command(command_name, command, overwrite=overwrite)
                 success += 1
             except Exception as err:
                 logger.error('CommandServer : load command {} failed with {}({}) from command body {}'.format(command_name, err, err.args, command_body))
                 fail += 1
         return success, fail
 
-    def _load_commands_from_string(self, command_config_string):
+    def _load_commands_from_string(self, command_config_string, *, overwrite=False):
         try:
             command_config = json.loads(command_config_string)
-            return self._load_commands(**command_config)
+            return self._load_commands(**command_config, overwrite=overwrite)
         except Exception as err:
             logger.error('CommandServer : load commands failed with {}({}) from string {}'.format(err, err.args, command_config_string))
 
-    def _load_commands_from_file(self, command_file):
+    def _load_commands_from_file(self, command_file, *, overwrite=False):
         try:
             with open(command_file, 'r') as fp:
                 command_config_string = fp.read()
-            return self._load_commands_from_string(command_config_string)
+            return self._load_commands_from_string(command_config_string, overwrite=overwrite)
         except Exception as err:
             logger.error('CommandServer : load commands failed with {}({}) from file {}'.format(err, err.args, command_file))
 
@@ -335,8 +335,6 @@ class CommandServer(UDPServer):
             message += '{:22} -- {}\n'.format(k, v)
         logger.info(message)
 
-    def _register_command_remotely(self, command_config): # entry for command "register_command"
-        self.load_commands(**command_config) # one more unpack needed for remotely register command
 
 
 if '__main__' == __name__:
