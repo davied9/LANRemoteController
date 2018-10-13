@@ -24,8 +24,8 @@ class Command(BaseCommand):
             else:
                 _args = self.args
             if kwargs:
-                _kwargs = self.kwargs.copy()
-                _kwargs.update(kwargs)
+                _kwargs = kwargs
+                _kwargs.update(self.kwargs)
             else:
                 _kwargs = self.kwargs
             self._execute_handler(*_args, **_kwargs)
@@ -42,8 +42,8 @@ class Command(BaseCommand):
             if args:
                 raise ValueError('execute handler do not support args')
             if kwargs:
-                _kwargs = self.kwargs.copy()
-                _kwargs.update(kwargs)
+                _kwargs = kwargs
+                _kwargs.update(self.kwargs)
             else:
                 _kwargs = self.kwargs
             self._execute_handler(**_kwargs)
