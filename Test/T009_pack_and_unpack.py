@@ -14,6 +14,12 @@ def funny(portal, *args, **kwargs):
     print('    args : ', args)
     print('    kwargs : ', kwargs)
 
+def add_on(**kwargs):
+    print('    kwargs before : ', kwargs)
+    kwargs['add_on'] = 'a new one'
+    print('    kwargs after : ', kwargs)
+
+
 if '__main__' == __name__:
     kwargs = dict()
     kwargs['kwargs'] = {
@@ -41,4 +47,7 @@ if '__main__' == __name__:
     print('4 try :')
     target(args=kwargs['args'])
 
-
+    print('5 try :') # any modification on the unpacked argument will not change the original one
+    print('before : ', kwargs)
+    add_on(**kwargs)
+    print('after : ', kwargs)
