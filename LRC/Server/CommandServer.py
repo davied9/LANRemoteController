@@ -105,6 +105,7 @@ class CommandServer(UDPServer):
         self._apply_remote_config(**kwargs)
 
     def sync_config(self): # sync this instance's config to the running command server with same address(ip,port)
+        # todo : sync_config command should actually do the following code, but for now just send 'sync_config' command
         self.send_command('sync_config', **self._dump_remote_config())
 
     def register_cleanup_command(self, *keys):
@@ -118,34 +119,36 @@ class CommandServer(UDPServer):
     def register_command(self, key, command, *, overwrite=False):
         if not overwrite and key in self.commands.keys():
             self._verbose_info('duplicate command {}, abort'.format(key))
-            return
+            return False
         logger.info('CommandServer : add command {} {}'.format(key, command))
         self.commands[key] = command
+        return True
 
     def register_command_remotely(self, command_config, *, overwrite=False):
         self.send_command('register_command', command_config=command_config, overwrite=overwrite)
 
     def send_command(self, command, **kwargs):
+        # todo : send_command should first check local configurations, make sure local settings of commands should be executed
         self._verbose_info('CommandServer : send command {}({}) to {}'.format(command, kwargs, self.command_server_address))
         self.socket.sendto(self.protocol.pack_message(command=command, **kwargs), self.command_server_address)
 
     def load_commands(self, command_config, *, overwrite=False):
         logger.info('CommandServer : load commands from config :\n{}'.format(command_config))
-        success, fail = self._load_commands(command_config, overwrite=overwrite)
-        logger.info('CommandServer : load commands from config done, total {}, success {}, fail {}'.format(
-                success+fail, success, fail))
+        done, fail, ignore = self._load_commands(command_config, overwrite=overwrite)
+        logger.info('CommandServer : load commands from config done, total {}, done {}, ignore {}, fail {}'.format(
+                done+fail+ignore, done, ignore, fail))
 
     def load_commands_from_string(self, command_config_string, *, overwrite=False):
         logger.info('CommandServer : load commands from config string :\n{}'.format(command_config_string))
-        success, fail = self._load_commands_from_string(command_config_string, overwrite=overwrite)
-        logger.info('CommandServer : load commands from config string done, total {}, success {}, fail {}'.format(
-                success+fail, success, fail))
+        done, fail, ignore = self._load_commands_from_string(command_config_string, overwrite=overwrite)
+        logger.info('CommandServer : load commands from config string done, total {}, done {}, ignore {}, fail {}'.format(
+                done+fail+ignore, done, ignore, fail))
 
     def load_commands_from_file(self, command_file, *, overwrite=False):
         logger.info('CommandServer : load commands from config file :\n{}'.format(command_file))
-        success, fail = self._load_commands_from_file(command_file, overwrite=overwrite)
-        logger.info('CommandServer : load commands from config file done, total {}, success {}, fail {}'.format(
-                success+fail, success, fail))
+        done, fail, ignore = self._load_commands_from_file(command_file, overwrite=overwrite)
+        logger.info('CommandServer : load commands from config file done, total {}, done {}, ignore {}, fail {}'.format(
+                done+fail+ignore, done, ignore, fail))
 
     # properties
     @property
@@ -298,17 +301,20 @@ class CommandServer(UDPServer):
             self.server_address = (kwargs["ip"], self.server_address[1])
 
     def _load_commands(self, command_config, *, overwrite=False):
-        success=0
+        done=0
         fail=0
+        ignore=0
         for command_name, command_body in command_config.items():
             try:
                 command = parse_command(**command_body)
-                self.register_command(command_name, command, overwrite=overwrite)
-                success += 1
+                if self.register_command(command_name, command, overwrite=overwrite):
+                    done += 1
+                else:
+                    ignore += 1
             except Exception as err:
                 logger.error('CommandServer : load command {} failed with {}({}) from command body {}'.format(command_name, err, err.args, command_body))
                 fail += 1
-        return success, fail
+        return done, fail, ignore
 
     def _load_commands_from_string(self, command_config_string, *, overwrite=False):
         try:
