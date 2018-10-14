@@ -189,7 +189,7 @@ class LRCServerManager(object):
 
     # commands interfaces
     def start_server(self, **kwargs):
-        self._update_server_config(kwargs)
+        kwargs = self._update_server_config(kwargs)
         self._start_server(**kwargs)
 
     def stop_server(self):
@@ -200,7 +200,7 @@ class LRCServerManager(object):
             self._server_process = None
 
     def start_waiter(self, **kwargs):
-        self._update_waiter_config(kwargs)
+        kwargs = self._update_waiter_config(kwargs)
         self._start_waiter(**kwargs)
 
     def stop_waiter(self):
@@ -227,6 +227,7 @@ class LRCServerManager(object):
             config['client_list'] = self.client_list
         if 'log_mailbox' not in config or config['log_mailbox'] is None and self.log_mailbox:
             config['log_mailbox'] = self.log_mailbox
+        return config
 
     def _start_server(self, **kwargs):
         if self._server_process:
@@ -251,6 +252,7 @@ class LRCServerManager(object):
             config['client_list'] = self.client_list
         if 'log_mailbox' not in config or config['log_mailbox'] is None and self.log_mailbox:
             config['log_mailbox'] = self.log_mailbox
+        return config
 
     def _start_waiter(self, **kwargs):
         if self._waiter_process:
@@ -281,7 +283,11 @@ class LRCServerManager(object):
             try:
                 logger.info(self.log_mailbox.get()) # get will block until there is data
             except Exception as err:
-                if self.communication_manager:
+                if len(err.args) >= 4 and 32 == err.args[0] and 232 == err.args[3]:
+                    logger.warning('LRC : {} -- closing servers.'.format(err))
+                    self.quit()
+                    break
+                elif self.communication_manager:
                     logger.error('LRC : mailbox error : {}({})'.format(err, err.args))
                 else:
                     logger.info('LRC : closing servers.')
