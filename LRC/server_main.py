@@ -36,11 +36,9 @@ def start_lrc_server_main(config, commands, commands_kwargs):
 
         # start a new command server if necessary
         command_server = CommandServer(**config.command_server_config)
-        if command_server.is_running:
-            _register_lrc_commands(command_server, config, commands_kwargs, register_remotely=True)
-        else:
+        _register_lrc_commands(command_server, config, commands_kwargs)
+        if not command_server.is_running:
             command_server.start()
-            _register_lrc_commands(command_server, config, commands_kwargs, register_remotely=False) # register after default command file loaded
         # send the command
         for cmd in commands:
             command_server.send_command(cmd, **commands_kwargs[cmd])
@@ -123,12 +121,12 @@ def parse_config_from_console_line(args):
     # sync config with command line configurations
     config.apply_config(**config_command_lines)
     # clean up
-    if 0 == len(commands) and not config.enable_ui:
-        logger.buffer_info('LRC : no command given, start_lrc will be executed.')
-        commands.append('start_lrc')
-        commands_kwargs['start_lrc'] = dict()
-        commands_kwargs['start_lrc'].update(**config.server_config)
-        commands_kwargs['start_lrc'].update(**config.waiter_config)
+    # if 0 == len(commands) and not config.enable_ui:
+    #     logger.buffer_info('LRC : no command given, start_lrc will be executed.')
+    #     commands.append('start_lrc')
+    #     commands_kwargs['start_lrc'] = dict()
+    #     commands_kwargs['start_lrc'].update(**config.server_config)
+    #     commands_kwargs['start_lrc'].update(**config.waiter_config)
 
     if 0 != len(reserved):
         msg = '\n'
@@ -142,13 +140,11 @@ def parse_config_from_console_line(args):
     return config, commands, commands_kwargs, reserved
 
 
-def _register_lrc_commands(command_server, config, commands_kwargs, register_remotely=False):
+def _register_lrc_commands(command_server, config, commands_kwargs):
     from LRC.Server.Commands.LRCServer import start_lrc, start_lrc_server, start_lrc_waiter
     from LRC.Server.Commands.LRCServer import stop_lrc, stop_lrc_server, stop_lrc_waiter
     from LRC.Server.Commands.LRCServer import quit as quit_lrc
     from LRC.Server.Command import Command
-
-    remote_command_config = dict()
 
     # start/stop LRC
     start_lrc_kwargs = dict()
@@ -156,72 +152,28 @@ def _register_lrc_commands(command_server, config, commands_kwargs, register_rem
     start_lrc_kwargs.update(**config.waiter_config)
     if 'start_lrc' in commands_kwargs:
         start_lrc_kwargs.update(**commands_kwargs['start_lrc'])
-    if register_remotely:
-        remote_command_config['start_lrc'] = {
-            "import":"LRC.Server.Commands.LRCServer",
-            "execute":"start_lrc",
-            "kwargs": start_lrc_kwargs
-        }
-        remote_command_config['stop_lrc'] = {
-            "import":"LRC.Server.Commands.LRCServer",
-            "execute":"stop_lrc"
-        }
-    else:
-        command_server.register_command('start_lrc', Command(name='start_lrc', execute=start_lrc, kwargs=start_lrc_kwargs))
-        command_server.register_command('stop_lrc', Command(name='stop_lrc', execute=stop_lrc))
+    command_server.register_command('start_lrc', Command(name='start_lrc', execute=start_lrc, kwargs=start_lrc_kwargs))
+    command_server.register_command('stop_lrc', Command(name='stop_lrc', execute=stop_lrc))
 
     # start/stop LRC server
     start_lrc_server_kwargs = dict()
     start_lrc_server_kwargs.update(**config.server_config)
     if 'start_lrc_server' in commands_kwargs:
         start_lrc_server_kwargs.update(**commands_kwargs['start_lrc_server'])
-    if register_remotely:
-        remote_command_config['start_lrc_server'] = {
-            "import":"LRC.Server.Commands.LRCServer",
-            "execute":"start_lrc_server",
-            "kwargs": start_lrc_server_kwargs
-        }
-        remote_command_config['stop_lrc_server'] = {
-            "import":"LRC.Server.Commands.LRCServer",
-            "execute":"stop_lrc_server"
-        }
-    else:
-        command_server.register_command('start_lrc_server', Command(name='start_lrc_server', execute=start_lrc_server, kwargs=start_lrc_server_kwargs))
-        command_server.register_command('stop_lrc_server', Command(name='stop_lrc_server', execute=stop_lrc_server))
+    command_server.register_command('start_lrc_server', Command(name='start_lrc_server', execute=start_lrc_server, kwargs=start_lrc_server_kwargs))
+    command_server.register_command('stop_lrc_server', Command(name='stop_lrc_server', execute=stop_lrc_server))
 
     # start/stop LRC waiter
     start_lrc_waiter_kwargs = dict()
     start_lrc_waiter_kwargs.update(**config.waiter_config)
     if 'start_lrc_waiter' in commands_kwargs:
         start_lrc_waiter_kwargs.update(**commands_kwargs['start_lrc_waiter'])
-    if register_remotely:
-        remote_command_config['start_lrc_waiter'] = {
-            "import":"LRC.Server.Commands.LRCServer",
-            "execute":"start_lrc_waiter",
-            "kwargs": start_lrc_waiter_kwargs
-        }
-        remote_command_config['stop_lrc_waiter'] = {
-            "import":"LRC.Server.Commands.LRCServer",
-            "execute":"stop_lrc_waiter"
-        }
-    else:
-        command_server.register_command('start_lrc_waiter', Command(name='start_lrc_waiter', execute=start_lrc_waiter, kwargs=start_lrc_waiter_kwargs))
-        command_server.register_command('stop_lrc_waiter', Command(name='stop_lrc_waiter', execute=stop_lrc_waiter))
+    command_server.register_command('start_lrc_waiter', Command(name='start_lrc_waiter', execute=start_lrc_waiter, kwargs=start_lrc_waiter_kwargs))
+    command_server.register_command('stop_lrc_waiter', Command(name='stop_lrc_waiter', execute=stop_lrc_waiter))
 
     # quit LRC
-    if register_remotely:
-        remote_command_config['quit_lrc'] = {
-            "import":"LRC.Server.Commands.LRCServer",
-            "execute":"quit",
-        }
-        command_server.send_command('register_cleanup_command', args=('quit_lrc',))
-    else:
-        command_server.register_command('quit_lrc', Command(name='quit_lrc', execute=quit_lrc))
-        command_server.register_cleanup_command('quit_lrc')
-
-    # execute register command remotely
-    if register_remotely:
-        command_server.register_command_remotely(remote_command_config)
+    command_server.register_command('quit_lrc', Command(name='quit_lrc', execute=quit_lrc))
+    command_server.register_cleanup_command('quit_lrc')
 
 
 def _help_commands():
