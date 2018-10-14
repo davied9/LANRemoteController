@@ -142,7 +142,8 @@ class CommandServer(UDPServer):
                     else:
                         kwargs.update(self.commands[command].kwargs)
                 except Exception as err:
-                    logger.error('CommandServer : parse command kwargs failed : {}({})'.format(err, err.args))
+                    logger.error('CommandServer : [abort] parse command kwargs failed : {}({})'.format(err, err.args))
+                    return
             if hasattr(self.commands[command], 'args'):
                 try:
                     if self.commands[command].args is None:
@@ -154,7 +155,8 @@ class CommandServer(UDPServer):
                             _args.extend(list(args))
                         kwargs['args'] = _args
                 except Exception as err:
-                    logger.error('CommandServer : parse command args failed : {}({})'.format(err, err.args))
+                    logger.error('CommandServer : [abort] parse command args failed : {}({})'.format(err, err.args))
+                    return
         self.socket.sendto(self.protocol.pack_message(command=command, **kwargs), self.command_server_address)
 
     def load_commands(self, command_config, *, overwrite=False):
