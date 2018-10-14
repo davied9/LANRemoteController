@@ -232,19 +232,24 @@ class CommandServer(UDPServer):
         self.__is_main_server = val
 
     # functional
-    def _init_commands(self):
-        default_commands_file = os.path.abspath(os.path.join('LRC','Server','commands.json'))
+    def _init_commands(self): # loading default commands from current directory
+        default_commands_file = os.path.abspath('default_commands.json')
         try:
-            self.load_commands_from_file(default_commands_file)
+            self._load_commands_from_file(default_commands_file)
         except Exception as err:
-            logger.error('CommandServer : load commands from default command file {} failed : {}'.format(default_commands_file, err.args))
+            self._verbose_info('CommandServer : load commands from default command file {} failed : {}'.format(default_commands_file, err.args))
 
     def _init_basic_commands(self): # those should not be deleted
-        self.register_command('quit', Command(name='quit', execute=self.quit))
-        self.register_command('register_command', Command(name='register_command', execute=self.load_commands, kwargs=dict()))
-        self.register_command('register_cleanup_command', Command(name='register_cleanup_command', execute=self.register_cleanup_command, args=tuple()))
-        self.register_command('list_commands', Command(name='list_commands', execute=self._list_commands))
-        self.register_command('sync_config', Command(name='sync_config', execute=self._apply_remote_config, kwargs=dict()))
+        # place associated command definition is not approved
+        # do not define command like 'def execute(var1, var2)'
+        # use kwargs instead, like 'def execute(var1='default', var2=None)'
+        # place not related command is OK, such as :
+        # 'def execute(*args)'
+        self.commands['quit'] = Command(name='quit', execute=self.quit)
+        self.commands['register_command'] = Command(name='register_command', execute=self.load_commands, kwargs=dict())
+        self.commands['register_cleanup_command'] = Command(name='register_cleanup_command', execute=self.register_cleanup_command, args=tuple())
+        self.commands['list_commands'] = Command(name='list_commands', execute=self._list_commands)
+        self.commands['sync_config'] = Command(name='sync_config', execute=self._apply_remote_config, kwargs=dict())
 
     def _clear_commands(self):
         for k in self.commands.keys():
