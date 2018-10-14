@@ -18,21 +18,23 @@ class Command(BaseCommand):
 
     def execute(self, *args, **kwargs):
         if self.args is not None and self.kwargs is not None:
-            _args = list(args)
-            _args.extend(self.args)
-            kwargs.update(self.kwargs)
-            self._execute_handler(*_args, **kwargs)
+            _args = list(self.args)
+            _args.extend(list(args))
+            _kwargs = self.kwargs.copy()
+            _kwargs.update(kwargs)
+            self._execute_handler(*_args, **_kwargs)
         elif self.args is not None and self.kwargs is None:
-            _args = list(args)
-            _args.extend(self.args)
+            _args = list(self.args)
+            _args.extend(list(args))
             if kwargs:
                 raise ValueError('execute handler do not support kwargs')
             self._execute_handler(*_args)
         elif self.args is None and self.kwargs is not None:
             if args:
                 raise ValueError('execute handler do not support args')
-            kwargs.update(self.kwargs)
-            self._execute_handler(**kwargs)
+            _kwargs = self.kwargs.copy()
+            _kwargs.update(kwargs)
+            self._execute_handler(**_kwargs)
         else: # self.args is None and self.kwargs is None
             if args or kwargs:
                 raise ValueError('execute handler do not support args and kwargs')
