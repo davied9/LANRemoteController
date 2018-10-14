@@ -2,6 +2,7 @@ from __future__ import print_function
 from LRC.Server.Config import LRCServerConfig
 from LRC.Server.Command import Command, parse_command
 from LRC.Common.logger import logger
+from LRC.Common.Exceptions import ArgumentError
 from LRC.Common.empty import empty
 from LRC.Protocol.v1.CommandServerProtocol import CommandServerProtocol
 from multiprocessing import Manager
@@ -106,6 +107,7 @@ class CommandServer(UDPServer):
 
     def sync_config(self): # sync this instance's config to the running command server with same address(ip,port)
         # todo : sync_config command should actually do the following code, but for now just send 'sync_config' command
+        # todo : sync verbose for only current command
         self.send_command('sync_config', **self._dump_remote_config())
 
     def register_cleanup_command(self, *keys):
@@ -127,9 +129,32 @@ class CommandServer(UDPServer):
     def register_command_remotely(self, command_config, *, overwrite=False):
         self.send_command('register_command', command_config=command_config, overwrite=overwrite)
 
-    def send_command(self, command, **kwargs):
-        # todo : send_command should first check local configurations, make sure local settings of commands should be executed
+    def send_command(self, command, *, args=(), **kwargs):
+        # done : send_command should first check local configurations, make sure local settings of commands should be executed
         self._verbose_info('CommandServer : send command {}({}) to {}'.format(command, kwargs, self.command_server_address))
+        if command in self.commands.keys():
+            self._verbose_info('CommandServer : local command found {}({})'.format(command, self.commands[command]))
+            if hasattr(self.commands[command], 'kwargs'):
+                try:
+                    if self.commands[command].kwargs is None:
+                        if kwargs:
+                            raise ArgumentError('command {} do not support kwargs, got {}'.format(command, kwargs))
+                    else:
+                        kwargs.update(self.commands[command].kwargs)
+                except Exception as err:
+                    logger.error('CommandServer : parse command kwargs failed : {}({})'.format(err, err.args))
+            if hasattr(self.commands[command], 'args'):
+                try:
+                    if self.commands[command].args is None:
+                        if args:
+                            raise ArgumentError('command {} do not support args, got {}'.format(command, args))
+                    else:
+                        _args = list(self.commands[command].args)
+                        if args:
+                            _args.extend(list(args))
+                        kwargs['args'] = _args
+                except Exception as err:
+                    logger.error('CommandServer : parse command args failed : {}({})'.format(err, err.args))
         self.socket.sendto(self.protocol.pack_message(command=command, **kwargs), self.command_server_address)
 
     def load_commands(self, command_config, *, overwrite=False):
