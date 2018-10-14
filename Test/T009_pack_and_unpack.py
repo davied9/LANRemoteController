@@ -19,6 +19,10 @@ def add_on(**kwargs):
     kwargs['add_on'] = 'a new one'
     print('    kwargs after : ', kwargs)
 
+def separate(*, args=(), **kwargs):
+    print('    args : ', args)
+    print('    kwargs : ', kwargs)
+
 
 if '__main__' == __name__:
     kwargs = dict()
@@ -51,3 +55,6 @@ if '__main__' == __name__:
     print('before : ', kwargs)
     add_on(**kwargs)
     print('after : ', kwargs)
+
+    print('6 try :')
+    separate(**kwargs)
