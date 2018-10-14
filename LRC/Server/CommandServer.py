@@ -7,6 +7,7 @@ from LRC.Common.empty import empty
 from LRC.Protocol.v1.CommandServerProtocol import CommandServerProtocol
 from multiprocessing import Manager
 from threading import Thread
+from socket import socket, AF_INET, SOCK_DGRAM
 import os, json
 
 try: # python 2
@@ -18,15 +19,14 @@ except ImportError:  # python 3
 class CommandServer(UDPServer):
 
     # interfaces
-    def __init__(self, **kwargs):
+    def __init__(self, *, verbose=False, server_address=('127.0.0.1', 35589), ip=None, port=None, **kwargs):
         # initial configuration
-        self.verbose = kwargs["verbose"] if 'verbose' in kwargs else False
+        self.verbose = verbose
         # initialize command server
-        server_address = kwargs["server_address"] if 'server_address' in kwargs else ('127.0.0.1', 35589)
-        if 'port' in kwargs:
-            server_address = (server_address[0], kwargs["port"])
-        if 'ip' in kwargs:
-            server_address = (kwargs["ip"], server_address[1])
+        if port:
+            server_address = (server_address[0], port)
+        if ip:
+            server_address = (ip, server_address[1])
         super(CommandServer, self).__init__(server_address=server_address, RequestHandlerClass=None, bind_and_activate=False)
         # initialize protocol
         self.protocol = CommandServerProtocol()
@@ -37,6 +37,8 @@ class CommandServer(UDPServer):
         # initialize role
         self.role = 'not started' # 'not started' 'main' 'secondary'
         self.__cleanup_commands = list()
+        # initialize temp_socket
+        self._temp_socket = None
 
     def finish_request(self, request, client_address):
         self._verbose_info('CommandServer : got request {} from client {}'.format(request, client_address))
@@ -53,11 +55,13 @@ class CommandServer(UDPServer):
                 else:
                     args = list()
                 del kwargs['name']
-                self._execute_command(client_address, command, *args, **kwargs)
+                self._execute_command_from_remote(client_address, command, *args, **kwargs)
             elif 'request' == tag:
                 self._respond_request(client_address, request=kwargs['name'], **kwargs)
             elif 'running_test' == tag:
                 self._respond_running_test(client_address, **kwargs)
+            elif 'respond' == tag:
+                self._process_respond(client_address, **kwargs)
         except Exception as err:
             logger.error('CommandServer : failed to process request {} from {}'.format(request, client_address))
 
@@ -130,34 +134,10 @@ class CommandServer(UDPServer):
         self.send_command('register_command', command_config=command_config, overwrite=overwrite)
 
     def send_command(self, command, *, args=(), **kwargs):
-        # done : send_command should first check local configurations, make sure local settings of commands should be executed
-        self._verbose_info('CommandServer : send command {}({}) to {}'.format(command, kwargs, self.command_server_address))
-        if command in self.commands.keys():
-            self._verbose_info('CommandServer : local command found {}({})'.format(command, self.commands[command]))
-            if hasattr(self.commands[command], 'kwargs'):
-                try:
-                    if self.commands[command].kwargs is None:
-                        if kwargs:
-                            raise ArgumentError('command {} do not support kwargs, got {}'.format(command, kwargs))
-                    else:
-                        kwargs.update(self.commands[command].kwargs)
-                except Exception as err:
-                    logger.error('CommandServer : [abort] parse command kwargs failed : {}({})'.format(err, err.args))
-                    return
-            if hasattr(self.commands[command], 'args'):
-                try:
-                    if self.commands[command].args is None:
-                        if args:
-                            raise ArgumentError('command {} do not support args, got {}'.format(command, args))
-                    else:
-                        _args = list(self.commands[command].args)
-                        if args:
-                            _args.extend(list(args))
-                        kwargs['args'] = _args
-                except Exception as err:
-                    logger.error('CommandServer : [abort] parse command args failed : {}({})'.format(err, err.args))
-                    return
-        self.socket.sendto(self.protocol.pack_message(command=command, **kwargs), self.command_server_address)
+        if self.is_main_server: # for main server, execute locally
+            self._execute_command_locally(command, *args, **kwargs)
+        else: # for other server, send command to main server
+            self._send_command(command, args=args, **kwargs)
 
     def load_commands(self, command_config, *, overwrite=False):
         logger.info('CommandServer : load commands from config :\n{}'.format(command_config))
@@ -210,18 +190,23 @@ class CommandServer(UDPServer):
         self.server_address = (self.server_address[0], val)
 
     @property
+    def temp_socket(self): # this socket is used as a client to main command server, when this server is not main
+        if not self._temp_socket:
+            self._temp_socket = self._get_temp_socket()
+        return self._temp_socket
+
+    @property
     def is_running(self):
         try:
-            from socket import socket, AF_INET, SOCK_DGRAM
-            soc = socket(family=AF_INET, type=SOCK_DGRAM)
-            soc.settimeout(0.5)
-            soc.sendto(self.protocol.pack_message(running_test='CommandServer', state='request'), self.command_server_address)
-            respond, _ = soc.recvfrom(1024)
+            self.temp_socket.sendto(self.protocol.pack_message(running_test='CommandServer', state='request'), self.command_server_address)
+            respond, _ = self.temp_socket.recvfrom(1024)
             tag, kwargs = self.protocol.unpack_message(respond)
-            if 'running_test' == tag and 'CommandServer' == kwargs['target'] and 'confirm' == kwargs['state']:
-                return True
+            if 'running_test' == tag:
+                return ('CommandServer' == kwargs['target'] and 'confirm' == kwargs['state'])
+            else:
+                logger.error('CommandServer : [abnormal] got {} message while expecting running_test result'.format(tag))
         except Exception as err:
-            self._verbose_info('CommandServer : running_test : {}'.format(err.args))
+            self._verbose_info('CommandServer : running_test : {}({})'.format(err, err.args))
         return False
 
     @property
@@ -284,15 +269,76 @@ class CommandServer(UDPServer):
         self.commands.clear()
         logger.warning('CommandServer : commands cleared')
 
-    def _execute_command(self, client_address, command, *args, **kwargs):
-        if command not in self.commands.keys():
-            logger.error('CommandServer : command {} from {} not registered'.format(command, client_address))
-            return
+    def _send_command(self, command, *, args=(), **kwargs):
         try:
-            logger.info('CommandServer : executing command {}({},{}) from {}'.format(command, args, kwargs, client_address))
-            self.commands[command].execute(*args, **kwargs)
+            # done : send_command should first check local configurations, make sure local settings of commands should be executed
+            kwargs = self._update_command_config(command, args, kwargs)
+            logger.info('CommandServer : send command {}({}) to {}'.format(command, kwargs, self.command_server_address))
+            # todo : send command will sync target command to execution server before execution
+            # send command
+            self.temp_socket.sendto(self.protocol.pack_message(command=command, **kwargs), self.command_server_address)
+            # todo : send command will check execution result after send one
+            respond_msg, _ = self.temp_socket.recvfrom(1024)
+            tag, kwargs = self.protocol.unpack_message(respond_msg)
+            if 'respond' == tag and 'command' == kwargs['request'] and 'success' == kwargs['state']:
+                logger.info('CommandServer : execute command {} on {} success'.format(kwargs['command_name'], self.command_server_address))
+            else: # send command is used for other server(except for main), when this server is running, this may happen when load is full
+                if 'respond' != tag:
+                    logger.error('CommandServer : [abnormal] got {} message while expecting respond of command'.format(tag))
+                elif 'command' != kwargs['request']:
+                    logger.error('CommandServer : [abnormal] got {} respond while expecting respond of command'.format(kwargs['request']))
+                elif 'success' != kwargs['state']:
+                    raise RuntimeError(kwargs['err_info'])
         except Exception as err:
-            logger.error('CommandServer : failed executing command {} with error {}'.format(command, err.args))
+            logger.error('CommandServer : send command {} failed with {}({})'.format(command, err, err.args))
+
+    def _execute_command_locally(self, command, *args, **kwargs):
+        logger.info('CommandServer : execute command {}({},{}) locally'.format(command, args, kwargs))
+        try:
+            self._execute_command_imp(command, *args, **kwargs)
+            logger.info('CommandServer : execute command {} successful'.format(command))
+        except Exception as err:
+            logger.error('CommandServer : execute command {} failed with error {}'.format(command, err.args))
+
+    def _execute_command_from_remote(self, client_address, command, *args, **kwargs):
+        logger.info('CommandServer : execute command {}({},{}) from {}'.format(command, args, kwargs, client_address))
+        # execute command
+        try:
+            self._execute_command_imp(command, *args, **kwargs)
+            logger.info('CommandServer : execute command {} successful'.format(command))
+            msg = self.protocol.pack_message(respond='command', command_name=command, state='success')
+        except Exception as err:
+            err_info = 'CommandServer : execute command {} failed with error {}'.format(command, err.args)
+            logger.error(err_info)
+            msg = self.protocol.pack_message(respond='command', command_name=command, state='failed', err_info=err_info)
+        # send execute result
+        self.socket.sendto(msg, client_address)
+
+    def _execute_command_imp(self, command, *args, **kwargs):
+        if command not in self.commands.keys():
+            raise ValueError('CommandServer : command {} not registered'.format(command))
+        self.commands[command].execute(*args, **kwargs)
+
+    def _update_command_config(self, command, args, kwargs):
+        # sync arguments to command arguments : priority : command line > register > command definition
+        if command in self.commands.keys():
+            self._verbose_info('CommandServer : found local command {}({})'.format(command, self.commands[command]))
+            if hasattr(self.commands[command], 'kwargs'):
+                if self.commands[command].kwargs is None:
+                    if kwargs:
+                        raise ArgumentError('command {} do not support kwargs, got {}'.format(command, kwargs))
+                else:
+                    kwargs.update(self.commands[command].kwargs)
+            if hasattr(self.commands[command], 'args'):
+                if self.commands[command].args is None:
+                    if args:
+                        raise ArgumentError('command {} do not support args, got {}'.format(command, args))
+                else:
+                    _args = list(self.commands[command].args)
+                    if args:
+                        _args.extend(args)
+                    kwargs['args'] = _args
+        return kwargs
 
     def _respond_request(self, client_address, request, **kwargs):
         self.socket.sendto(self.protocol.pack_message(respond=request+' confirm'), client_address)
@@ -303,6 +349,11 @@ class CommandServer(UDPServer):
                 self.socket.sendto(self.protocol.pack_message(running_test='CommandServer', state='confirm'), client_address)
                 return
         logger.warning('receive unavailable running_test {} from {}'.format(kwargs, client_address))
+
+    def _get_temp_socket(self):
+        temp_socket = socket(family=AF_INET, type=SOCK_DGRAM)
+        temp_socket.settimeout(0.5)
+        return temp_socket
 
     def _dump_local_config(self): # dump config can work all right only in local
         d = dict()
@@ -364,7 +415,7 @@ class CommandServer(UDPServer):
             logger.error('CommandServer : load commands failed with {}({}) from file {}'.format(err, err.args, command_file))
 
     def _verbose_info(self, message):
-        self._verbose_info_handler('CommandServer : verbose : {}'.format(message))
+        self._verbose_info_handler('CommandServer : [verbose] {}'.format(message))
 
     # local command entry
     def _list_commands(self): # entry for command "list_commands"
