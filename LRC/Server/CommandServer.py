@@ -277,12 +277,13 @@ class CommandServer(UDPServer):
             # todo : send command will sync target command to execution server before execution
             # send command
             self.temp_socket.sendto(self.protocol.pack_message(command=command, **kwargs), self.command_server_address)
-            # todo : send command will check execution result after send one
+            # done : send command will check execution result after send one
             respond_msg, _ = self.temp_socket.recvfrom(1024)
             tag, kwargs = self.protocol.unpack_message(respond_msg)
+            #   detail : check result
             if 'respond' == tag and 'command' == kwargs['request'] and 'success' == kwargs['state']:
                 logger.info('CommandServer : execute command {} on {} success'.format(kwargs['command_name'], self.command_server_address))
-            else: # send command is used for other server(except for main), when this server is running, this may happen when load is full
+            else: # 'respond' != tag -> send command is used for other server(except for main), when this server is running, this may happen when load is full
                 if 'respond' != tag:
                     logger.error('CommandServer : [abnormal] got {} message while expecting respond of command'.format(tag))
                 elif 'command' != kwargs['request']:
@@ -320,7 +321,13 @@ class CommandServer(UDPServer):
         self.commands[command].execute(*args, **kwargs)
 
     def _update_command_config(self, command, args, kwargs):
-        # sync arguments to command arguments : priority : command line > register > command definition
+        '''
+        sync arguments to command arguments : priority : command line > register > command definition
+        :param command:     command name
+        :param args:        command args
+        :param kwargs:      command kwargs
+        :return kwargs:     command kwargs merged from args, input kwargs, and command args && kwargs registered in self.commands
+        '''
         if command in self.commands.keys():
             self._verbose_info('CommandServer : found local command {}({})'.format(command, self.commands[command]))
             if hasattr(self.commands[command], 'kwargs'):
