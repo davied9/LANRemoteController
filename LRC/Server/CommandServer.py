@@ -19,9 +19,10 @@ except ImportError:  # python 3
 class CommandServer(UDPServer):
 
     # interfaces
-    def __init__(self, *, verbose=False, server_address=('127.0.0.1', 35589), ip=None, port=None, **kwargs):
+    def __init__(self, *, verbose=False, sync_config=False, server_address=('127.0.0.1', 35589), ip=None, port=None, **kwargs):
         # initial configuration
         self.verbose = verbose
+        self.__sync_config = sync_config
         # initialize command server
         if port:
             server_address = (server_address[0], port)
@@ -38,7 +39,7 @@ class CommandServer(UDPServer):
         self.role = 'not started' # 'not started' 'main' 'secondary'
         self.__cleanup_commands = list()
         # initialize temp_socket
-        self._temp_socket = None
+        self.__temp_socket = None
 
     def finish_request(self, request, client_address):
         self._verbose_info('CommandServer : got request {} from client {}'.format(request, client_address))
@@ -60,8 +61,6 @@ class CommandServer(UDPServer):
                 self._respond_request(client_address, request=kwargs['name'], **kwargs)
             elif 'running_test' == tag:
                 self._respond_running_test(client_address, **kwargs)
-            elif 'respond' == tag:
-                self._process_respond(client_address, **kwargs)
         except Exception as err:
             logger.error('CommandServer : failed to process request {} from {}'.format(request, client_address))
 
@@ -110,9 +109,19 @@ class CommandServer(UDPServer):
         self._apply_remote_config(**kwargs)
 
     def sync_config(self): # sync this instance's config to the running command server with same address(ip,port)
-        # todo : sync_config command should actually do the following code, but for now just send 'sync_config' command
-        # todo : sync verbose for only current command
-        self.send_command('sync_config', **self._dump_remote_config())
+        # accessing remote main command server -- sync_config
+        # done : sync_config command should actually do the following code, but for now just send 'sync_config' command
+        #        sync_config do not directly execute command, use --sync-config flag in console
+        # done : sync verbose for only current command
+        if not self.is_main_server:
+            self._send_command('sync_config', **self._dump_remote_config())
+
+    def show_config(self):
+        config = self._dump_remote_config()
+        msg = 'CommandServer : configurations :\n'
+        for k, v in config.items():
+            msg += '    {:22} : {}\n'.format(k, v)
+        logger.info(msg)
 
     def register_cleanup_command(self, *keys):
         for key in keys:
@@ -121,6 +130,10 @@ class CommandServer(UDPServer):
                 continue
             logger.info('CommandServer : add cleanup command {}'.format(key))
             self.cleanup_commands.append(key)
+
+    def register_cleanup_command_remotely(self, *args):
+        # accessing remote main command server -- register_cleanup_command_remotely
+        self.send_command('register_cleanup_command', args=args)
 
     def register_command(self, key, command, *, overwrite=False):
         if not overwrite and key in self.commands.keys():
@@ -131,9 +144,13 @@ class CommandServer(UDPServer):
         return True
 
     def register_command_remotely(self, command_config, *, overwrite=False):
+        # accessing remote main command server -- register_command_remotely
         self.send_command('register_command', command_config=command_config, overwrite=overwrite)
 
-    def send_command(self, command, *, args=(), **kwargs):
+    def send_command(self, command, *, sync_config_for_one_shot=False, args=(), **kwargs):
+        if self.need_sync_config or sync_config_for_one_shot:
+            self.sync_config()
+        # accessing remote main command server -- send_command
         if self.is_main_server: # for main server, execute locally
             self._execute_command_locally(command, *args, **kwargs)
         else: # for other server, send command to main server
@@ -191,9 +208,9 @@ class CommandServer(UDPServer):
 
     @property
     def temp_socket(self): # this socket is used as a client to main command server, when this server is not main
-        if not self._temp_socket:
-            self._temp_socket = self._get_temp_socket()
-        return self._temp_socket
+        if not self.__temp_socket:
+            self.__temp_socket = self._get_temp_socket()
+        return self.__temp_socket
 
     @property
     def is_running(self):
@@ -219,6 +236,10 @@ class CommandServer(UDPServer):
             self._verbose_info_handler = logger.info
         else:
             self._verbose_info_handler = empty
+
+    @property
+    def need_sync_config(self):
+        return self.__sync_config
 
     @property
     def commands(self):
@@ -262,6 +283,7 @@ class CommandServer(UDPServer):
         self.commands['register_cleanup_command'] = Command(name='register_cleanup_command', execute=self.register_cleanup_command, args=tuple())
         self.commands['list_commands'] = Command(name='list_commands', execute=self._list_commands)
         self.commands['sync_config'] = Command(name='sync_config', execute=self._apply_remote_config, kwargs=dict())
+        self.commands['show_config'] = Command(name='show_config', execute=self.show_config)
 
     def _clear_commands(self):
         for k in self.commands.keys():
@@ -298,8 +320,10 @@ class CommandServer(UDPServer):
         try:
             self._execute_command_imp(command, *args, **kwargs)
             logger.info('CommandServer : execute command {} successful'.format(command))
+            return True
         except Exception as err:
             logger.error('CommandServer : execute command {} failed with error {}'.format(command, err.args))
+            return False
 
     def _execute_command_from_remote(self, client_address, command, *args, **kwargs):
         logger.info('CommandServer : execute command {}({},{}) from {}'.format(command, args, kwargs, client_address))
@@ -308,12 +332,15 @@ class CommandServer(UDPServer):
             self._execute_command_imp(command, *args, **kwargs)
             logger.info('CommandServer : execute command {} successful'.format(command))
             msg = self.protocol.pack_message(respond='command', command_name=command, state='success')
+            success = True
         except Exception as err:
             err_info = 'CommandServer : execute command {} failed with error {}'.format(command, err.args)
             logger.error(err_info)
             msg = self.protocol.pack_message(respond='command', command_name=command, state='failed', err_info=err_info)
+            success = False
         # send execute result
         self.socket.sendto(msg, client_address)
+        return success
 
     def _execute_command_imp(self, command, *args, **kwargs):
         if command not in self.commands.keys():
@@ -365,13 +392,13 @@ class CommandServer(UDPServer):
     def _dump_local_config(self): # dump config can work all right only in local
         d = dict()
         d['commands']  = self.commands
+        d['server_address']  = self.server_address
         # todo: try to sync protocol
         # d['protocol']  = self.server_address
         return d
 
     def _dump_remote_config(self): # dump config can work all right only in local
         d = dict()
-        d['server_address']  = self.server_address
         d['verbose']  = self.verbose
         return d
 

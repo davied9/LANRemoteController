@@ -76,47 +76,50 @@ def parse_config_from_console_line(args):
         verbose_info = _verbose_info
         verbose_info('--verbose given, enable verbose info')
         processed_flags.append('--verbose')
-    if '--enable-ui' in args:
-        config_command_lines['enable_ui'] = True
-        verbose_info('--enable-ui given, enable server UI')
-        processed_flags.append('--enable-ui')
-    if '--no-ui' in args:
-        config_command_lines['enable_ui'] = False
-        verbose_info('--no-ui given, disable server UI')
-        processed_flags.append('--no-ui')
     # check the rest of them
     commands_kwargs['default'] = dict()
     current_command = 'default'
     ix = 0 # console argument index
     while ix < len(args):
         arg = args[ix]
-        if arg.startswith('--config-file='):
+        if '--enable-ui' == arg:
+            config_command_lines['enable_ui'] = True
+            verbose_info('--enable-ui given, enable LRC server UI')
+            processed_flags.append('--enable-ui')
+        elif '--no-ui' == arg:
+            config_command_lines['enable_ui'] = False
+            verbose_info('--no-ui given, disable LRC server UI')
+            processed_flags.append('--no-ui')
+        elif '--sync-config' == arg:
+            config_command_lines['sync_config'] = True
+            verbose_info('--sync-config given, command server will sync local config to main command server')
+            processed_flags.append('--sync-config')
+        elif arg.startswith('--config-file='):
             config.config_file = arg[len('--config-file='):]
             verbose_info('--config-file given, loading config from file {}'.format(config.config_file))
             verbose_info('config loaded : {}'.format(config))
             processed_flags.append(arg)
-        else:
-            if arg.startswith('--'): # --xxx config flag
-                if arg not in processed_flags:
-                    reserved.append(arg)
-            elif arg.startswith('-'):
+        elif arg.startswith('--'): # --xxx config flag
+            if arg not in processed_flags:
                 reserved.append(arg)
+        elif arg.startswith('-'):
+            reserved.append(arg)
+        else:
+            tmp = command_param_exp.findall(arg) # kkk=vvv
+            if len(tmp) > 0:
+                param_name = tmp[0]
+                param_value_str = arg[len(param_name)+1:]
+                try:
+                    commands_kwargs[current_command][param_name] = eval(param_value_str)
+                    verbose_info('add param "{}"({}) for command "{}"'.format(param_name, commands_kwargs[current_command][param_name], current_command))
+                except Exception as err:
+                    logger.buffer_error('LRC : parse command parameter failed from {} : {}'.format(param_value_str, err.args))
             else:
-                tmp = command_param_exp.findall(arg) # kkk=vvv
-                if len(tmp) > 0:
-                    param_name = tmp[0]
-                    param_value_str = arg[len(param_name)+1:]
-                    try:
-                        commands_kwargs[current_command][param_name] = eval(param_value_str)
-                        verbose_info('add param "{}"({}) for command "{}"'.format(param_name, commands_kwargs[current_command][param_name], current_command))
-                    except Exception as err:
-                        logger.buffer_error('LRC : parse command parameter failed from {} : {}'.format(param_value_str, err.args))
-                else:
-                    commands.append(arg)
-                    current_command = commands[n_commands]
-                    commands_kwargs[current_command] = dict()
-                    n_commands += 1
-                    verbose_info('add command {}'.format(current_command))
+                commands.append(arg)
+                current_command = commands[n_commands]
+                commands_kwargs[current_command] = dict()
+                n_commands += 1
+                verbose_info('add command {}'.format(current_command))
         ix += 1
     # sync config with command line configurations
     config.apply_config(**config_command_lines)

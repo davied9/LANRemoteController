@@ -3,26 +3,18 @@ import json
 class LRCServerConfig(object):
 
     # basics
-    def __init__(self, **kwargs):
+    def __init__(self, config_file=None, **kwargs):
         # initialize default values
         self._init_default_values()
         # load config files
-        if 'config_file' in kwargs:
-            self.config_file = kwargs['config_file']
-        # apply configurations from arguments
-        self._update_command_server_config(**kwargs)
-        self._update_server_config(**kwargs)
-        self._update_waiter_config(**kwargs)
-        if 'enable_ui' in kwargs:
-            self.enable_ui = kwargs['enable_ui']
-        if 'verify_code' in kwargs: # for new client verification
-            self.verify_code = kwargs['verify_code']
-        if 'verbose' in kwargs:
-            self.verbose = kwargs['verbose']
+        self.config_file = config_file
+        # setting priority : arguments > config file
+        self.apply_config(**kwargs)
 
     def __str__(self):
         return '''
     config file             : {},
+    sync config             : {},
     command server address  : {},
     server address          : {},
     waiter address          : {},
@@ -31,6 +23,7 @@ class LRCServerConfig(object):
     verbose                 : {},
 '''.format(
             self.config_file,
+            self.sync_config,
             self.command_server_address,
             self.server_address,
             self.waiter_address,
@@ -68,6 +61,7 @@ class LRCServerConfig(object):
         return {
             'server_address' : self.command_server_address,
             'verbose'         : self.verbose,
+            'sync_config'    : self.sync_config
         }
 
     @property
@@ -87,12 +81,13 @@ class LRCServerConfig(object):
             'verbose'         : self.verbose,
         }
 
-
     # interfaces
     def apply_config(self, **kwargs): # apply all config except config_file, this is maintained by load_from_config_file
         self._update_command_server_config(**kwargs)
         self._update_waiter_config(**kwargs)
         self._update_server_config(**kwargs)
+        if 'sync_config' in kwargs:
+            self.sync_config = kwargs['sync_config']
         if 'enable_ui' in kwargs:
             self.enable_ui = kwargs['enable_ui']
         if 'verify_code' in kwargs:
@@ -126,6 +121,7 @@ class LRCServerConfig(object):
     # functional
     def _init_default_values(self):
         self._config_file = None
+        self.sync_config = False
         self.enable_ui = False
 
         self.command_ip = '127.0.0.1'
@@ -141,32 +137,35 @@ class LRCServerConfig(object):
         self.verbose = False
 
     # details
-    def _update_command_server_config(self, **kwargs):
-        if 'command_server_address' in kwargs:
-            self.command_ip = kwargs['command_server_address'][0]
-            self.command_port = kwargs['command_server_address'][1]
-        if 'command_server_ip' in kwargs:
-            self.command_ip = kwargs['command_server_ip']
-        if 'command_server_port' in kwargs:
-            self.command_port = kwargs['command_server_port']
+    def _update_command_server_config(self, command_server_address=None,
+            command_server_ip=None, command_server_port=None, **kwargs):
+        if command_server_address:
+            self.command_ip = command_server_address[0]
+            self.command_port = command_server_address[1]
+        if command_server_ip:
+            self.command_ip = command_server_ip
+        if command_server_port:
+            self.command_port = command_server_port
 
-    def _update_server_config(self, **kwargs):
-        if 'server_address' in kwargs:
-            self.server_ip = kwargs['server_address'][0]
-            self.server_port = kwargs['server_address'][1]
-        if 'server_ip' in kwargs:
-            self.server_ip = kwargs['server_ip']
-        if 'server_port' in kwargs:
-            self.server_port = kwargs['server_port']
+    def _update_server_config(self, server_address=None,
+            server_ip=None, server_port=None, **kwargs):
+        if server_address:
+            self.server_ip = server_address[0]
+            self.server_port = server_address[1]
+        if server_ip:
+            self.server_ip = server_ip
+        if server_port:
+            self.server_port = server_port
 
-    def _update_waiter_config(self, **kwargs):
-        if 'waiter_address' in kwargs:
-            self.waiter_ip = kwargs['waiter_address'][0]
-            self.waiter_port = kwargs['waiter_address'][1]
-        if 'waiter_ip' in kwargs:
-            self.waiter_ip = kwargs['waiter_ip']
-        if 'waiter_port' in kwargs:
-            self.waiter_port = kwargs['waiter_port']
+    def _update_waiter_config(self, waiter_address=None,
+            waiter_ip=None, waiter_port=None, **kwargs):
+        if waiter_address:
+            self.waiter_ip = waiter_address[0]
+            self.waiter_port = waiter_address[1]
+        if waiter_ip:
+            self.waiter_ip = waiter_ip
+        if waiter_port:
+            self.waiter_port = waiter_port
 
 
 if '__main__' == __name__:
