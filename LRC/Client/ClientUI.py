@@ -46,7 +46,7 @@ class ClientUI(App):
         super(ClientUI, self).__init__(**kwargs)
         # init
         self.verbose = verbose
-        self.client = LRCClient(server_address=server_address)
+        self.client = LRCClient(server_address=server_address, verbose=verbose)
         self.controller_sets = None
         self.current_edit_set = None # for sync between build screen and controller screen
 

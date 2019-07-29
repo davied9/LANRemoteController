@@ -67,6 +67,7 @@ class LRCClient(object):
     def send_combinations(self, *args):
         if self.waiter_address:
             message = self.waiter_protocol.pack_message(controller=Controller('LRCClient', *args))
+            self.verbose_info('sending {} to {}'.format(message, self.waiter_address))
             self.socket.sendto(message, self.waiter_address)
         else:
             logger.error('Client : waiter address unknown, connect to server to get one.')

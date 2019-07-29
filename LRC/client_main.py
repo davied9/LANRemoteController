@@ -10,6 +10,7 @@ def main():
     verbose = False
     if '--verbose' in sys.argv:
         verbose = True
+        sys.argv.remove('--verbose')
 
     import os
     from kivy.logger import logging
@@ -20,6 +21,7 @@ def main():
     Config.read(config_file_path)
 
     logging.info("{:12}: loading config from {}".format( 'Entry', config_file_path) )
+    logging.info("{:12}: plaform {}".format( 'Entry', sys.platform) )
 
     from LRC.Common.logger import logger
     from LRC.Client.ClientUI import ClientUI

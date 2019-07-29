@@ -375,7 +375,9 @@ class CommandServer(UDPServer):
         return kwargs
 
     def _respond_request(self, client_address, request, **kwargs):
-        self.socket.sendto(self.protocol.pack_message(respond=request+' confirm'), client_address)
+        msg = self.protocol.pack_message(respond=request, state ='confirm')
+        self._verbose_info('CommandServer : send "{}" to {}'.format(msg, client_address))
+        self.socket.sendto(msg, client_address)
 
     def _respond_running_test(self, client_address, **kwargs):
         if 'CommandServer' == kwargs['target']:

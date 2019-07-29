@@ -52,6 +52,7 @@ class LRCServer ( UDPServer, object ):
                     self.info('Server: add client {0} to client list.'.format(client_address))
                 respond_message = self.client_protocol.pack_message(
                     respond=kwargs['name'], state='confirm', waiter_address=self.waiter_address)
+                self._verbose_info('send {} to {}'.format(respond_message, client_address))
                 self.socket.sendto(respond_message, client_address)
 
     def verify_request(self, request, client_address):
