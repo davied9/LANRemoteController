@@ -2,7 +2,7 @@ from LRC.Protocol.v1.ServerProtocol import ServerProtocol
 from LRC.Protocol.v1.WaiterProtocol import WaiterProtocol
 from LRC.Protocol.v1.ClientProtocol import ClientProtocol
 from LRC.Controller.LRCController import Controller
-from LRC.Common.logger import logger
+from kivy.logger import logging as logger
 from LRC.Common.empty import empty
 from socket import *
 

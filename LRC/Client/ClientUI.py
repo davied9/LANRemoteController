@@ -4,7 +4,7 @@ kivy.require('1.10.1')
 import os
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager
-from LRC.Common.logger import logger
+from kivy.logger import logging as logger
 from LRC.Common.empty import empty
 from LRC.Client.ControllerCollectionScreen import ControllerCollectionScreen
 from LRC.Client.ControllerCollectionBuildScreen import ControllerCollectionBuildScreen

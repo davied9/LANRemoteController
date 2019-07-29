@@ -8,7 +8,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.clock import Clock
 from kivy.uix.screenmanager import Screen
-from LRC.Common.logger import logger
+from kivy.logger import logging as logger
 from LRC.Common.Exceptions import NotFoundError
 from LRC.Controller.LRCController import Controller, ControllerSet
 from LRC.Client.ControllerEditor import ControllerEditor
