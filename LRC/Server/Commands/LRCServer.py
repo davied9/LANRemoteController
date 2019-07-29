@@ -1,5 +1,5 @@
-from LRC.Server.LRCServer import LRCServerManager
-from LRC.Server.Config import LRCServerConfig
+from Server.LRCServer import LRCServerManager
+from Server.Config import LRCServerConfig
 from multiprocessing import Process, Manager, freeze_support
 
 
@@ -50,7 +50,7 @@ def quit():
 if '__main__' == __name__:
 
     def test_case_000(): # basic usage
-        from LRC.Server.Config import LRCServerConfig
+        from Server.Config import LRCServerConfig
         from time import sleep
         freeze_support()
 
@@ -68,7 +68,7 @@ if '__main__' == __name__:
 
 
     def test_case_001():
-        from LRC.Server.Config import LRCServerConfig
+        from Server.Config import LRCServerConfig
         from time import sleep
 
         config = LRCServerConfig()

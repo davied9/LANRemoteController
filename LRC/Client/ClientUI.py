@@ -5,11 +5,11 @@ import os
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager
 from kivy.logger import logging as logger
-from LRC.Common.empty import empty
-from LRC.Client.ControllerCollectionScreen import ControllerCollectionScreen
-from LRC.Client.ControllerCollectionBuildScreen import ControllerCollectionBuildScreen
-from LRC.Client.ControllerScreen import ControllerScreen
-from LRC.Client.LRCClient import LRCClient
+from Common.empty import empty
+from Client.ControllerCollectionScreen import ControllerCollectionScreen
+from Client.ControllerCollectionBuildScreen import ControllerCollectionBuildScreen
+from Client.ControllerScreen import ControllerScreen
+from Client.LRCClient import LRCClient
 
 # from kivy.uix.screenmanager import SwapTransition
 # from kivy.uix.screenmanager import ShaderTransition

@@ -1,6 +1,6 @@
 from kivy.logger import logging as logger
-from LRC.Common.Exceptions import ArgumentError
-from LRC.Controller.LRCKeySettings import KeySettings
+from Common.Exceptions import ArgumentError
+from Controller.LRCKeySettings import KeySettings
 import json
 
 class AlternateKey(object):
