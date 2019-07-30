@@ -3,9 +3,10 @@ from __future__ import print_function
 def main():
     import sys
     # parse config
-    config, commands, commands_kwargs, reserved = parse_config_from_console_line(sys.argv[1:])
+    argv_bac = sys.argv
+    sys.argv = [sys.argv[0]]
+    config, commands, commands_kwargs, reserved = parse_config_from_console_line(argv_bac[1:])
     # update system arguments to avoid kivy error
-    sys.argv = sys.argv[0:1]
     sys.argv.extend(reserved)
     # start server
     start_lrc_server_main(config, commands, commands_kwargs)
@@ -67,7 +68,6 @@ def parse_config_from_console_line(args):
     processed_flags = []
     if '--verbose' in args:
         config_command_lines['verbose'] = True
-        sys.argv.remove('--verbose')
         def _verbose_info(info):
             from kivy.logger import logging as logger
             logger.info('LRC : verbose : {}'.format(info))
