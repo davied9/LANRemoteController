@@ -84,9 +84,11 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
         else:
             self._reload_controller_set_from_app()
 
-        if current_app.client.server_address:
-            self.connector.ip_button.text   = current_app.client.server_address[0]
-            self.connector.port_button.text = str(current_app.client.server_address[1])
+        # if current_app.client.server_address:
+        #     self.connector.ip_button.text   = current_app.client.server_address[0]
+        #     self.connector.port_button.text = str(current_app.client.server_address[1])
+
+        self.connector.load_server_config()
 
     def on_leave(self, *args):
         self._reset_controller_set_container()
