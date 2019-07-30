@@ -2,6 +2,7 @@ from Common.logger import logger
 from Common.Exceptions import ArgumentError
 from Controller.LRCKeySettings import KeySettings
 import json
+import os
 
 class AlternateKey(object):
 
@@ -223,6 +224,9 @@ class ControllerSet(object):
         :param file_path:   where to dump
         :return:
         '''
+        root, _ = os.path.split(file_path)
+        if not os.path.exists(root):
+            os.makedirs(root)
         with open(file_path, 'w') as fh:
             fh.write(self.dump_to_str())
 
