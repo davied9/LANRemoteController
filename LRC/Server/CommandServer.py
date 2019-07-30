@@ -222,8 +222,7 @@ class CommandServer(UDPServer):
                 return ('CommandServer' == kwargs['target'] and 'confirm' == kwargs['state'])
             else:
                 logger.error('CommandServer : [abnormal] got {} message while expecting running_test result'.format(tag))
-        except Exception as err:
-            self._verbose_info('CommandServer : running_test : {}({})'.format(err, err.args))
+        except: pass
         return False
 
     @property
