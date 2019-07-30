@@ -7,6 +7,10 @@ def main():
         from Common.info import version
         print('LRC version {}'.format(version))
         exit()
+
+    from Common.logger import logger as LRCLogger
+    LRCLogger.set_logger(name='kivy')
+
     verbose = False
     if '--verbose' in sys.argv:
         verbose = True

@@ -1,6 +1,6 @@
 from __future__ import print_function
 from Controller.LRCController import Controller
-from kivy.logger import logging as logger
+from Common.logger import logger
 from Protocol.v1.ServerProtocol import ServerProtocol
 from Protocol.v1.WaiterProtocol import WaiterProtocol
 from Protocol.v1.ClientProtocol import ClientProtocol

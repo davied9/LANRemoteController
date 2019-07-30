@@ -1,5 +1,5 @@
 from Protocol.BaseProtocol import BaseProtocol
-from kivy.logger import logging as logger
+from Common.logger import logger
 import re
 
 class V1BaseProtocol(BaseProtocol):

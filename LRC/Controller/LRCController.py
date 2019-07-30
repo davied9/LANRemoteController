@@ -1,4 +1,4 @@
-from kivy.logger import logging as logger
+from Common.logger import logger
 from Common.Exceptions import ArgumentError
 from Controller.LRCKeySettings import KeySettings
 import json

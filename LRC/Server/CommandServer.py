@@ -1,7 +1,7 @@
 from __future__ import print_function
 from Server.Config import LRCServerConfig
 from Server.Command import Command, parse_command
-from kivy.logger import logging as logger
+from Common.logger import logger
 from Common.Exceptions import ArgumentError
 from Common.empty import empty
 from Protocol.v1.CommandServerProtocol import CommandServerProtocol

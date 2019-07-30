@@ -81,7 +81,7 @@ class LRCServerUI(App):
     # interfaces
     def __init__(self, *, verbose=False,
                  server_address=('0.0.0.0', 35530), waiter_address=('0.0.0.0', 35527),
-                 watch_interval=0.5, **kwargs):
+                 watch_interval=0.5, verify_code=None, **kwargs):
         super(LRCServerUI, self).__init__(**kwargs)
         # servers
         self.server_address = server_address

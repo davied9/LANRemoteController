@@ -1,4 +1,4 @@
-from kivy.logger import logging as logger
+from Common.logger import logger
 from Protocol.v1.BaseProtocol import V1BaseProtocol
 
 

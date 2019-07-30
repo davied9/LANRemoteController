@@ -1,4 +1,6 @@
 from __future__ import print_function
+from Common.logger import logger
+
 
 def main():
     import sys
@@ -21,7 +23,6 @@ def start_lrc_server_main(config, commands, commands_kwargs):
         freeze_support()
 
         if commands:
-            from kivy.logger import logging as logger
             logger.warning('LRC : UI is enabled, commands {} will not be executed.'.format(commands))
 
         ui = LRCServerUI(**config.server_config)
@@ -64,12 +65,20 @@ def parse_config_from_console_line(args):
         print('LRC version {}'.format(version))
         exit()
 
-    # processed_flags contains all flags that have been processed before walk through all arguments
     processed_flags = []
+    if '--no-ui' in args:
+        args.remove( '--no-ui' )
+        config_command_lines['enable_ui'] = False
+        verbose_info('--no-ui given, disable LRC server UI')
+        processed_flags.append('--no-ui')
+    else:
+        logger.set_logger(name='kivy')
+        config_command_lines['enable_ui'] = True
+
+    # processed_flags contains all flags that have been processed before walk through all arguments
     if '--verbose' in args:
         config_command_lines['verbose'] = True
         def _verbose_info(info):
-            from kivy.logger import logging as logger
             logger.info('LRC : verbose : {}'.format(info))
         verbose_info = _verbose_info
         verbose_info('--verbose given, enable verbose info')
@@ -80,15 +89,7 @@ def parse_config_from_console_line(args):
     ix = 0 # console argument index
     while ix < len(args):
         arg = args[ix]
-        if '--enable-ui' == arg:
-            config_command_lines['enable_ui'] = True
-            verbose_info('--enable-ui given, enable LRC server UI')
-            processed_flags.append('--enable-ui')
-        elif '--no-ui' == arg:
-            config_command_lines['enable_ui'] = False
-            verbose_info('--no-ui given, disable LRC server UI')
-            processed_flags.append('--no-ui')
-        elif '--sync-config' == arg:
+        if '--sync-config' == arg:
             config_command_lines['sync_config'] = True
             verbose_info('--sync-config given, command server will sync local config to main command server')
             processed_flags.append('--sync-config')
@@ -111,7 +112,6 @@ def parse_config_from_console_line(args):
                     commands_kwargs[current_command][param_name] = eval(param_value_str)
                     verbose_info('add param "{}"({}) for command "{}"'.format(param_name, commands_kwargs[current_command][param_name], current_command))
                 except Exception as err:
-                    from kivy.logger import logging as logger
                     logger.error('LRC : parse command parameter failed from {} : {}'.format(param_value_str, err.args))
             else:
                 commands.append(arg)
