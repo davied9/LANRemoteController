@@ -1,5 +1,5 @@
 from Server.Command import BaseCommand
-from Common.logger import logger
+from kivy.logger import logging as logger
 
 
 class TestCommand(BaseCommand):

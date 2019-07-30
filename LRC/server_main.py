@@ -1,5 +1,4 @@
 from __future__ import print_function
-from Common.logger import logger
 
 def main():
     import sys
@@ -20,10 +19,8 @@ def start_lrc_server_main(config, commands, commands_kwargs):
 
         freeze_support()
 
-        logger.set_logger(name='kivy')
-        logger.flush_buffers()
-
         if commands:
+            from kivy.logger import logging as logger
             logger.warning('LRC : UI is enabled, commands {} will not be executed.'.format(commands))
 
         ui = LRCServerUI(**config.server_config)
@@ -31,8 +28,6 @@ def start_lrc_server_main(config, commands, commands_kwargs):
     else:
         from Server.CommandServer import CommandServer
         import sys
-
-        logger.flush_buffers()
 
         # start a new command server if necessary
         command_server = CommandServer(**config.command_server_config)
@@ -48,6 +43,7 @@ def parse_config_from_console_line(args):
     from Server.Config import LRCServerConfig
     from Common.empty import empty
     import re
+    import sys
     # init
     reserved = list()
     commands = list()
@@ -71,8 +67,10 @@ def parse_config_from_console_line(args):
     processed_flags = []
     if '--verbose' in args:
         config_command_lines['verbose'] = True
+        sys.argv.remove('--verbose')
         def _verbose_info(info):
-            logger.buffer_info('LRC : verbose : {}'.format(info))
+            from kivy.logger import logging as logger
+            logger.info('LRC : verbose : {}'.format(info))
         verbose_info = _verbose_info
         verbose_info('--verbose given, enable verbose info')
         processed_flags.append('--verbose')
@@ -113,7 +111,8 @@ def parse_config_from_console_line(args):
                     commands_kwargs[current_command][param_name] = eval(param_value_str)
                     verbose_info('add param "{}"({}) for command "{}"'.format(param_name, commands_kwargs[current_command][param_name], current_command))
                 except Exception as err:
-                    logger.buffer_error('LRC : parse command parameter failed from {} : {}'.format(param_value_str, err.args))
+                    from kivy.logger import logging as logger
+                    logger.error('LRC : parse command parameter failed from {} : {}'.format(param_value_str, err.args))
             else:
                 commands.append(arg)
                 current_command = commands[n_commands]
@@ -135,7 +134,7 @@ def parse_config_from_console_line(args):
         msg = '\n'
         for flag in reserved:
             msg += '    {}\n'.format(flag)
-        logger.buffer_warning('LRC : options will be passed to kivy framework : {}.'.format(msg))
+        logger.warning('LRC : options will be passed to kivy framework : {}.'.format(msg))
 
     # for now, default command arguments are passed to command server
     config._update_command_server_config(**commands_kwargs['default'])

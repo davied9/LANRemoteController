@@ -14,7 +14,7 @@ from multiprocessing import Process, Manager, freeze_support
 from threading import Thread
 from random import randint
 from time import sleep
-from Common.logger import logger
+from kivy.logger import logging as logger
 from Common.empty import empty
 from Server.LRCServer import LRCServer, LRCWaiter
 import re, os
