@@ -15,8 +15,9 @@ def main():
     import os
     from kivy.logger import logging
     from kivy.config import Config
-    if sys.platform != 'win32':
-        Config.set(section="kivy", option="log_dir", value="/sdcard/DAV")
+    from kivy.utils import platform
+    if platform == 'android': # set log path to sdcard for android devices
+        Config.set(section="kivy", option="log_dir", value="/sdcard/LRC/logs")
         verbose=True
 
     if verbose:
