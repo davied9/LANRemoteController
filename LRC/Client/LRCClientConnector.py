@@ -48,7 +48,6 @@ class LRCClientConnector(BoxLayout):
         self.ip_matcher = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
         self.ext_err_logger = None
         self.config_file = os.path.abspath(os.path.join(os.getcwd(), "Client", "server.cfg"))
-        self.load_server_config()
 
     def execute_controller(self, controller):
         for _, comb in controller.dump().items():
@@ -106,6 +105,7 @@ class LRCClientConnector(BoxLayout):
         try:
             with open( self.config_file, "wb" ) as f:
                 f.write(json.dumps({"ip": IP, "port": PORT}).encode('utf-8'))
+            logger.info("LRCClientConnector: save server config to {}".format(self.config_file))
         except Exception as err:
             logger.error("LRCClientConnector: failed to save server config to {} : {}".format(self.config_file, err))
 
@@ -114,6 +114,7 @@ class LRCClientConnector(BoxLayout):
             with open( self.config_file, "rb" ) as f:
                 loaded = json.loads(f.read().decode())
             self.ip_button.text = loaded["ip"]
-            self.port_button.text = loaded["port"]
+            self.port_button.text = str(loaded["port"])
+            logger.info("LRCClientConnector: load server config from {}".format(self.config_file))
         except Exception as err:
             logger.error("LRCClientConnector: failed to load server config from {} : {}".format(self.config_file, err))
