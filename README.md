@@ -27,6 +27,8 @@ Things will work on all kinds of devices involved with keyboard.
 
 see [kivy official site](https://kivy.org/doc/stable/gettingstarted/installation.html)
 
+if --no-ui is given to server, then kivy is not neccessary
+
 ### LRC
 
 You can install LRC directly by pip :
@@ -47,7 +49,7 @@ Run the following commands, packages will be found in ./dist
 
 `python -m build`
 
-All packages will be found in ./dist
+All built packages will be found in ./dist
 
 # Usage
 
@@ -55,7 +57,7 @@ All packages will be found in ./dist
 
 make sure PythonXXX/Scripts/ in your system search path
 
-call `lrcserver` to start server
+call `lrcserver --no-ui start_lrc` to start server
 
 call `lrcclient` to start client
 
@@ -63,7 +65,13 @@ type `lrcserver -h` or `lrcclient -h` for help
 
 ### android
 
-copy the directory extracted from ./dist/LRCClient-x.x.x-Android.tar.gz to <android-device>/sdcard/kivy, 
+1. use pydroid
+
+copy the directory extracted from ./history_packages/LRCClient-x.x.x-Android.tar.gz to <android-device>/sdcard/kivy, 
 
 then run main.py with kivy Laucher or pydroid (require kivy 1.10.1)
+
+2. use built apk
+
+./history_packages/LRC-0.1.3-release-unsigned.apk
 
