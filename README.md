@@ -17,7 +17,9 @@ Things will work on all kinds of devices involved with keyboard.
 
 ##### PyUseInput (needed by server)
 
-`python -m pip install git+https://github.com/SavinaRoja/PyUserInput.git@master`
+`python -m pip install git+https://github.com/PyUserInput/PyUserInput.git@d45f45ffbb2399d964eb515c887c493a1837c09d`
+
+we do not use master here to avoid dependency on pyHook for python3 on windows (not neccessary && convenient)
 
 ##### pypiwin32 (needed by windows server)
 
