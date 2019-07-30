@@ -1,5 +1,5 @@
-from LRC.Common.logger import logger
-from LRC.Protocol.v1.BaseProtocol import V1BaseProtocol
+from Common.logger import logger
+from Protocol.v1.BaseProtocol import V1BaseProtocol
 
 
 class CommandServerProtocol(V1BaseProtocol):

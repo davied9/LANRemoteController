@@ -4,8 +4,10 @@ kivy.require('1.10.1')
 from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
 from kivy.app import App
-from LRC.Common.logger import logger
+from kivy.logger import logging as logger
 import re
+import os
+import json
 
 Builder.load_string('''
 <LRCClientConnector>:
@@ -45,6 +47,7 @@ class LRCClientConnector(BoxLayout):
         super(LRCClientConnector, self).__init__(**kwargs)
         self.ip_matcher = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
         self.ext_err_logger = None
+        self.config_file = os.path.abspath(os.path.join(os.getcwd(), "Client", "server.cfg"))
 
     def execute_controller(self, controller):
         for _, comb in controller.dump().items():
@@ -65,6 +68,7 @@ class LRCClientConnector(BoxLayout):
         if server_address:
             try:
                 self.connect(server_address)
+                self.save_server_config(IP=ip, PORT=port)
             except Exception as err:
                 info = 'Connector: try to connect to {0} failed: {1}'.format(server_address, err.args)
                 logger.info(info)
@@ -96,3 +100,21 @@ class LRCClientConnector(BoxLayout):
             return port
         else:
             raise ValueError('port should between (10000, 49999)')
+
+    def save_server_config(self, IP, PORT):
+        try:
+            with open( self.config_file, "wb" ) as f:
+                f.write(json.dumps({"ip": IP, "port": PORT}).encode('utf-8'))
+            logger.info("LRCClientConnector: save server config to {}".format(self.config_file))
+        except Exception as err:
+            logger.error("LRCClientConnector: failed to save server config to {} : {}".format(self.config_file, err))
+
+    def load_server_config(self):
+        try :
+            with open( self.config_file, "rb" ) as f:
+                loaded = json.loads(f.read().decode())
+            self.ip_button.text = loaded["ip"]
+            self.port_button.text = str(loaded["port"])
+            logger.info("LRCClientConnector: load server config from {}".format(self.config_file))
+        except Exception as err:
+            logger.error("LRCClientConnector: failed to load server config from {} : {}".format(self.config_file, err))

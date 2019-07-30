@@ -4,12 +4,12 @@ kivy.require('1.10.1')
 import os
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager
-from LRC.Common.logger import logger
-from LRC.Common.empty import empty
-from LRC.Client.ControllerCollectionScreen import ControllerCollectionScreen
-from LRC.Client.ControllerCollectionBuildScreen import ControllerCollectionBuildScreen
-from LRC.Client.ControllerScreen import ControllerScreen
-from LRC.Client.LRCClient import LRCClient
+from kivy.logger import logging as logger
+from Common.empty import empty
+from Client.ControllerCollectionScreen import ControllerCollectionScreen
+from Client.ControllerCollectionBuildScreen import ControllerCollectionBuildScreen
+from Client.ControllerScreen import ControllerScreen
+from Client.LRCClient import LRCClient
 
 # from kivy.uix.screenmanager import SwapTransition
 # from kivy.uix.screenmanager import ShaderTransition
@@ -46,7 +46,7 @@ class ClientUI(App):
         super(ClientUI, self).__init__(**kwargs)
         # init
         self.verbose = verbose
-        self.client = LRCClient(server_address=server_address)
+        self.client = LRCClient(server_address=server_address, verbose=verbose)
         self.controller_sets = None
         self.current_edit_set = None # for sync between build screen and controller screen
 

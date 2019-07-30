@@ -1,4 +1,4 @@
-from LRC.Protocol.BaseCommunicationProtocol import BaseCommunicationProtocol
+from Protocol.BaseCommunicationProtocol import BaseCommunicationProtocol
 
 class BaseProtocol(BaseCommunicationProtocol):
 
