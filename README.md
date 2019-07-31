@@ -23,7 +23,9 @@ we do not use master here to avoid dependency on pyHook for python3 on windows (
 
 ##### pypiwin32 (needed by windows server)
 
-`python -m pip install pypiwin32` # this is used for windows server
+`python -m pip install pypiwin32`
+
+this is used for windows server
 
 ##### kivy (needed by client)
 
@@ -77,3 +79,10 @@ then run main.py with kivy Laucher or pydroid (require kivy 1.10.1)
 
 ./history_packages/LRC-0.1.3-release-unsigned.apk
 
+# Releases Notes:
+
+### 0.1.4
+
+1. rename collections to lrccollections to avoid name conflict with matplotlib
+
+2. replace argument parse process with ArgumentParser from argparse
