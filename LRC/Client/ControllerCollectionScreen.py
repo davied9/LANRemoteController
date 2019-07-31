@@ -105,6 +105,7 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
 
     def _load_controller_set_from_local(self):
         controller_sets = {}
+        logger.info('Collection: loading collections from {}'.format(collection_path))
         for r, dirs, files in os.walk(collection_path):
             for file_name in files:
                 if not file_name.endswith('.json'): continue
