@@ -1,4 +1,4 @@
-from Server.Command import BaseCommand
+from LRC.Server.Command import BaseCommand
 from kivy.logger import logging as logger
 
 

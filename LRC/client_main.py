@@ -4,11 +4,11 @@ def main():
         print(_help_str())
         exit()
     if '--version' in sys.argv:
-        from Common.info import version
+        from LRC.Common.info import version
         print('LRC version {}'.format(version))
         exit()
 
-    from Common.logger import logger as LRCLogger
+    from LRC.Common.logger import logger as LRCLogger
     LRCLogger.set_logger(name='kivy')
 
     verbose = False
@@ -34,7 +34,7 @@ def main():
     logging.info("{:12}: plaform {}".format( 'Entry', sys.platform) )
 
     # start application
-    from Client.ClientUI import ClientUI
+    from LRC.Client.ClientUI import ClientUI
     ClientUI(verbose=verbose).run()
 
 

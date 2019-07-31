@@ -1,4 +1,4 @@
-from Protocol.v1.BaseProtocol import V1BaseProtocol
+from LRC.Protocol.v1.BaseProtocol import V1BaseProtocol
 
 
 class ServerProtocol(V1BaseProtocol): # how do server unpack message, how to pack message sent to server

@@ -1,5 +1,5 @@
-from Protocol.v1.BaseProtocol import V1BaseProtocol
-from Controller.LRCController import Controller
+from LRC.Protocol.v1.BaseProtocol import V1BaseProtocol
+from LRC.Controller.LRCController import Controller
 
 
 class WaiterProtocol(V1BaseProtocol): # how do waiter unpack message, how to pack message sent to waiter

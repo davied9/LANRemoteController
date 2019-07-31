@@ -10,8 +10,8 @@ from kivy.clock import Clock
 from kivy.properties import NumericProperty
 
 Builder.load_string('''
-#:import LRCClientConnector Client.LRCClientConnector
-#:import ButtonContainer    Client.ButtonContainer
+#:import LRCClientConnector LRC.Client.LRCClientConnector
+#:import ButtonContainer    LRC.Client.ButtonContainer
 
 <ControllerScreen>:
     # widgets

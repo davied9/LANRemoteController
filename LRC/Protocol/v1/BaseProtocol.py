@@ -1,5 +1,5 @@
-from Protocol.BaseProtocol import BaseProtocol
-from Common.logger import logger
+from LRC.Protocol.BaseProtocol import BaseProtocol
+from LRC.Common.logger import logger
 import re
 
 class V1BaseProtocol(BaseProtocol):

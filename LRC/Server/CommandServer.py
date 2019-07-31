@@ -1,10 +1,10 @@
 from __future__ import print_function
-from Server.Config import LRCServerConfig
-from Server.Command import Command, parse_command
-from Common.logger import logger
-from Common.Exceptions import ArgumentError
-from Common.empty import empty
-from Protocol.v1.CommandServerProtocol import CommandServerProtocol
+from LRC.Server.Config import LRCServerConfig
+from LRC.Server.Command import Command, parse_command
+from LRC.Common.logger import logger
+from LRC.Common.Exceptions import ArgumentError
+from LRC.Common.empty import empty
+from LRC.Protocol.v1.CommandServerProtocol import CommandServerProtocol
 from multiprocessing import Manager
 from threading import Thread
 from socket import socket, AF_INET, SOCK_DGRAM

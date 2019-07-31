@@ -1,9 +1,9 @@
 from __future__ import print_function
-from Controller.LRCController import Controller
-from Common.logger import logger
-from Protocol.v1.ServerProtocol import ServerProtocol
-from Protocol.v1.WaiterProtocol import WaiterProtocol
-from Protocol.v1.ClientProtocol import ClientProtocol
+from LRC.Controller.LRCController import Controller
+from LRC.Common.logger import logger
+from LRC.Protocol.v1.ServerProtocol import ServerProtocol
+from LRC.Protocol.v1.WaiterProtocol import WaiterProtocol
+from LRC.Protocol.v1.ClientProtocol import ClientProtocol
 from multiprocessing import Process, Manager
 from threading import Thread
 
@@ -36,7 +36,7 @@ class LRCServer ( UDPServer, object ):
             self._verbose_info = self._verbose_info_imp
             self._verbose_info('verbose enabled.')
         else:
-            from Common.empty import empty
+            from LRC.Common.empty import empty
             self._verbose_info = empty
         self._verbose_info('server {}, waiter {}'.format( self.server_address, self.waiter_address))
 
@@ -93,7 +93,7 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
             self._verbose_info = self._verbose_info_imp
             self._verbose_info('verbose enabled.')
         else:
-            from Common.empty import empty
+            from LRC.Common.empty import empty
             self._verbose_info = empty
         self._verbose_info('server {}, waiter {}'.format( self.connect_server_address, self.server_address))
 

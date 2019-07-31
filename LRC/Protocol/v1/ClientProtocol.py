@@ -1,4 +1,4 @@
-from Protocol.v1.BaseProtocol import V1BaseProtocol
+from LRC.Protocol.v1.BaseProtocol import V1BaseProtocol
 
 
 class ClientProtocol(V1BaseProtocol): # how do client unpack message, how to pack message sent to client

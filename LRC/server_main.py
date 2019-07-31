@@ -1,5 +1,5 @@
 from __future__ import print_function
-from Common.logger import logger
+from LRC.Common.logger import logger
 
 
 def main():
@@ -18,7 +18,7 @@ def start_lrc_server_main(config, commands, commands_kwargs):
 
     if config.enable_ui:
         from multiprocessing import freeze_support
-        from Server.ServerUI import LRCServerUI
+        from LRC.Server.ServerUI import LRCServerUI
 
         freeze_support()
 
@@ -28,7 +28,7 @@ def start_lrc_server_main(config, commands, commands_kwargs):
         ui = LRCServerUI(**config.server_config)
         ui.run()
     else:
-        from Server.CommandServer import CommandServer
+        from LRC.Server.CommandServer import CommandServer
         import sys
 
         # start a new command server if necessary
@@ -42,8 +42,8 @@ def start_lrc_server_main(config, commands, commands_kwargs):
 
 
 def parse_config_from_console_line(args):
-    from Server.Config import LRCServerConfig
-    from Common.empty import empty
+    from LRC.Server.Config import LRCServerConfig
+    from LRC.Common.empty import empty
     import re
     import sys
     # init
@@ -61,7 +61,7 @@ def parse_config_from_console_line(args):
         print(_help_commands())
         exit()
     if '--version' in args:
-        from Common.info import version
+        from LRC.Common.info import version
         print('LRC version {}'.format(version))
         exit()
 
@@ -143,10 +143,10 @@ def parse_config_from_console_line(args):
 
 
 def _register_lrc_commands(command_server, config, commands_kwargs):
-    from Server.Commands.LRCServer import start_lrc, start_lrc_server, start_lrc_waiter
-    from Server.Commands.LRCServer import stop_lrc, stop_lrc_server, stop_lrc_waiter
-    from Server.Commands.LRCServer import quit as quit_lrc
-    from Server.Command import Command
+    from LRC.Server.Commands.LRCServer import start_lrc, start_lrc_server, start_lrc_waiter
+    from LRC.Server.Commands.LRCServer import stop_lrc, stop_lrc_server, stop_lrc_waiter
+    from LRC.Server.Commands.LRCServer import quit as quit_lrc
+    from LRC.Server.Command import Command
 
     # start/stop LRC
     start_lrc_kwargs = dict()

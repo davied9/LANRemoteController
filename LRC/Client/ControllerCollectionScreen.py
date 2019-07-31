@@ -8,13 +8,13 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.screenmanager import Screen
 from kivy.clock import Clock
 from kivy.logger import logging as logger
-from Controller.LRCController import  ControllerSet
+from LRC.Controller.LRCController import  ControllerSet
 import os, json
 
 
 Builder.load_string('''
-#:import LRCClientConnector Client.LRCClientConnector
-#:import ButtonContainer    Client.ButtonContainer
+#:import LRCClientConnector LRC.Client.LRCClientConnector
+#:import ButtonContainer    LRC.Client.ButtonContainer
 
 <ControllerCollectionScreen>:
     # widgets

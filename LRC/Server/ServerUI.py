@@ -15,8 +15,8 @@ from threading import Thread
 from random import randint
 from time import sleep
 from kivy.logger import logging as logger
-from Common.empty import empty
-from Server.LRCServer import LRCServer, LRCWaiter
+from LRC.Common.empty import empty
+from LRC.Server.LRCServer import LRCServer, LRCWaiter
 import re, os
 os.environ['KIVY_IMAGE'] = 'pil,sdl2'
 

@@ -1,6 +1,6 @@
-from Common.logger import logger
-from Common.Exceptions import ArgumentError
-from Controller.LRCKeySettings import KeySettings
+from LRC.Common.logger import logger
+from LRC.Common.Exceptions import ArgumentError
+from LRC.Controller.LRCKeySettings import KeySettings
 import json
 import os
 

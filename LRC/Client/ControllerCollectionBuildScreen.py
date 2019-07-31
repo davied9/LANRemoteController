@@ -11,15 +11,15 @@ from kivy.uix.label import Label
 from kivy.clock import Clock
 from kivy.uix.screenmanager import Screen
 from kivy.logger import logging as logger
-from Common.Exceptions import NotFoundError
-from Controller.LRCController import Controller, ControllerSet
-from Client.ControllerEditor import ControllerEditor
+from LRC.Common.Exceptions import NotFoundError
+from LRC.Controller.LRCController import Controller, ControllerSet
+from LRC.Client.ControllerEditor import ControllerEditor
 import os
 
 
 
 Builder.load_string('''
-#:import  ButtonContainer    Client.ButtonContainer
+#:import  ButtonContainer    LRC.Client.ButtonContainer
 
 <PopupConfirm>:
     info_label: info_label

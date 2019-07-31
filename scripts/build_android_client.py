@@ -28,7 +28,7 @@ if '__main__' == __name__ :
     sys.path.append(package_dir)
     sys.path.append(os.path.dirname(sys.argv[0]))
 
-    from Common.logger import logger # directly import from working directory to avoid not installed problem
+    from LRC.Common.logger import logger # directly import from working directory to avoid not installed problem
     for arg in sys.argv[1:]:
         if arg.startswith('--log-file='):
             logger.stream_id = arg[len('--log-file='):]
