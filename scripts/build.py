@@ -38,10 +38,6 @@ def build_all(src_root, *, copy_to_history=False):
     info['server 2'] = (err, package_path)
     total += 1
 
-    err, package_path = build_server_source(src_root, copy_to_history=copy_to_history)
-    info['server source'] = (err, package_path)
-    total += 1
-
     err, package_path = build_client_android_source(src_root, copy_to_history=copy_to_history)
     info['client source android'] = (err, package_path)
     total += 1

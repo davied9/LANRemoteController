@@ -1,0 +1,11 @@
+{
+	"PotPlayer": {
+		"Next": ["left ctrl", "left shift", "left alt", "n"],
+		"Pause": ["left ctrl", "left shift", "left alt", "p"],
+		"Volumn Down": ["left ctrl", "left shift", "left alt", "d"],
+		"Volumn Up": ["left ctrl", "left shift", "left alt", "u"],
+		"Fast Backward": ["left ctrl", "left shift", "left alt", "o"],
+		"Fast Forward": ["left ctrl", "left shift", "left alt", "i"],
+		"Previous": ["left ctrl", "left shift", "left alt", "b"]
+	}
+}

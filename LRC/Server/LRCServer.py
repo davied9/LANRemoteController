@@ -52,6 +52,7 @@ class LRCServer ( UDPServer, object ):
                     self.info('Server: add client {0} to client list.'.format(client_address))
                 respond_message = self.client_protocol.pack_message(
                     respond=kwargs['name'], state='confirm', waiter_address=self.waiter_address)
+                self._verbose_info('send {} to {}'.format(respond_message, client_address))
                 self.socket.sendto(respond_message, client_address)
 
     def verify_request(self, request, client_address):
@@ -100,6 +101,7 @@ class LRCWaiter( UDPServer, object ): # waiter serve all the time
     def finish_request(self, request, client_address):
         self._verbose_info('receive request {} from {}'.format(request, client_address))
         tag, kwargs = self.waiter_protocol.unpack_message(request[0])
+        self._verbose_info('unpack result : {}'.format(tag, kwargs))
         if 'controller' == tag:
             controller = kwargs['controller']
             key_combination = controller.get_key_list()
@@ -188,7 +190,7 @@ class LRCServerManager(object):
 
     # commands interfaces
     def start_server(self, **kwargs):
-        self._update_server_config(kwargs)
+        kwargs = self._update_server_config(kwargs)
         self._start_server(**kwargs)
 
     def stop_server(self):
@@ -199,7 +201,7 @@ class LRCServerManager(object):
             self._server_process = None
 
     def start_waiter(self, **kwargs):
-        self._update_waiter_config(kwargs)
+        kwargs = self._update_waiter_config(kwargs)
         self._start_waiter(**kwargs)
 
     def stop_waiter(self):
@@ -226,6 +228,7 @@ class LRCServerManager(object):
             config['client_list'] = self.client_list
         if 'log_mailbox' not in config or config['log_mailbox'] is None and self.log_mailbox:
             config['log_mailbox'] = self.log_mailbox
+        return config
 
     def _start_server(self, **kwargs):
         if self._server_process:
@@ -250,6 +253,7 @@ class LRCServerManager(object):
             config['client_list'] = self.client_list
         if 'log_mailbox' not in config or config['log_mailbox'] is None and self.log_mailbox:
             config['log_mailbox'] = self.log_mailbox
+        return config
 
     def _start_waiter(self, **kwargs):
         if self._waiter_process:
@@ -280,7 +284,11 @@ class LRCServerManager(object):
             try:
                 logger.info(self.log_mailbox.get()) # get will block until there is data
             except Exception as err:
-                if self.communication_manager:
+                if len(err.args) >= 4 and 32 == err.args[0] and 232 == err.args[3]:
+                    logger.warning('LRC : {} -- closing servers.'.format(err))
+                    self.quit()
+                    break
+                elif self.communication_manager:
                     logger.error('LRC : mailbox error : {}({})'.format(err, err.args))
                 else:
                     logger.info('LRC : closing servers.')

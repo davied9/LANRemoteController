@@ -6,16 +6,39 @@ from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
+from kivy.uix.popup import Popup
+from kivy.uix.label import Label
 from kivy.clock import Clock
 from kivy.uix.screenmanager import Screen
-from LRC.Common.logger import logger
+from kivy.logger import logging as logger
 from LRC.Common.Exceptions import NotFoundError
+from LRC.Common.info import collection_path
 from LRC.Controller.LRCController import Controller, ControllerSet
 from LRC.Client.ControllerEditor import ControllerEditor
-from LRC.Client.ButtonContainer import ButtonContainer
+import os
+
+
 
 Builder.load_string('''
-#:import ButtonContainer    LRC.Client.ButtonContainer
+#:import  ButtonContainer    LRC.Client.ButtonContainer
+
+<PopupConfirm>:
+    info_label: info_label
+    confirm_button: confirm_button
+    cancel_button: cancel_button
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            id: info_label
+            text: 'confirm'
+        BoxLayout:
+            size_hint: 1, 0.5
+            Button:
+                id: confirm_button
+                text: 'confirm'
+            Button:
+                id: cancel_button
+                text: 'cancel'
 
 <ControllerCollectionBuildScreen>:
     display_title: title_button
@@ -56,6 +79,12 @@ Builder.load_string('''
                 Widget:
                     size_hint: 0.05, 1
                 Button:
+                    text: 'Destroy'
+                    size_hint: 0.2, 1
+                    on_release: root._confirm_delete_controller_set(self)
+                Widget:
+                    size_hint: 0.05, 1
+                Button:
                     text: 'Save'
                     size_hint: 0.2, 1
                     on_release: root._save_controller_set(self)
@@ -74,6 +103,7 @@ Builder.load_string('''
 
 ''')
 
+class PopupConfirm(Popup): pass
 
 class ControllerCollectionBuildScreen(Screen): # controller collection builder
     '''Controller Collection Build Screen
@@ -162,7 +192,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
                     self._rename_current_edit_set(new_set_name)
                     self._close_set_name_editor()
                 else:
-                    self.present_info('Duplicate controller collection {0}'.format(self.set_name_editor.text))
+                    self.present_info('Collection name "{0}" not available'.format(self.set_name_editor.text))
             else:
                 self.present_info('Duplicate controller collection {0}'.format(self.set_name_editor.text))
 
@@ -205,11 +235,37 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
     def _remove_controller_button(self, controller_button):
         self.button_container.remove_button(controller_button)
 
+    # as callback for "Destroy" button -- delete this controller set
+    def _confirm_delete_controller_set(self, button):
+        current_app = App.get_running_app()
+
+        self.confirm_pop = PopupConfirm(title='confirm', pos_hint={'x':0.25,'y':0.4}, size_hint=(0.5, 0.3))
+        self.confirm_pop.info_label.text = 'Delete controller set {}'.format(current_app.current_edit_set)
+        self.confirm_pop.confirm_button.bind(on_release=self._delete_controller_set)
+        self.confirm_pop.cancel_button.bind(on_release=self._cancel_delete_controller_set)
+        self.background_floatlayout.add_widget(self.confirm_pop)
+
+    def _cancel_delete_controller_set(self, button):
+        self.background_floatlayout.remove_widget(self.confirm_pop)
+        del self.confirm_pop
+        self.confirm_pop = None
+
+    def _delete_controller_set(self, button):
+        current_app = App.get_running_app()
+
+        current_app.controller_sets.pop( current_app.current_edit_set )
+        controller_set_file = os.path.join(collection_path, '{0}.json'.format(current_app.current_edit_set) )
+        if os.path.exists(controller_set_file):
+            os.remove(controller_set_file)
+
+        self.manager.last_screen = "Controller Collections"
+        self._go_back_last_screen(button)
+
     # as callback for "Save" button -- save this build to a controller set file
     def _save_controller_set(self, button):
         current_app = App.get_running_app()
         controller_set = current_app.controller_sets[current_app.current_edit_set]
-        controller_set.dump_to_file('./collections/{0}.json'.format(current_app.current_edit_set))
+        controller_set.dump_to_file( os.path.join(collection_path, '{0}.json'.format(current_app.current_edit_set) ) )
 
         self._revert_delete_button_state()
 

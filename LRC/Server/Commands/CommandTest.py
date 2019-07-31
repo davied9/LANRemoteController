@@ -1,5 +1,5 @@
 from LRC.Server.Command import BaseCommand
-from LRC.Common.logger import logger
+from kivy.logger import logging as logger
 
 
 class TestCommand(BaseCommand):

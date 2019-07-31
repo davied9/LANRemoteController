@@ -14,7 +14,7 @@ from multiprocessing import Process, Manager, freeze_support
 from threading import Thread
 from random import randint
 from time import sleep
-from LRC.Common.logger import logger
+from kivy.logger import logging as logger
 from LRC.Common.empty import empty
 from LRC.Server.LRCServer import LRCServer, LRCWaiter
 import re, os
@@ -81,7 +81,7 @@ class LRCServerUI(App):
     # interfaces
     def __init__(self, *, verbose=False,
                  server_address=('0.0.0.0', 35530), waiter_address=('0.0.0.0', 35527),
-                 watch_interval=0.5, **kwargs):
+                 watch_interval=0.5, verify_code=None, **kwargs):
         super(LRCServerUI, self).__init__(**kwargs)
         # servers
         self.server_address = server_address

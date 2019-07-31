@@ -2,7 +2,7 @@ from LRC.Protocol.v1.ServerProtocol import ServerProtocol
 from LRC.Protocol.v1.WaiterProtocol import WaiterProtocol
 from LRC.Protocol.v1.ClientProtocol import ClientProtocol
 from LRC.Controller.LRCController import Controller
-from LRC.Common.logger import logger
+from kivy.logger import logging as logger
 from LRC.Common.empty import empty
 from socket import *
 
@@ -67,6 +67,7 @@ class LRCClient(object):
     def send_combinations(self, *args):
         if self.waiter_address:
             message = self.waiter_protocol.pack_message(controller=Controller('LRCClient', *args))
+            self.verbose_info('sending {} to {}'.format(message, self.waiter_address))
             self.socket.sendto(message, self.waiter_address)
         else:
             logger.error('Client : waiter address unknown, connect to server to get one.')

@@ -3,6 +3,7 @@ from __future__ import print_function
 if '__main__' == __name__ :
     import shutil
     import os, sys
+    from LRC.Common.info import collection_path
 
     # define utilities
     def empty(*args, **kwargs): pass
@@ -16,7 +17,7 @@ if '__main__' == __name__ :
     ext_to_copy = ['.py']
     skip_dirs = ['logs', '__pycache__']
     skip_files = ['android.txt']
-    example_collections_directory = os.path.join('..', 'collections')
+    example_collections_directory = collection_path
 
     # initialize
     script_file = sys.argv[0]
@@ -28,7 +29,7 @@ if '__main__' == __name__ :
     sys.path.append(package_dir)
     sys.path.append(os.path.dirname(sys.argv[0]))
 
-    from Common.logger import logger # directly import from working directory to avoid not installed problem
+    from LRC.Common.logger import logger # directly import from working directory to avoid not installed problem
     for arg in sys.argv[1:]:
         if arg.startswith('--log-file='):
             logger.stream_id = arg[len('--log-file='):]

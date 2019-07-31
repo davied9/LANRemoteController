@@ -1,0 +1,10 @@
+{
+	"Kugou": {
+		"Next": ["left ctrl", "left alt", "n"],
+		"Pause": ["left ctrl", "left alt", "p"],
+		"Volumn Down": ["left ctrl", "left alt", "d"],
+		"Volumn Up": ["left ctrl", "left alt", "u"],
+		"Previous": ["left ctrl", "left alt", "b"],
+		"Mute": ["left ctrl", "left alt", "m"]
+	}
+}

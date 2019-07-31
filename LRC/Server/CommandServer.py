@@ -2,10 +2,12 @@ from __future__ import print_function
 from LRC.Server.Config import LRCServerConfig
 from LRC.Server.Command import Command, parse_command
 from LRC.Common.logger import logger
+from LRC.Common.Exceptions import ArgumentError
 from LRC.Common.empty import empty
 from LRC.Protocol.v1.CommandServerProtocol import CommandServerProtocol
 from multiprocessing import Manager
 from threading import Thread
+from socket import socket, AF_INET, SOCK_DGRAM
 import os, json
 
 try: # python 2
@@ -17,15 +19,15 @@ except ImportError:  # python 3
 class CommandServer(UDPServer):
 
     # interfaces
-    def __init__(self, **kwargs):
+    def __init__(self, *, verbose=False, sync_config=False, server_address=('127.0.0.1', 35589), ip=None, port=None, **kwargs):
         # initial configuration
-        self.verbose = kwargs["verbose"] if 'verbose' in kwargs else False
+        self.verbose = verbose
+        self.__sync_config = sync_config
         # initialize command server
-        server_address = kwargs["server_address"] if 'server_address' in kwargs else ('127.0.0.1', 35589)
-        if 'port' in kwargs:
-            server_address = (server_address[0], kwargs["port"])
-        if 'ip' in kwargs:
-            server_address = (kwargs["ip"], server_address[1])
+        if port:
+            server_address = (server_address[0], port)
+        if ip:
+            server_address = (ip, server_address[1])
         super(CommandServer, self).__init__(server_address=server_address, RequestHandlerClass=None, bind_and_activate=False)
         # initialize protocol
         self.protocol = CommandServerProtocol()
@@ -36,6 +38,8 @@ class CommandServer(UDPServer):
         # initialize role
         self.role = 'not started' # 'not started' 'main' 'secondary'
         self.__cleanup_commands = list()
+        # initialize temp_socket
+        self.__temp_socket = None
 
     def finish_request(self, request, client_address):
         self._verbose_info('CommandServer : got request {} from client {}'.format(request, client_address))
@@ -52,7 +56,7 @@ class CommandServer(UDPServer):
                 else:
                     args = list()
                 del kwargs['name']
-                self._execute_command(client_address, command, *args, **kwargs)
+                self._execute_command_from_remote(client_address, command, *args, **kwargs)
             elif 'request' == tag:
                 self._respond_request(client_address, request=kwargs['name'], **kwargs)
             elif 'running_test' == tag:
@@ -105,7 +109,19 @@ class CommandServer(UDPServer):
         self._apply_remote_config(**kwargs)
 
     def sync_config(self): # sync this instance's config to the running command server with same address(ip,port)
-        self.send_command('sync_config', **self._dump_remote_config())
+        # accessing remote main command server -- sync_config
+        # done : sync_config command should actually do the following code, but for now just send 'sync_config' command
+        #        sync_config do not directly execute command, use --sync-config flag in console
+        # done : sync verbose for only current command
+        if not self.is_main_server:
+            self._send_command('sync_config', **self._dump_remote_config())
+
+    def show_config(self):
+        config = self._dump_remote_config()
+        msg = 'CommandServer : configurations :\n'
+        for k, v in config.items():
+            msg += '    {:22} : {}\n'.format(k, v)
+        logger.info(msg)
 
     def register_cleanup_command(self, *keys):
         for key in keys:
@@ -115,37 +131,48 @@ class CommandServer(UDPServer):
             logger.info('CommandServer : add cleanup command {}'.format(key))
             self.cleanup_commands.append(key)
 
-    def register_command(self, key, command):
-        if key in self.commands.keys() and command == self.commands[key]:
-            self._verbose_info('duplicate command {} {}'.format(key, command))
-            return
+    def register_cleanup_command_remotely(self, *args):
+        # accessing remote main command server -- register_cleanup_command_remotely
+        self.send_command('register_cleanup_command', args=args)
+
+    def register_command(self, key, command, *, overwrite=False):
+        if not overwrite and key in self.commands.keys():
+            self._verbose_info('duplicate command {}, abort'.format(key))
+            return False
         logger.info('CommandServer : add command {} {}'.format(key, command))
         self.commands[key] = command
+        return True
 
-    def register_command_remotely(self, command_config):
-        self.send_command('register_command', command_config=command_config)
+    def register_command_remotely(self, command_config, *, overwrite=False):
+        # accessing remote main command server -- register_command_remotely
+        self.send_command('register_command', command_config=command_config, overwrite=overwrite)
 
-    def send_command(self, command, **kwargs):
-        self._verbose_info('CommandServer : send command {}({}) to {}'.format(command, kwargs, self.command_server_address))
-        self.socket.sendto(self.protocol.pack_message(command=command, **kwargs), self.command_server_address)
+    def send_command(self, command, *, sync_config_for_one_shot=False, args=(), **kwargs):
+        if self.need_sync_config or sync_config_for_one_shot:
+            self.sync_config()
+        # accessing remote main command server -- send_command
+        if self.is_main_server: # for main server, execute locally
+            self._execute_command_locally(command, *args, **kwargs)
+        else: # for other server, send command to main server
+            self._send_command(command, args=args, **kwargs)
 
-    def load_commands(self, **command_config):
+    def load_commands(self, command_config, *, overwrite=False):
         logger.info('CommandServer : load commands from config :\n{}'.format(command_config))
-        success, fail = self._load_commands(**command_config)
-        logger.info('CommandServer : load commands from config done, total {}, success {}, fail {}'.format(
-                success+fail, success, fail))
+        done, fail, ignore = self._load_commands(command_config, overwrite=overwrite)
+        logger.info('CommandServer : load commands from config done, total {}, done {}, ignore {}, fail {}'.format(
+                done+fail+ignore, done, ignore, fail))
 
-    def load_commands_from_string(self, command_config_string):
+    def load_commands_from_string(self, command_config_string, *, overwrite=False):
         logger.info('CommandServer : load commands from config string :\n{}'.format(command_config_string))
-        success, fail = self._load_commands_from_string(command_config_string)
-        logger.info('CommandServer : load commands from config string done, total {}, success {}, fail {}'.format(
-                success+fail, success, fail))
+        done, fail, ignore = self._load_commands_from_string(command_config_string, overwrite=overwrite)
+        logger.info('CommandServer : load commands from config string done, total {}, done {}, ignore {}, fail {}'.format(
+                done+fail+ignore, done, ignore, fail))
 
-    def load_commands_from_file(self, command_file):
+    def load_commands_from_file(self, command_file, *, overwrite=False):
         logger.info('CommandServer : load commands from config file :\n{}'.format(command_file))
-        success, fail = self._load_commands_from_file(command_file)
-        logger.info('CommandServer : load commands from config file done, total {}, success {}, fail {}'.format(
-                success+fail, success, fail))
+        done, fail, ignore = self._load_commands_from_file(command_file, overwrite=overwrite)
+        logger.info('CommandServer : load commands from config file done, total {}, done {}, ignore {}, fail {}'.format(
+                done+fail+ignore, done, ignore, fail))
 
     # properties
     @property
@@ -180,18 +207,22 @@ class CommandServer(UDPServer):
         self.server_address = (self.server_address[0], val)
 
     @property
+    def temp_socket(self): # this socket is used as a client to main command server, when this server is not main
+        if not self.__temp_socket:
+            self.__temp_socket = self._get_temp_socket()
+        return self.__temp_socket
+
+    @property
     def is_running(self):
         try:
-            from socket import socket, AF_INET, SOCK_DGRAM
-            soc = socket(family=AF_INET, type=SOCK_DGRAM)
-            soc.settimeout(0.5)
-            soc.sendto(self.protocol.pack_message(running_test='CommandServer', state='request'), self.command_server_address)
-            respond, _ = soc.recvfrom(1024)
+            self.temp_socket.sendto(self.protocol.pack_message(running_test='CommandServer', state='request'), self.command_server_address)
+            respond, _ = self.temp_socket.recvfrom(1024)
             tag, kwargs = self.protocol.unpack_message(respond)
-            if 'running_test' == tag and 'CommandServer' == kwargs['target'] and 'confirm' == kwargs['state']:
-                return True
-        except Exception as err:
-            self._verbose_info('CommandServer : running_test : {}'.format(err.args))
+            if 'running_test' == tag:
+                return ('CommandServer' == kwargs['target'] and 'confirm' == kwargs['state'])
+            else:
+                logger.error('CommandServer : [abnormal] got {} message while expecting running_test result'.format(tag))
+        except: pass
         return False
 
     @property
@@ -204,6 +235,10 @@ class CommandServer(UDPServer):
             self._verbose_info_handler = logger.info
         else:
             self._verbose_info_handler = empty
+
+    @property
+    def need_sync_config(self):
+        return self.__sync_config
 
     @property
     def commands(self):
@@ -229,19 +264,25 @@ class CommandServer(UDPServer):
         self.__is_main_server = val
 
     # functional
-    def _init_commands(self):
-        default_commands_file = os.path.abspath(os.path.join('LRC','Server','commands.json'))
+    def _init_commands(self): # loading default commands from current directory
+        default_commands_file = os.path.abspath('default_commands.json')
         try:
-            self.load_commands_from_file(default_commands_file)
+            self._load_commands_from_file(default_commands_file)
         except Exception as err:
-            logger.error('CommandServer : load commands from default command file {} failed : {}'.format(default_commands_file, err.args))
+            self._verbose_info('CommandServer : load commands from default command file {} failed : {}'.format(default_commands_file, err.args))
 
     def _init_basic_commands(self): # those should not be deleted
-        self.register_command('quit', Command(name='quit', execute=self.quit))
-        self.register_command('register_command', Command(name='register_command', execute=self._register_command_remotely, kwargs=dict()))
-        self.register_command('register_cleanup_command', Command(name='register_cleanup_command', execute=self.register_cleanup_command, args=tuple()))
-        self.register_command('list_commands', Command(name='list_commands', execute=self._list_commands))
-        self.register_command('sync_config', Command(name='sync_config', execute=self._apply_remote_config, kwargs=dict()))
+        # place associated command definition is not approved
+        # do not define command like 'def execute(var1, var2)'
+        # use kwargs instead, like 'def execute(var1='default', var2=None)'
+        # place not related command is OK, such as :
+        # 'def execute(*args)'
+        self.commands['quit'] = Command(name='quit', execute=self.quit)
+        self.commands['register_command'] = Command(name='register_command', execute=self.load_commands, kwargs=dict())
+        self.commands['register_cleanup_command'] = Command(name='register_cleanup_command', execute=self.register_cleanup_command, args=tuple())
+        self.commands['list_commands'] = Command(name='list_commands', execute=self._list_commands)
+        self.commands['sync_config'] = Command(name='sync_config', execute=self._apply_remote_config, kwargs=dict())
+        self.commands['show_config'] = Command(name='show_config', execute=self.show_config)
 
     def _clear_commands(self):
         for k in self.commands.keys():
@@ -249,18 +290,93 @@ class CommandServer(UDPServer):
         self.commands.clear()
         logger.warning('CommandServer : commands cleared')
 
-    def _execute_command(self, client_address, command, *args, **kwargs):
-        if command not in self.commands.keys():
-            logger.error('CommandServer : command {} from {} not registered'.format(command, client_address))
-            return
+    def _send_command(self, command, *, args=(), **kwargs):
         try:
-            logger.info('CommandServer : executing command {}({},{}) from {}'.format(command, args, kwargs, client_address))
-            self.commands[command].execute(*args, **kwargs)
+            # done : send_command should first check local configurations, make sure local settings of commands should be executed
+            kwargs = self._update_command_config(command, args, kwargs)
+            logger.info('CommandServer : send command {}({}) to {}'.format(command, kwargs, self.command_server_address))
+            # todo : send command will sync target command to execution server before execution
+            # send command
+            self.temp_socket.sendto(self.protocol.pack_message(command=command, **kwargs), self.command_server_address)
+            # done : send command will check execution result after send one
+            respond_msg, _ = self.temp_socket.recvfrom(1024)
+            tag, kwargs = self.protocol.unpack_message(respond_msg)
+            #   detail : check result
+            if 'respond' == tag and 'command' == kwargs['request'] and 'success' == kwargs['state']:
+                logger.info('CommandServer : execute command {} on {} success'.format(kwargs['command_name'], self.command_server_address))
+            else: # 'respond' != tag -> send command is used for other server(except for main), when this server is running, this may happen when load is full
+                if 'respond' != tag:
+                    logger.error('CommandServer : [abnormal] got {} message while expecting respond of command'.format(tag))
+                elif 'command' != kwargs['request']:
+                    logger.error('CommandServer : [abnormal] got {} respond while expecting respond of command'.format(kwargs['request']))
+                elif 'success' != kwargs['state']:
+                    raise RuntimeError(kwargs['err_info'])
         except Exception as err:
-            logger.error('CommandServer : failed executing command {} with error {}'.format(command, err.args))
+            logger.error('CommandServer : send command {} failed with {}({})'.format(command, err, err.args))
+
+    def _execute_command_locally(self, command, *args, **kwargs):
+        logger.info('CommandServer : execute command {}({},{}) locally'.format(command, args, kwargs))
+        try:
+            self._execute_command_imp(command, *args, **kwargs)
+            logger.info('CommandServer : execute command {} successful'.format(command))
+            return True
+        except Exception as err:
+            logger.error('CommandServer : execute command {} failed with error {}'.format(command, err.args))
+            return False
+
+    def _execute_command_from_remote(self, client_address, command, *args, **kwargs):
+        logger.info('CommandServer : execute command {}({},{}) from {}'.format(command, args, kwargs, client_address))
+        # execute command
+        try:
+            self._execute_command_imp(command, *args, **kwargs)
+            logger.info('CommandServer : execute command {} successful'.format(command))
+            msg = self.protocol.pack_message(respond='command', command_name=command, state='success')
+            success = True
+        except Exception as err:
+            err_info = 'CommandServer : execute command {} failed with error {}'.format(command, err.args)
+            logger.error(err_info)
+            msg = self.protocol.pack_message(respond='command', command_name=command, state='failed', err_info=err_info)
+            success = False
+        # send execute result
+        self.socket.sendto(msg, client_address)
+        return success
+
+    def _execute_command_imp(self, command, *args, **kwargs):
+        if command not in self.commands.keys():
+            raise ValueError('CommandServer : command {} not registered'.format(command))
+        self.commands[command].execute(*args, **kwargs)
+
+    def _update_command_config(self, command, args, kwargs):
+        '''
+        sync arguments to command arguments : priority : command line > register > command definition
+        :param command:     command name
+        :param args:        command args
+        :param kwargs:      command kwargs
+        :return kwargs:     command kwargs merged from args, input kwargs, and command args && kwargs registered in self.commands
+        '''
+        if command in self.commands.keys():
+            self._verbose_info('CommandServer : found local command {}({})'.format(command, self.commands[command]))
+            if hasattr(self.commands[command], 'kwargs'):
+                if self.commands[command].kwargs is None:
+                    if kwargs:
+                        raise ArgumentError('command {} do not support kwargs, got {}'.format(command, kwargs))
+                else:
+                    kwargs.update(self.commands[command].kwargs)
+            if hasattr(self.commands[command], 'args'):
+                if self.commands[command].args is None:
+                    if args:
+                        raise ArgumentError('command {} do not support args, got {}'.format(command, args))
+                else:
+                    _args = list(self.commands[command].args)
+                    if args:
+                        _args.extend(args)
+                    kwargs['args'] = _args
+        return kwargs
 
     def _respond_request(self, client_address, request, **kwargs):
-        self.socket.sendto(self.protocol.pack_message(respond=request+' confirm'), client_address)
+        msg = self.protocol.pack_message(respond=request, state ='confirm')
+        self._verbose_info('CommandServer : send "{}" to {}'.format(msg, client_address))
+        self.socket.sendto(msg, client_address)
 
     def _respond_running_test(self, client_address, **kwargs):
         if 'CommandServer' == kwargs['target']:
@@ -269,16 +385,21 @@ class CommandServer(UDPServer):
                 return
         logger.warning('receive unavailable running_test {} from {}'.format(kwargs, client_address))
 
+    def _get_temp_socket(self):
+        temp_socket = socket(family=AF_INET, type=SOCK_DGRAM)
+        temp_socket.settimeout(0.5)
+        return temp_socket
+
     def _dump_local_config(self): # dump config can work all right only in local
         d = dict()
         d['commands']  = self.commands
+        d['server_address']  = self.server_address
         # todo: try to sync protocol
         # d['protocol']  = self.server_address
         return d
 
     def _dump_remote_config(self): # dump config can work all right only in local
         d = dict()
-        d['server_address']  = self.server_address
         d['verbose']  = self.verbose
         return d
 
@@ -297,36 +418,39 @@ class CommandServer(UDPServer):
         if 'ip' in kwargs:
             self.server_address = (kwargs["ip"], self.server_address[1])
 
-    def _load_commands(self, **command_config):
-        success=0
+    def _load_commands(self, command_config, *, overwrite=False):
+        done=0
         fail=0
+        ignore=0
         for command_name, command_body in command_config.items():
             try:
                 command = parse_command(**command_body)
-                self.register_command(command_name, command)
-                success += 1
+                if self.register_command(command_name, command, overwrite=overwrite):
+                    done += 1
+                else:
+                    ignore += 1
             except Exception as err:
                 logger.error('CommandServer : load command {} failed with {}({}) from command body {}'.format(command_name, err, err.args, command_body))
                 fail += 1
-        return success, fail
+        return done, fail, ignore
 
-    def _load_commands_from_string(self, command_config_string):
+    def _load_commands_from_string(self, command_config_string, *, overwrite=False):
         try:
             command_config = json.loads(command_config_string)
-            return self._load_commands(**command_config)
+            return self._load_commands(**command_config, overwrite=overwrite)
         except Exception as err:
             logger.error('CommandServer : load commands failed with {}({}) from string {}'.format(err, err.args, command_config_string))
 
-    def _load_commands_from_file(self, command_file):
+    def _load_commands_from_file(self, command_file, *, overwrite=False):
         try:
             with open(command_file, 'r') as fp:
                 command_config_string = fp.read()
-            return self._load_commands_from_string(command_config_string)
+            return self._load_commands_from_string(command_config_string, overwrite=overwrite)
         except Exception as err:
             logger.error('CommandServer : load commands failed with {}({}) from file {}'.format(err, err.args, command_file))
 
     def _verbose_info(self, message):
-        self._verbose_info_handler('CommandServer : verbose : {}'.format(message))
+        self._verbose_info_handler('CommandServer : [verbose] {}'.format(message))
 
     # local command entry
     def _list_commands(self): # entry for command "list_commands"
@@ -335,8 +459,6 @@ class CommandServer(UDPServer):
             message += '{:22} -- {}\n'.format(k, v)
         logger.info(message)
 
-    def _register_command_remotely(self, command_config): # entry for command "register_command"
-        self.load_commands(**command_config) # one more unpack needed for remotely register command
 
 
 if '__main__' == __name__:

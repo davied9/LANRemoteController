@@ -7,9 +7,9 @@ from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.screenmanager import Screen
 from kivy.clock import Clock
-from LRC.Common.logger import logger
-from LRC.Client.ButtonContainer import ButtonContainer
+from kivy.logger import logging as logger
 from LRC.Controller.LRCController import  ControllerSet
+from LRC.Common.info import collection_path
 import os, json
 
 
@@ -85,9 +85,11 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
         else:
             self._reload_controller_set_from_app()
 
-        if current_app.client.server_address:
-            self.connector.ip_button.text   = current_app.client.server_address[0]
-            self.connector.port_button.text = str(current_app.client.server_address[1])
+        # if current_app.client.server_address:
+        #     self.connector.ip_button.text   = current_app.client.server_address[0]
+        #     self.connector.port_button.text = str(current_app.client.server_address[1])
+
+        self.connector.load_server_config()
 
     def on_leave(self, *args):
         self._reset_controller_set_container()
@@ -103,7 +105,8 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
 
     def _load_controller_set_from_local(self):
         controller_sets = {}
-        for r, dirs, files in os.walk('./collections'):
+        logger.info('Collection: loading collections from {}'.format(collection_path))
+        for r, dirs, files in os.walk(collection_path):
             for file_name in files:
                 if not file_name.endswith('.json'): continue
                 full_path = r+'/'+file_name
