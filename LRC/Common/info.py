@@ -1,6 +1,6 @@
 __all__ = ['version', 'common_path', 'collection_path', 'lrc_root']
 
-version='0.1.3'
+version='0.1.4'
 
 import os
 common_path = os.path.split(__file__)[0]
