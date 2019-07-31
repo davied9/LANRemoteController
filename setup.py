@@ -4,7 +4,6 @@ if '__main__' == __name__:
     os.chdir(src_root)
 
     from LRC.Common.info import version
-    from LRC.Common.logger import logger
 
     # get readme description
     with open(os.path.join("README.md"), "r") as fh:
@@ -19,14 +18,16 @@ if '__main__' == __name__:
         long_description=long_description,
         long_description_content_type="text/markdown",
         url="https://github.com/davied9/LANRemoteController",
-        packages=[p for p in setuptools.find_packages(where='.') if p.startswith('LRC')],
-        package_data={'':'*.json'},
+        packages=setuptools.find_packages(where='./LRC'),  # find all packages under ./LRC, like Client | Common | Server | Server.Commands
+        package_dir={'':'LRC'},  # put all packages into folder LRC
+        package_data={'collections':['*.json']}, # package collection has data *.json
+        include_package_data=True, # pack data (e.g. *.json in collections) into setup package
         entry_points="""
         [console_scripts]
         lrcclient = LRC.client_main:main
         lrcserver = LRC.server_main:main
         """,
         classifiers=["Programming Language :: Python",],
-        setup_requires=['kivy>=1.10.1', 'PyUserInput>=0.1.9']
+        install_requires=['pypiwin32>=223;platform_system=="Windows"', 'PyUserInput>=0.1.9']
     )
 
