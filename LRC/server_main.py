@@ -37,7 +37,7 @@ def start_lrc_server_new_entry(parsed_args):
         from LRC.Server.ServerUI import LRCServerUI
 
         freeze_support()
-        logger.set_logger('kivy')
+        logger.set_logger(name='kivy')
 
         if parsed_args.commands:
             logger.warning('LRC : UI is enabled, commands {} will not be executed.'.format(parsed_args.commands))
@@ -108,7 +108,7 @@ def register_lrc_commands(command_server, lrc_config):
 
     # start/stop LRC
     command_server.register_command('start_lrc', Command(name='start_lrc', execute=start_lrc,
-        kwargs={'server_address':lrc_config.server_address, 'waiter_address': lrc_config.server_address} ))
+        kwargs={'server_address':lrc_config.server_address, 'waiter_address': lrc_config.waiter_address} ))
     command_server.register_command('stop_lrc', Command(name='stop_lrc', execute=stop_lrc))
 
     # start/stop LRC server
@@ -118,7 +118,7 @@ def register_lrc_commands(command_server, lrc_config):
 
     # start/stop LRC waiter
     command_server.register_command('start_lrc_waiter', Command(name='start_lrc_waiter', execute=start_lrc_waiter,
-        kwargs={'waiter_address': lrc_config.server_address}))
+        kwargs={'waiter_address': lrc_config.waiter_address}))
     command_server.register_command('stop_lrc_waiter', Command(name='stop_lrc_waiter', execute=stop_lrc_waiter))
 
     # quit LRC
