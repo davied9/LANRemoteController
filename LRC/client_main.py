@@ -1,20 +1,13 @@
+
 def main():
     import sys
-    if '-h' in sys.argv or '--help' in sys.argv:
-        print(_help_str())
-        exit()
-    if '--version' in sys.argv:
-        from LRC.Common.info import version
-        print('LRC version {}'.format(version))
-        exit()
+    parsed_args = parse_config_from_console_line_with_parser(sys.argv[1:])
+    sys.argv = [sys.argv[0]]
 
     from LRC.Common.logger import logger as LRCLogger
     LRCLogger.set_logger(name='kivy')
 
-    verbose = False
-    if '--verbose' in sys.argv:
-        verbose = True
-        sys.argv.remove('--verbose')
+    verbose = parsed_args.verbose
 
     import os
     from kivy.logger import logging
@@ -38,6 +31,28 @@ def main():
     ClientUI(verbose=verbose).run()
 
 
+def parse_config_from_console_line_with_parser(args):
+    from LRC.Common.info import version, url, client_entry
+    import argparse
+
+    # help description
+    parser = argparse.ArgumentParser(description= '''
+LANRemoteController
+
+[more]
+    for more information, see {}
+'''.format(url), prog=client_entry)
+    # version info
+    parser.add_argument('--version', '-v', help='version', action='version', version='''
+LRC(LAN Remote Controller) version {}
+{}
+'''.format(version, url))
+    # arguments
+    parser.add_argument('--verbose', '-vv', help='increase log verbose level', default=False, action='store_true')
+
+    return parser.parse_args(args=args)
+
+
 def walk_working_dir():
     import os
     from kivy.logger import logging
@@ -45,22 +60,6 @@ def walk_working_dir():
         logging.info('{:12}: {} :'.format('walking', root))
         for file in files:
             logging.info('{:12}:     {}'.format('walking', file))
-
-
-def _help_str():
-    return '''
-LRC server
-[Usage]
-    lrcwaiter
-
-[options]
-    --help, -h              show this help info
-    --version               show LRC version
-    --verbose               show more information in log
-
-[more]
-    for more infomation, see https://github.com/davied9/LANRemoteController
-'''
 
 
 if '__main__' == __name__:

@@ -1,19 +1,5 @@
 from __future__ import print_function
 from LRC.Common.logger import logger
-from LRC.Common.info import url
-
-__description__ = '''
-LANRemoteController
-
-[example]
-    lrcserver --no-ui start_lrc --lrc-server-address ('0.0.0.0',35589)
-    lrcserver --no-ui stop_lrc  # you may need to run this in another command window
-
-[more]
-    for more information, see {}
-'''.format(url)
-
-__program__ = 'lrcserver'
 
 
 def main():
@@ -75,13 +61,26 @@ def start_lrc_server_new_entry(parsed_args):
 
 
 def parse_config_from_console_line_with_parser(args):
-    from LRC.Common.info import version, url
+    from LRC.Common.info import version, url, server_entry
     import argparse
-    parser = argparse.ArgumentParser(description=__description__, prog=__program__)
+
+    # help description
+    parser = argparse.ArgumentParser(description= '''
+LANRemoteController
+
+[example]
+    {} --no-ui start_lrc --lrc-server-address ('0.0.0.0',35589)
+    {} --no-ui stop_lrc  # you may need to run this in another command window
+
+[more]
+    for more information, see {}
+'''.format(server_entry, server_entry, url), prog=server_entry)
+    # version info
     parser.add_argument('--version', '-v', help='version', action='version', version='''
 LRC(LAN Remote Controller) version {}
 {}
 '''.format(version, url))
+    # arguments
     parser.add_argument('--no-ui', help='disable ui', dest='enable_ui', default=True, action='store_false')
     parser.add_argument('--verbose', '-vv', help='increase log verbose level', default=False, action='store_true')
     parser.add_argument('--sync-config', help='command server sync local config to main command server',
