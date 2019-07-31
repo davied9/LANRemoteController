@@ -9,6 +9,12 @@ if '__main__' == __name__:
     with open(os.path.join("README.md"), "r") as fh:
         long_description = fh.read()
 
+    # find all packages under ./LRC, like LRC.Client | LRC.Common | LRC.Server | LRC.Server.Commands
+    packages = [p for p in setuptools.find_packages(where='.') if p.startswith('LRC')]
+    print('packages :')
+    for p in packages:
+        print('    {}'.format(p))
+
     setuptools.setup(
         name="LRC",
         version=version,
@@ -18,9 +24,9 @@ if '__main__' == __name__:
         long_description=long_description,
         long_description_content_type="text/markdown",
         url=url,
-        packages=setuptools.find_packages(where='./LRC'),  # find all packages under ./LRC, like Client | Common | Server | Server.Commands
-        package_dir={'':'LRC'},  # put all packages into folder LRC
-        package_data={'collections':['*.json']}, # package collection has data *.json
+        packages=packages,
+        # package_dir={'':'LRC'},  # put all packages into folder LRC
+        package_data={'LRC.lrccollections':['*.json']}, # package collection has data *.json
         include_package_data=True, # pack data (e.g. *.json in collections) into setup package
         entry_points="""
         [console_scripts]
