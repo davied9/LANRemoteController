@@ -3,6 +3,7 @@ from __future__ import print_function
 if '__main__' == __name__ :
     import shutil
     import os, sys
+    from LRC.Common.info import collection_path
 
     # define utilities
     def empty(*args, **kwargs): pass
@@ -16,7 +17,7 @@ if '__main__' == __name__ :
     ext_to_copy = ['.py']
     skip_dirs = ['logs', '__pycache__']
     skip_files = ['android.txt']
-    example_collections_directory = os.path.join('..', 'collections')
+    example_collections_directory = collection_path
 
     # initialize
     script_file = sys.argv[0]

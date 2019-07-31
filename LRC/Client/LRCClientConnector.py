@@ -5,6 +5,7 @@ from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
 from kivy.app import App
 from kivy.logger import logging as logger
+from LRC.Common.info import lrc_root
 import re
 import os
 import json
@@ -47,7 +48,7 @@ class LRCClientConnector(BoxLayout):
         super(LRCClientConnector, self).__init__(**kwargs)
         self.ip_matcher = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)')
         self.ext_err_logger = None
-        self.config_file = os.path.abspath(os.path.join(os.getcwd(), "Client", "server.cfg"))
+        self.config_file = os.path.abspath(os.path.join(os.path.split(__file__)[0], "server.cfg"))
 
     def execute_controller(self, controller):
         for _, comb in controller.dump().items():

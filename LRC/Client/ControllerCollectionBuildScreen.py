@@ -12,6 +12,7 @@ from kivy.clock import Clock
 from kivy.uix.screenmanager import Screen
 from kivy.logger import logging as logger
 from LRC.Common.Exceptions import NotFoundError
+from LRC.Common.info import collection_path
 from LRC.Controller.LRCController import Controller, ControllerSet
 from LRC.Client.ControllerEditor import ControllerEditor
 import os
@@ -253,7 +254,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         current_app = App.get_running_app()
 
         current_app.controller_sets.pop( current_app.current_edit_set )
-        controller_set_file = './collections/{0}.json'.format(current_app.current_edit_set)
+        controller_set_file = os.path.join(collection_path, '{0}.json'.format(current_app.current_edit_set) )
         if os.path.exists(controller_set_file):
             os.remove(controller_set_file)
 
@@ -264,7 +265,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
     def _save_controller_set(self, button):
         current_app = App.get_running_app()
         controller_set = current_app.controller_sets[current_app.current_edit_set]
-        controller_set.dump_to_file('./collections/{0}.json'.format(current_app.current_edit_set))
+        controller_set.dump_to_file( os.path.join(collection_path, '{0}.json'.format(current_app.current_edit_set) ) )
 
         self._revert_delete_button_state()
 

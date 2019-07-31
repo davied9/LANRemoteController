@@ -9,6 +9,7 @@ from kivy.uix.screenmanager import Screen
 from kivy.clock import Clock
 from kivy.logger import logging as logger
 from LRC.Controller.LRCController import  ControllerSet
+from LRC.Common.info import collection_path
 import os, json
 
 
@@ -104,7 +105,7 @@ class ControllerCollectionScreen(Screen): # gallery of controller sets
 
     def _load_controller_set_from_local(self):
         controller_sets = {}
-        for r, dirs, files in os.walk('./collections'):
+        for r, dirs, files in os.walk(collection_path):
             for file_name in files:
                 if not file_name.endswith('.json'): continue
                 full_path = r+'/'+file_name
