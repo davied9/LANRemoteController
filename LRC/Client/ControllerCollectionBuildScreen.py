@@ -258,6 +258,7 @@ class ControllerCollectionBuildScreen(Screen): # controller collection builder
         if os.path.exists(controller_set_file):
             os.remove(controller_set_file)
 
+        self._cancel_delete_controller_set(button)
         self.manager.last_screen = "Controller Collections"
         self._go_back_last_screen(button)
 
