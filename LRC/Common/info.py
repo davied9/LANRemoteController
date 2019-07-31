@@ -7,6 +7,10 @@ repo = 'https://github.com/davied9/LANRemoteController.git'
 server_entry = 'lrcserver'
 client_entry = 'lrcclient'
 
+description = '''
+LRC(LANRemoteController)
+'''
+
 import os
 common_path = os.path.split(__file__)[0]
 lrc_root = os.path.split(common_path)[0]

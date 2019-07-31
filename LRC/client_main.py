@@ -32,16 +32,21 @@ def main():
 
 
 def parse_config_from_console_line_with_parser(args):
-    from LRC.Common.info import version, url, client_entry
-    import argparse
+    from LRC.Common.info import version, url, client_entry, description
+    from argparse import ArgumentParser
+    from argparse import RawTextHelpFormatter
 
     # help description
-    parser = argparse.ArgumentParser(description= '''
-LANRemoteController
+    parser = ArgumentParser(
+        prog=client_entry,
+        formatter_class=RawTextHelpFormatter,
+        description= description,
+        epilog='''
 
 [more]
     for more information, see {}
-'''.format(url), prog=client_entry)
+
+'''.format(url))
     # version info
     parser.add_argument('--version', '-v', help='version', action='version', version='''
 LRC(LAN Remote Controller) version {}
