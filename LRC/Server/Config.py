@@ -83,9 +83,9 @@ class LRCServerConfig(object):
 
     # interfaces
     def apply_config(self, **kwargs): # apply all config except config_file, this is maintained by load_from_config_file
-        self._update_command_server_config(**kwargs)
-        self._update_waiter_config(**kwargs)
-        self._update_server_config(**kwargs)
+        self.update_command_server_config(**kwargs)
+        self.update_waiter_config(**kwargs)
+        self.update_server_config(**kwargs)
         if 'sync_config' in kwargs:
             self.sync_config = kwargs['sync_config']
         if 'enable_ui' in kwargs:
@@ -137,7 +137,7 @@ class LRCServerConfig(object):
         self.verbose = False
 
     # details
-    def _update_command_server_config(self, command_server_address=None,
+    def update_command_server_config(self, command_server_address=None,
             command_server_ip=None, command_server_port=None, **kwargs):
         if command_server_address:
             self.command_ip = command_server_address[0]
@@ -147,7 +147,7 @@ class LRCServerConfig(object):
         if command_server_port:
             self.command_port = command_server_port
 
-    def _update_server_config(self, server_address=None,
+    def update_server_config(self, server_address=None,
             server_ip=None, server_port=None, **kwargs):
         if server_address:
             self.server_ip = server_address[0]
@@ -157,7 +157,7 @@ class LRCServerConfig(object):
         if server_port:
             self.server_port = server_port
 
-    def _update_waiter_config(self, waiter_address=None,
+    def update_waiter_config(self, waiter_address=None,
             waiter_ip=None, waiter_port=None, **kwargs):
         if waiter_address:
             self.waiter_ip = waiter_address[0]

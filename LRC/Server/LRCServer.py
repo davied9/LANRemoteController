@@ -190,7 +190,7 @@ class LRCServerManager(object):
 
     # commands interfaces
     def start_server(self, **kwargs):
-        kwargs = self._update_server_config(kwargs)
+        kwargs = self.update_server_config(kwargs)
         self._start_server(**kwargs)
 
     def stop_server(self):
@@ -201,7 +201,7 @@ class LRCServerManager(object):
             self._server_process = None
 
     def start_waiter(self, **kwargs):
-        kwargs = self._update_waiter_config(kwargs)
+        kwargs = self.update_waiter_config(kwargs)
         self._start_waiter(**kwargs)
 
     def stop_waiter(self):
@@ -223,7 +223,7 @@ class LRCServerManager(object):
         self.stop_communication_manager()
 
     # functional
-    def _update_server_config(self, config):
+    def update_server_config(self, config):
         if 'client_list' not in config or config['client_list'] is None and self.client_list:
             config['client_list'] = self.client_list
         if 'log_mailbox' not in config or config['log_mailbox'] is None and self.log_mailbox:
@@ -248,7 +248,7 @@ class LRCServerManager(object):
         except Exception as err:
             logger.error('LRC : start server process failed : {}'.format(err.args))
 
-    def _update_waiter_config(self, config):
+    def update_waiter_config(self, config):
         if 'client_list' not in config or config['client_list'] is None and self.client_list:
             config['client_list'] = self.client_list
         if 'log_mailbox' not in config or config['log_mailbox'] is None and self.log_mailbox:
